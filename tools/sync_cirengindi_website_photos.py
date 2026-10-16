@@ -96,12 +96,46 @@ def make(slug:str, logo:Image.Image, out:Path):
         assert check.size==(900,900),out
     print(f"OK {slug}: {original.width}x{original.height} -> {out.name} ({out.stat().st_size:,} bytes)",flush=True)
 
+def make_banner(index:int, product_id:int, logo:Image.Image):
+    # Four editorial-format brand slides using the same genuine product photos.
+    w,h=1200,620
+    x,y=np.mgrid[0:h,0:w]
+    blend=np.minimum(1.0,np.maximum(0.0,y/w))[:,:,None]
+    left=np.array([99.0,57.0,41.0])[None,None,:]
+    right=np.array([241.0,218.0,193.0])[None,None,:]
+    bg=np.uint8(np.clip(left*(1-blend)+right*blend,0,255))
+    board=Image.fromarray(bg,'RGB').convert('RGBA')
+    source=Image.open(ROOT/f"official_{product_id:02d}.webp").convert('RGB')
+    photo=source.crop((37,120,863,862))
+    pane=ImageOps.contain(photo,(640,512),Image.Resampling.LANCZOS).convert("RGBA")
+    px=526+(640-pane.width)//2
+    py=69+(512-pane.height)//2
+    shadow=Image.new("RGBA",(w,h),(0,0,0,0))
+    ImageDraw.Draw(shadow).rounded_rectangle(
+       (px+6,py+10,px+pane.width+6,py+pane.height+10),radius=27,fill=(50,20,10,38)
+    )
+    board.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(17)))
+    mask=Image.new("L",pane.size,0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+       (0,0,pane.width-1,pane.height-1),radius=24,fill=255
+    )
+    board.paste(pane,(px,py),mask)
+    badge=logo.copy()
+    badge.thumbnail((89,89),Image.Resampling.LANCZOS)
+    board.alpha_composite(badge,((w-badge.width)//2,7))
+    target=ROOT/f"official_banner_{index:02d}.webp"
+    board.convert("RGB").save(target,format="WEBP",quality=89,method=6)
+    print(f"OK banner {index} ({product_id}) => {target.name}",flush=True)
+
 def main():
     logo=Image.open(BRAND).convert("RGBA")
-    # Files are named using immutable source keys to avoid duplicates and category mistakes.
+    # Files named using stable source keys; preserve real website variants.
     for i,slug in enumerate(PRODUCTS,1):
         make(slug,logo,ROOT/f"official_{i:02d}.webp")
     done=list(ROOT.glob("official_??.webp"))
     assert len(done)==31,(len(done),done)
-    print("PASS: All 31 distinct official product photos harmonized",flush=True)
+    for i,product_id in enumerate((1,12,23,29),1):
+        make_banner(i,product_id,logo)
+    assert len(list(ROOT.glob("official_banner_??.webp")))==4
+    print("PASS: 31 website product photos and 4 matching editorial banners",flush=True)
 if __name__=="__main__":main()
