@@ -103,19 +103,21 @@ function shell(body,active){
 function renderLogin(msg=""){
  root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand">${icon("i-store")}</div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@email.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div><button class="btn secondary" style="width:100%;margin-top:12px" onclick="registerOwner()">Aktivasi Akun Owner Baru</button></div></section>`
 }
-async function registerOwner(){
+function registerOwner(){
  const email='rizkyhidayat8999@gmail.com';
- const pass=prompt('Aktivasi Owner '+email+'\nMasukkan password baru (minimal 8 karakter).');
- if(pass===null)return;if(pass.length<8)return toast('Password minimal 8 karakter.');
- const confirmPass=prompt('Ulangi password Owner');if(pass!==confirmPass)return toast('Konfirmasi password tidak sama.');
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand">${icon('i-store')}</div><h1>Aktivasi Owner</h1><p>Akun khusus pemilik Cireng Indi</p><div class="notice">Email: ${email}. Pastikan email verifikasi dibuka sebelum login.</div><label>Password baru</label><input type="password" id="ownerpass" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter"><label>Ulangi password</label><input type="password" id="ownerpass2" autocomplete="new-password" minlength="8"><button class="full" onclick="activateOwnerSubmit()">Kirim Aktivasi</button><button class="btn secondary" style="width:100%;margin-top:10px" onclick="renderLogin()">Kembali ke Login</button></div></section>`;
+}
+async function activateOwnerSubmit(){
+ const email='rizkyhidayat8999@gmail.com';
+ const pass=document.getElementById('ownerpass')?.value||'',again=document.getElementById('ownerpass2')?.value||'';
+ if(pass.length<8)return toast('Password minimal 8 karakter.');
+ if(pass!==again)return toast('Konfirmasi password tidak sama.');
  busy(true);try{
-  const response=await fetch(SUPABASE_URL+'/auth/v1/signup',{
+  await parse(await fetch(SUPABASE_URL+'/auth/v1/signup',{
    method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},
    body:JSON.stringify({email,password:pass})
-  });
-  const data=await parse(response);
-  toast('Periksa email '+email+' untuk verifikasi, kemudian login.');
-  renderLogin('Aktivasi terkirim. Verifikasi alamat email dahulu, kemudian masuk dengan email dan password.');
+  }));
+  renderLogin('Aktivasi terkirim. Buka email verifikasi pada '+email+', lalu login menggunakan password tadi.');
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function doLogin(){
