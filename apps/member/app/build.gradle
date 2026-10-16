@@ -10,8 +10,19 @@ android {
         applicationId "com.cirengindi.member"
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName "1.1.0-test"
+        versionCode 3
+        versionName "1.2.0"
+    }
+
+    signingConfigs {
+        if (System.getenv("CI_SIGNING_KEYSTORE")) {
+            production {
+                storeFile file(System.getenv("CI_SIGNING_KEYSTORE"))
+                storePassword System.getenv("CI_STORE_PASSWORD")
+                keyAlias System.getenv("CI_KEY_ALIAS")
+                keyPassword System.getenv("CI_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -20,6 +31,7 @@ android {
             versionNameSuffix "-internal"
         }
         release {
+            if (System.getenv("CI_SIGNING_KEYSTORE")) signingConfig signingConfigs.production
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
