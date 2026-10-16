@@ -34,6 +34,7 @@ async function orderRows(rows){
  const payments=check(await admin.from('ci_payments').select('*').in('order_id',ids));
  const couriers=courierIds.length?check(await admin.from('ci_couriers').select('id,name,flat_fee').in('id',courierIds)):[];
  const contacts=courierIds.length?check(await admin.from('ci_courier_contacts').select('courier_id,whatsapp').in('courier_id',courierIds)):[];
+ const events=check(await admin.from('ci_order_status_events').select('order_id,status,occurred_at').in('order_id',ids).order('occurred_at',{ascending:true}));
  const proofUrls=new Map();
  for(const p of payments.filter(p=>p.proof_storage_path)){
    const signed=await admin.storage.from('ci-payment-proofs').createSignedUrl(p.proof_storage_path,600);
@@ -43,7 +44,8 @@ async function orderRows(rows){
   const pay=payments.find(x=>x.order_id===o.id), courier=couriers.find(x=>x.id===o.courier_id);
   return {...o,items:items.filter(i=>i.order_id===o.id),
    payment:pay?{id:pay.id,method:pay.method,status:pay.status,amount:pay.amount,review_note:pay.review_note,bank_snapshot:pay.bank_snapshot,proof_submitted_at:pay.proof_submitted_at,proof_url:proofUrls.get(o.id)||null}:null,
-   courier:courier?{id:courier.id,name:courier.name,whatsapp:contacts.find(x=>x.courier_id===courier.id)?.whatsapp||null}:null};
+   courier:courier?{id:courier.id,name:courier.name,whatsapp:contacts.find(x=>x.courier_id===courier.id)?.whatsapp||null}:null,
+   timeline:events.filter(event=>event.order_id===o.id).map(event=>({status:event.status,at:event.occurred_at}))};
  });
 }
 async function paymentSettings(){
@@ -73,7 +75,10 @@ async function authApi(b){const a=b.action;if(a==='register'){
   return err('REGISTRATION_UNAVAILABLE',503);
  }
  const id=created.data.user.id;
- const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase()};
+ const referral=String(b.referral||'').trim().toUpperCase();
+ const inviter=referral?check(await admin.from('member_profiles').select('user_id').eq('referral_code',referral).maybeSingle()):null;
+ if(referral&&!inviter)return err('INVALID_REFERRAL_CODE');
+ const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase(),referred_by:inviter?.user_id!==id?inviter?.user_id||null:null};
  const ins=await admin.from('member_profiles').insert(profile).select('*').single();if(ins.error){return err(ins.error.message)};
  if(!created.data.session)return reply({member:ins.data,pendingVerification:true});
  return reply({member:ins.data,session:created.data.session});
@@ -132,9 +137,10 @@ async function mobile(req,b){
   const payload={p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_payment_method:method,p_address_id:b.address_id||null,p_notes:b.notes||null,p_bank_code:method==='transfer'?String(b.bank_code||'').toUpperCase():null};
   // Prefer the atomic two-bank RPC. Do not fall back on generic errors:
   // retrying a checkout after an uncertain response could create duplicate orders.
-  const result=await admin.rpc('ci_checkout_with_bank',payload);
+  const voucherId=b.voucher_id?String(b.voucher_id):null;
+  const result=voucherId?await admin.rpc('ci_checkout_with_voucher',{...payload,p_voucher_id:voucherId}):await admin.rpc('ci_checkout_with_bank',payload);
   if(!result.error)return reply({order:result.data});
-  if(!['PGRST202','42883'].includes(String(result.error.code||'')))throw new Error(result.error.message);
+  if(voucherId||!['PGRST202','42883'].includes(String(result.error.code||'')))throw new Error(result.error.message);
   // Until the verified bank RPC migration is applied, preserve COD for older and newer clients.
   // Never silently route a bank-specific transfer to a different recipient.
   if(method!=='cod')return err('TRANSFER_SETUP_PENDING',503);
@@ -174,6 +180,16 @@ async function mobile(req,b){
   const o=check(await admin.from('ci_orders').select('*').eq('id',b.id).eq('member_id',uid).maybeSingle());if(!o||o.status!=='pending')return err('INVALID_STATUS_TRANSITION');
   check(await admin.rpc('ci_cancel_order_safe',{p_order_id:o.id,p_member_id:uid}));
   return reply({ok:true});
+ }
+ if(a==='vouchers'){
+  const issued=await list('ci_member_vouchers','voucher_id,status,used_at',{eq:{member_id:uid}});
+  const all=await list('ci_vouchers','id,code,title,description,discount_type,discount_value,min_spend,max_discount,fulfillment_scope,starts_at,ends_at,active,all_members,usage_limit',{order:'created_at'});
+  const now=Date.now(),vouchers=all.filter(v=>v.all_members||issued.some(x=>x.voucher_id===v.id)).map(v=>{
+    const record=issued.find(x=>x.voucher_id===v.id);
+    const status=record?.status==='used'?'used':record?.status==='revoked'?'revoked':!v.active||Date.parse(v.ends_at)<=now?'expired':Date.parse(v.starts_at)>now?'upcoming':'available';
+    return {...v,status};
+  });
+  return reply({vouchers});
  }
  if(a==='rewards')return reply({rewards:await list('ci_rewards','*',{eq:{active:true},order:'sort_order'}),points:await points(uid)});
  if(a==='reward_redeem'){
@@ -277,7 +293,7 @@ async function owner(req,b){
  }
  if(a==='set_order_status'){
   const o=check(await admin.from('ci_orders').select('*').eq('id',b.id).maybeSingle());if(!o)return err('ORDER_NOT_FOUND');
-  const next={pending:['processing','cancelled'],processing:o.fulfillment_type==='pickup'?['completed','cancelled']:['shipped','cancelled'],shipped:['completed'],completed:[],cancelled:[]};
+  const next={pending:['processing','cancelled'],processing:o.fulfillment_type==='pickup'?['ready_for_pickup','cancelled']:['shipped','cancelled'],ready_for_pickup:['completed'],shipped:['completed'],completed:[],cancelled:[]};
   if(!(next[o.status]||[]).includes(b.status))return err('INVALID_STATUS_TRANSITION');
   const pay=check(await admin.from('ci_payments').select('method,status').eq('order_id',o.id).single());
   if(pay.method==='transfer' && b.status!=='cancelled' && pay.status!=='paid')return err('PAYMENT_NOT_CONFIRMED');
