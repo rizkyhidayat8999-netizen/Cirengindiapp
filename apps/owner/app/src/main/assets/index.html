@@ -78,6 +78,9 @@ html,body{background:linear-gradient(145deg,#fffaf6,#fff4e7)}
 .auth-password-info{font-size:12px;line-height:1.5;color:var(--muted);margin-top:8px}
 @media(max-width:360px){.loginbox{padding:19px 16px}.loginbox h1{font-size:25px}}
 @media(max-height:700px){.login{align-items:flex-start;padding:15px 14px calc(26px + env(safe-area-inset-bottom))}.loginbox{padding:17px 18px;border-radius:24px}.loginbrand{width:65px;height:65px;margin-bottom:10px}.loginbox h1{font-size:25px}.loginbox p{margin:8px 0 12px}.loginbox label{margin:9px 0 5px}.loginbox input{min-height:45px;padding:10px 12px}.loginbox .full{min-height:46px;margin-top:13px}.auth-help{margin-top:9px}.loginbox .btn{min-height:43px}}
+
+#ownerAuthStatus:empty{display:none}
+#ownerAuthStatus:not(:empty){border:1px solid #e6b69e;background:#fff5ec;color:#733b2c;padding:11px;border-radius:12px;margin:6px 0;text-align:left;line-height:1.5}
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
@@ -111,7 +114,7 @@ function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):nul
 function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
 function clearSession(){state.session=null;Native.clearSession()}
 
-async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.code||d.error_code||d.msg||d.message||d.error_description||d.error||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
+async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.error_code||d.error_description||d.msg||d.message||d.error||((typeof d.code==='string'&&!/^\d+$/.test(d.code))?d.code:null)||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
 async function loginAuth(email,password){
  return parse(await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{
   method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})
@@ -141,7 +144,7 @@ function shell(body,active){
  return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Aktivasi Akun Owner</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Aktivasi Akun Owner</button></div></section>`
 }
 function registerOwner(){
  const email='indicireng@gmail.com';
@@ -169,9 +172,9 @@ async function resendOwnerVerification(button){
     method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},
     body:JSON.stringify({type:'signup',email})
   }));
-  toast('Jika akun menunggu verifikasi, email baru telah diminta. Periksa inbox dan spam.');
+  const box=document.getElementById('ownerAuthStatus');if(box)box.textContent='Jika akun masih menunggu verifikasi, email terbaru telah diminta. Periksa inbox dan spam.';else toast('Periksa email verifikasi terbaru.');
  }catch(e){
-  toast(errorText(e.message));
+  const box=document.getElementById('ownerAuthStatus'),msg=errorText(e.message);if(box)box.textContent=msg;else toast(msg);
  }finally{
   if(button){button.textContent='Kirim ulang email verifikasi';setTimeout(()=>{if(button.isConnected)button.disabled=false;},60000);}
  }
@@ -201,7 +204,7 @@ function errorText(m){
  if(lower.includes('invalid login credentials')||lower.includes('invalid_credentials'))return map.invalid_credentials;
  if(lower.includes('email rate limit')||lower.includes('rate limit'))return map.over_email_send_rate_limit;
  if(lower.includes('already registered')||lower.includes('user already registered'))return map.email_exists;
- return map[code]||map[lower]||(code==='HTTP_400'?'Aktivasi belum selesai atau data login belum valid. Periksa email verifikasi dan gunakan tautan Kirim ulang jika diperlukan.':code.replaceAll('_',' '));
+ return map[code]||map[lower]||((code==='HTTP_400'||code==='400')?'Permintaan login ditolak. Verifikasi email Owner dengan tautan terbaru, lalu coba lagi.':code.replaceAll('_',' '));
 }
 function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
 async function go(p){
