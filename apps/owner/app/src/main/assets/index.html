@@ -85,7 +85,7 @@ html,body{background:linear-gradient(145deg,#fffaf6,#fff4e7)}
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
 <body>
-<div id="root"></div><div id="loading" class="loading"><div class="spin"></div></div><div id="toast" class="toast"></div>
+<div id="root"></div><div id="toast" class="toast"></div>
 
 <svg width="0" height="0" style="position:absolute">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
@@ -105,14 +105,21 @@ const SUPABASE_URL="https://tbviryuimoxgapubdjio.supabase.co";
 const KEY="sb_publishable_DxP6XDJP2XfZAC45pAniHQ_1WJqC4Fr";
 const state={session:null,page:"dashboard",cache:{}};
 const root=document.getElementById("root");
+const instantViews=new Map();let navId=0;
+function previewPage(page){
+ const old=instantViews.get(page);
+ if(old){root.innerHTML=old;return;}
+ const titles={dashboard:'Dashboard',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',operations:'Pengaturan Operasional',settings:'Lainnya'};
+ root.innerHTML=shell(`<div class="section"><h2>${esc(titles[page]||'Cireng Indi Owner')}</h2></div>`,['rewards','operations'].includes(page)?'settings':page);
+}
 const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const rp=n=>"Rp"+Number(n||0).toLocaleString("id-ID");
-function busy(v){loading.classList.toggle("show",!!v)}
+function busy(v){/* No blocking spinner */}
 let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600)}
 function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
 function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
-function clearSession(){state.session=null;Native.clearSession()}
+function clearSession(){state.session=null;instantViews.clear();Native.clearSession()}
 
 async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.error_code||d.error_description||d.msg||d.message||d.error||((typeof d.code==='string'&&!/^\d+$/.test(d.code))?d.code:null)||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
 async function loginAuth(email,password){
@@ -204,20 +211,20 @@ function errorText(m){
 }
 function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
 async function go(p){
- state.page=p;
- if(p==="dashboard")return dashboard();
- if(p==="orders")return orders();
- if(p==="products")return products();
- if(p==="members")return members();
- if(p==="rewards")return rewards();
- if(p==="operations")return operations();
- if(p==="settings")return settings();
+ const previous=state.page;
+ if(previous!==p&&root.querySelector('.app'))instantViews.set(previous,root.innerHTML);
+ state.page=p;const key=++navId;
+ previewPage(p);
+ try{
+  if(p==='dashboard')await dashboard();else if(p==='orders')await orders();else if(p==='products')await products();else if(p==='members')await members();else if(p==='rewards')await rewards();else if(p==='operations')await operations();else if(p==='settings')await settings();
+  if(key===navId&&state.page===p&&root.querySelector('.app'))instantViews.set(p,root.innerHTML);
+ }catch(e){if(key===navId)fail(e)}
 }
 
 async function dashboard(){
  busy(true);try{
   const d=await ownerApi("dashboard");
-  root.innerHTML=shell(`<div class="section"><h2>Ringkasan Hari Ini</h2><div class="grid">
+  if(state.page!=='dashboard')return;root.innerHTML=shell(`<div class="section"><h2>Ringkasan Hari Ini</h2><div class="grid">
    <div class="metric"><div class="label">Pesanan hari ini</div><strong>${Number(d.today_orders||0)}</strong><div class="hint">Semua status</div></div>
    <div class="metric"><div class="label">Omzet selesai</div><strong>${rp(d.today_completed_revenue)}</strong><div class="hint">Hari ini</div></div>
    <div class="metric"><div class="label">Perlu diproses</div><strong>${Number(d.pending_processing||0)}</strong><div class="hint">Pending + proses</div></div>
@@ -235,7 +242,7 @@ async function orders(){
  busy(true);try{
   const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
   const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
-  root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
+  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
@@ -278,7 +285,7 @@ async function products(){
   const d=await ownerApi("products"),ps=d.products||[],vs=d.variants||[];
   state.cache.products=d;
   const html=ps.map(p=>`<div class="card"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row" style="padding-top:12px;margin-top:12px;border-top:1px solid var(--line)"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',${Math.max(0,Number(v.stock)-1)})">−</button><b>${v.stock}</b><button onclick="stock('${v.id}',${Number(v.stock)+1})">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
-  root.innerHTML=shell(`<div class="section"><h2>Produk & Stok</h2>${html||'<div class="empty">Produk belum tersedia.</div>'}</div>`,"products")
+  if(state.page!=='products')return;root.innerHTML=shell(`<div class="section"><h2>Produk & Stok</h2>${html||'<div class="empty">Produk belum tersedia.</div>'}</div>`,"products")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function stock(id,n){busy(true);try{await ownerApi("set_stock",{id,stock:n});await products()}catch(e){fail(e)}finally{busy(false)}}
@@ -297,7 +304,7 @@ async function editVariant(id){
 async function members(){
  busy(true);try{
   const d=await ownerApi("members",{limit:200}),ms=d.members||[];
-  root.innerHTML=shell(`<div class="section"><h2>Member</h2><div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Classic")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
+  if(state.page!=='members')return;root.innerHTML=shell(`<div class="section"><h2>Member</h2><div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Classic")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
@@ -305,7 +312,7 @@ function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-i
 async function rewards(){
  busy(true);try{
   const d=await ownerApi("rewards"),rs=d.rewards||[],reds=d.redemptions||[];
-  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Reward & Penukaran</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
+  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Reward & Penukaran</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function rewardStock(id,n){busy(true);try{await ownerApi("set_reward_stock",{id,stock:n});await rewards()}catch(e){fail(e)}finally{busy(false)}}
@@ -315,7 +322,7 @@ async function operations(){
  busy(true);try{
   const d=await ownerApi('settings'),bs=d.banners||[],cs=d.couriers||[],bank=d.bank_transfer||{};
   state.cache.operations=d;
-  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Pengaturan Operasional</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div>
+  if(state.page!=='operations')return;root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Pengaturan Operasional</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div>
    <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Data rekening resmi Intan Istiqomah. Pilih BSI atau BRI untuk mengisi form rekening aktif, lalu simpan. Member dapat memilih BSI atau BRI per pesanan. Rekening terpilih tersimpan dalam detail pembayaran.</div><div class="bankReference"><button type="button" onclick="fillBank('BSI')"><b>BSI</b><span>7306336217</span><span>Intan Istiqomah</span></button><button type="button" onclick="fillBank('BRI')"><b>BRI</b><span>457901008978533</span><span>Intan Istiqomah</span></button></div>
    <label>Bank</label><input id="bankname" style="width:100%;margin:6px 0 10px" value="${esc(bank.bank_name||'')}" placeholder="Nama Bank">
    <label>Nomor rekening</label><input id="banknumber" inputmode="numeric" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_number||'')}" placeholder="Nomor rekening asli">
@@ -346,7 +353,7 @@ async function editCourier(id){
 async function settings(){
  busy(true);try{
   const me=await ownerApi("me");
-  root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
+  if(state.page!=='settings')return;root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
