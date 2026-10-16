@@ -104,6 +104,51 @@ button:focus-visible,.locrow:focus-visible{outline:3px solid #bb6b44;outline-off
 .productHero{background:#f7eee4}
 .productHero img{object-fit:contain!important}
 .photo-content{contain:layout paint}
+
+/* Cireng Indi premium member system – deliberate spacing and no blue WebView flash */
+:root{--brand:#914b34;--brand2:#6d3524;--cream:#f9f3ec;--soft:#f7e9de;--ink:#2b211b;--muted:#766b63;--line:#e9ddd2;--card:#fffdfa;--shadow:0 8px 24px rgba(92,57,35,.075);--r:20px}
+html,body{background:#f9f3ec!important}
+body{background:radial-gradient(circle at 10% 33%,rgba(235,198,163,.14),transparent 37%),radial-gradient(circle at 95% 82%,rgba(206,166,138,.1),transparent 42%),#f9f3ec!important}
+.app{background:transparent;padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+*{-webkit-tap-highlight-color:transparent}
+button,a,[role=button]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:active,[role=button]:active{opacity:.94}
+button:focus-visible,a:focus-visible,[role=button]:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #914b34;outline-offset:3px}
+.section{padding-left:20px;padding-right:20px}
+.bottomnav{height:calc(76px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:#fffdfa}
+.bottomnav button{min-height:48px}
+.member{border-radius:20px;box-shadow:var(--shadow)}
+.pill{min-height:36px;display:inline-flex;align-items:center;gap:5px;border-radius:14px}
+.voucherLink{background:#fbede0!important;color:#81412b!important;border:1px solid #edd5c3;font-size:12px;font-weight:800;padding:8px 11px;cursor:pointer}
+.feature,.orderMode,.pCard,.prow,.orderCard,.locationCard{border-radius:18px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.featureGrid{gap:12px}
+.hero{height:auto!important;aspect-ratio:1200/620;margin:14px 20px 0;border-radius:20px;overflow:hidden;background:#f2e4d7}
+.heroSlides>.banner{object-fit:cover!important;object-position:center!important;filter:none!important;transition:opacity .3s ease}
+.heroCopy{left:12px;right:12px;bottom:10px;width:auto;max-width:calc(100% - 24px);z-index:2}
+.heroCopy b{font-size:15px;line-height:1.2}.heroCopy span{font-size:11px;line-height:1.3}
+.heroDots{bottom:9px;right:12px;z-index:3}
+.productHero img,.pCard img,.prow img,.orderMode .pic img{object-fit:contain!important;background:#f8f0e7!important;filter:none!important}
+.cta,.fullbtn{min-height:52px;border-radius:14px}
+input,select,textarea{min-height:48px;border-radius:12px}
+.orderTimeline{margin:12px 0 10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+.orderStep{text-align:center;position:relative;font-size:10px;color:#8f8074;padding:0 2px}
+.orderStep:before{content:"";display:block;width:17px;height:17px;border:2px solid #d0c1b4;border-radius:50%;background:white;margin:0 auto 7px}
+.orderStep.active:before{border-color:#98523d;background:#98523d;box-shadow:inset 0 0 0 4px #fff}
+.orderStep.done:before{border-color:#26845c;background:#26845c;box-shadow:inset 0 0 0 4px white}
+.orderStep:after{content:"";position:absolute;top:8px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:#e0d5c9}
+.orderStep:last-child:after{display:none}.orderStep.done:after{background:#26845c}
+.orderStep span{display:block;line-height:1.2;min-height:26px;font-weight:650}
+.voucherCard{border:1px solid #e8d6c6;background:#fffdf9;border-radius:17px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.voucherCard h3{font-size:16px;margin:0 0 6px;color:#482c20}
+.voucherCard p{font-size:12px;line-height:1.5;margin:5px 0;color:#776a60}
+.voucherTag{display:inline-block;font-weight:800;background:#f7e5d5;color:#84462e;font-size:11px;border-radius:8px;padding:6px 9px;margin-bottom:7px}
+.variantGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.variantChoice{min-height:70px;padding:11px;background:white;color:#352920;border:1.5px solid #e4d4c5;border-radius:13px;text-align:left}
+.variantChoice.selected{border-color:#99503a;background:#fff7f0;box-shadow:0 0 0 1px #99503a}
+.variantChoice:disabled{opacity:.55}
+.variantChoice b{display:block;font-size:13px}.variantChoice span{display:block;margin-top:4px;color:#95533c;font-size:12px}
+@media(max-width:375px){.hero{margin:11px 14px 0}.heroCopy b{font-size:13px}.heroCopy span{font-size:10px}.orderStep{font-size:9px}}
+
 </style>
 </head>
 <body>
@@ -134,15 +179,34 @@ button:focus-visible,.locrow:focus-visible{outline:3px solid #bb6b44;outline-off
 <div id="root"></div><div id="toast" class="toast"></div>
 <script>
 const SB='https://tbviryuimoxgapubdjio.supabase.co', KEY='sb_publishable_DxP6XDJP2XfZAC45pAniHQ_1WJqC4Fr';
-const state={session:null,boot:null,me:null,route:'',category:'all',product:null,qty:1,fulfillment:'delivery'};
+const state={session:null,boot:null,me:null,route:'',category:'all',product:null,qty:1,fulfillment:'delivery',vouchers:[],selectedVoucherId:null,ordersSnapshot:[],addressesSnapshot:[]};
 const root=document.getElementById('root');
 
 const instantViews=new Map();const pendingCartActions=new Set();
+let prefetchRequest=null;
+function prefetchMember(){
+ if(prefetchRequest||!state.session?.accessToken)return prefetchRequest;
+ prefetchRequest=Promise.allSettled([
+  api('cart').then(d=>state.cartSnapshot=d),
+  api('orders').then(d=>state.ordersSnapshot=d.orders||[]),
+  api('vouchers').then(d=>{state.vouchers=d.vouchers||[];refreshVoucherCount()}),
+  api('addresses').then(d=>state.addressesSnapshot=d.addresses||[])
+ ]).finally(()=>prefetchRequest=null);
+ return prefetchRequest;
+}
+function refreshVoucherCount(){
+ document.querySelectorAll('[data-voucher-count]').forEach(el=>el.textContent=String(state.vouchers.filter(v=>v.status==='available').length));
+}
+function readPublicCatalog(){
+ try{const d=JSON.parse(localStorage.getItem('ci_public_catalog_v3')||'null');if(d?.products?.length&&d?.categories?.length&&d?.variants?.length)state.boot=d;}catch(e){}
+}
+function writePublicCatalog(d){try{localStorage.setItem('ci_public_catalog_v3',JSON.stringify(d))}catch(e){}}
+
 let navId=0, bootstrapRequest=null;
 function previewPage(r){
  const old=instantViews.get(r);
  if(old&&r!=='checkout'){root.innerHTML=old;return}
- const titles={home:'Beranda Cireng Indi',store:'Menu Cireng Indi',product:'Detail Produk',addresses:'Alamat Pengiriman',cart:'Keranjang',checkout:'Checkout',orders:'Pesanan Saya',rewards:'Point & Reward',profile:'Akun'};
+ const titles={home:'Beranda Cireng Indi',store:'Menu Cireng Indi',product:'Detail Produk',addresses:'Alamat Pengiriman',cart:'Keranjang',checkout:'Checkout',orders:'Pesanan Saya',rewards:'Point & Reward',vouchers:'Voucher Saya',partner:'Kemitraan Cireng Indi',profile:'Akun'};
  root.innerHTML=shell(`<section class="section instantPreview"><h2>${esc(titles[r]||'Cireng Indi')}</h2></section>`,r==='product'?'store':r);
 }
 const icon=(id,cls='')=>`<svg class="icon ${cls}"><use href="#${id}"></use></svg>`;
@@ -150,7 +214,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const rp=v=>'Rp'+Number(v||0).toLocaleString('id-ID');
 const img=p=>{if(!p)return'';if(/^https?:/i.test(p))return p;return SB+'/storage/v1/object/public/cirengindi-products/'+String(p).split('/').map(encodeURIComponent).join('/')};
 function loading(v){/* No blocking spinner */}let tt;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2600)}
-function sessionRead(){try{const r=Native.getSession();return r?JSON.parse(r):null}catch(e){return null}}function sessionSave(s){state.session=s;Native.saveSession(JSON.stringify(s))}function sessionClear(){state.session=null;state.me=null;state.boot=null;state.cartSnapshot=null;bootstrapRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
+function sessionRead(){try{const r=Native.getSession();return r?JSON.parse(r):null}catch(e){return null}}function sessionSave(s){state.session=s;Native.saveSession(JSON.stringify(s))}function sessionClear(){state.session=null;state.me=null;state.boot=null;state.cartSnapshot=null;state.ordersSnapshot=[];state.addressesSnapshot=[];state.vouchers=[];state.selectedVoucherId=null;bootstrapRequest=null;prefetchRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
 async function parse(r){let d={};try{d=await r.json()}catch(e){}if(!r.ok){const m=d.error_code||d.error||d.message||('HTTP_'+r.status);const error=new Error(String(m));error.status=r.status;throw error;}return d}
 async function auth(payload){return parse(await fetch(SB+'/functions/v1/member-auth',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify(payload)}))}
 async function refresh(){const s=state.session||sessionRead();if(!s?.refreshToken)throw new Error('AUTH_REQUIRED');const d=await parse(await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify({refresh_token:s.refreshToken})}));sessionSave({accessToken:d.access_token,refreshToken:d.refresh_token,memberId:s.memberId||d.user?.id||''});return state.session}
@@ -190,7 +254,7 @@ async function doForgot(){const email=document.getElementById('femail')?.value.t
 let heroTimer=null;let heroIndex=0;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>el.classList.toggle('is-active',i===heroIndex));document.querySelectorAll('.heroDots button').forEach((el,i)=>el.classList.toggle('active',i===heroIndex));}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
 async function boot(){
  if(state.boot)return state.boot;
- if(!bootstrapRequest)bootstrapRequest=api('bootstrap',{},false).then(d=>{state.boot=d;return d}).finally(()=>{bootstrapRequest=null});
+ if(!bootstrapRequest)bootstrapRequest=api('bootstrap',{},false).then(d=>{state.boot=d;writePublicCatalog(d);return d}).finally(()=>{bootstrapRequest=null});
  return bootstrapRequest;
 }
 async function go(r){
@@ -198,10 +262,10 @@ async function go(r){
  const previous=state.route;
  if(previous&&previous!==r&&previous!=='auth'&&previous!=='checkout'&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(previous,root.innerHTML);
  state.route=r;const key=++navId;
- if(r!=='product')previewPage(r);
+ if(r!=='product'&&r!=='home')previewPage(r);
  window.scrollTo(0,0);
  try{
-  if(r==='home')await home();else if(r==='store')await store();else if(r==='product')await product();else if(r==='addresses')await addresses();else if(r==='cart')await cart();else if(r==='checkout')await checkout();else if(r==='orders')await orders();else if(r==='rewards')await rewards();else if(r==='profile')await profile();
+  if(r==='home')await home();else if(r==='store')await store();else if(r==='product')await product();else if(r==='addresses')await addresses();else if(r==='cart')await cart();else if(r==='checkout')await checkout();else if(r==='orders')await orders();else if(r==='rewards')await rewards();else if(r==='vouchers')await vouchers();else if(r==='partner')await partner();else if(r==='profile')await profile();
   if(navId===key&&state.route===r&&r!=='checkout'&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(r,root.innerHTML);
  }catch(e){if(navId===key)fail(e)}
 }
@@ -364,7 +428,7 @@ async function rewards(){loading(true);try{const d=await api('rewards');if(state
 async function profile(){loading(true);try{const d=await api('me');state.me=d;const p=d.profile||{};if(state.route!=='profile')return;root.innerHTML=shell(`${uiTop('Akun','home')}<div class="profile"><div class="avatar">${icon('i-user','lg')}</div><div class="grow"><h2>${esc(p.full_name||p.username)}</h2><p>@${esc(p.username)}</p></div>${icon('i-right')}</div><div class="menuGroup"><div class="menurow" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><div class="grow"><b>REFerral</b><div style="font-size:12px;color:var(--muted)">${esc(p.referral_code||'Bagikan kode referral')}</div></div>${icon('i-right')}</div><div class="menurow" onclick="go('addresses')">${icon('i-pin')}<div class="grow">Alamat Tersimpan</div>${icon('i-right')}</div><div class="menurow" onclick="go('rewards')">${icon('i-star')}<div class="grow">Point & Reward</div>${icon('i-right')}</div><div class="menurow">${icon('i-settings')}<div class="grow">Pengaturan</div>${icon('i-right')}</div><div class="menurow" onclick="logout()">${icon('i-logout')}<div class="grow">Keluar</div>${icon('i-right')}</div></div><div class="section"><p style="text-align:center;font-size:12px;color:var(--muted)">Cireng Indi v${esc(Native.appVersion())}</p></div>`, 'profile')}finally{loading(false)}}
 function shareReferral(){const c=state.me?.profile?.referral_code;if(c)Native.shareText('Kode referral Cireng Indi saya: '+c);else toast('Kode referral belum tersedia.')}async function logout(){loading(true);try{try{await api('logout')}catch(e){}sessionClear();state.boot=null;renderAuth('login')}finally{loading(false)}}
 window.onNativeDeepLink=function(url){try{const u=new URL(url);const p=new URLSearchParams((u.hash||'').replace(/^#/,''));const a=p.get('access_token'),r=p.get('refresh_token');if(a){sessionSave({accessToken:a,refreshToken:r||'',memberId:''});root.innerHTML=`<section class="auth"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Reset Password</h1><div class="form"><label>Password baru</label><input id="npw" type="password"><button class="fullbtn" onclick="changeRecovery()">Simpan Password</button></div></div></section>`}}catch(e){}};async function changeRecovery(){loading(true);try{await api('change_password',{password:npw.value});toast('Password berhasil diubah.');await logout()}catch(e){fail(e)}finally{loading(false)}}
-(async()=>{state.session=sessionRead();if(state.session?.accessToken){try{await go('home')}catch(e){fail(e)}}else renderAuth('login')})();
+(async()=>{state.session=sessionRead();readPublicCatalog();if(state.session?.accessToken){try{await go('home')}catch(e){fail(e)}}else renderAuth('login')})();
 </script>
 </body>
 </html>
