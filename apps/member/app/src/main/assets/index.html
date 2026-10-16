@@ -2154,13 +2154,13 @@ function checkoutApplyBestVoucher(){
 }
 
 async function checkoutQty(id,q){
-  state.checkoutVerified=false;
-  const action=root.querySelector('.ciCheckoutFooter button');
-  if(action)action.disabled=true;
   const c=state.cartSnapshot;
   const current=(c?.items||[]).find(x=>x.variant_id===id);
   if(!current)return;
   if(q>Number(current.variant?.stock??99))return toast('Jumlah melebihi stok yang tersedia.');
+  state.checkoutVerified=false;
+  const action=root.querySelector('.ciCheckoutFooter button');
+  if(action)action.disabled=true;
   cartQty(id,q);
   const request=cartPendingById.get(id);
   if(request?.task)await request.task;
@@ -2186,7 +2186,12 @@ async function checkoutAddSuggested(id){
     state.cartSnapshot=null;
     toast('Produk ditambahkan.');
     if(state.route==='checkout')await checkout();
-  }catch(e){fail(e)}finally{pendingCartActions.delete(v.id)}
+  }catch(e){fail(e)}finally{
+    pendingCartActions.delete(v.id);
+    // An unavailable suggestion or a failed network request must not leave
+    // the checkout button disabled indefinitely.
+    if(state.route==='checkout'&&!state.checkoutVerified)void checkout();
+  }
 }
 
 async function openCheckoutProduct(id){await openP(id)}
