@@ -120,17 +120,24 @@ jobs:
             }
             if(!member.includes('OFFICIAL_IMAGE_SLUGS')||!member.includes('photoFallback'))
               throw Error('Official website photo selection/fallback absent from Member');
-            // Installed APKs do not include OTA-added official_*.webp assets.
-            // Never allow a newly published HTML to paint blank photographs.
+            // Fixed no-flicker photos: 31 local official assets plus two embedded,
+            // approved AI WebP images work on both existing and future APKs.
             const legacyRoot='apps/member/app/src/main/assets/assets/';
             for(const asset of ['banner_reseller.webp','banner_churros.webp','banner_cafe.webp','banner_puding.webp',
-             'product_cireng.webp','product_cireng_isi.webp','product_cilok.webp','logo_cireng_indi.png']){
-              if(!fs.existsSync(legacyRoot+asset))throw Error('Missing offline legacy photo '+asset);
+             'product_cireng.webp','product_cireng_isi.webp','product_cilok.webp',
+             'ai_cireng_styled.webp','ai_cireng_partner.webp','logo_cireng_indi.png']){
+              if(!fs.existsSync(legacyRoot+asset))throw Error('Missing local fallback photo '+asset);
             }
-            if(!member.includes("return 'assets/'+localPic(p?.name)") ||
-               !member.includes("return 'src=\"assets/'+esc(local)") ||
-               !member.includes('upgradedImages.get(id).then'))
-              throw Error('Member images must paint from bundled assets before OTA photo upgrade');
+            if(!member.includes('function stablePhotoSource(')||
+               !member.includes("return 'assets/official_'")||
+               !member.includes("AI_CIRENG_PHOTO_URL='data:image/webp;base64,")||
+               !member.includes("AI_PARTNER_PHOTO_URL='data:image/webp;base64,")||
+               member.includes('upgradeImageWhenReady')||
+               member.includes('new MutationObserver('))
+              throw Error('Member photos must be fixed offline sources with no image replacement after loading');
+            const memberGo=member.slice(member.indexOf('async function go(r)'),member.indexOf('const MEMBER_HERO_PROMOS',member.indexOf('async function go(r)')));
+            if(!memberGo.includes('state.route=r;')||memberGo.includes('previewPage(r)'))
+              throw Error('Member navigation must not flash a loading preview or stale HTML');
             if(!member.includes('id="launchBrand"') || !member.includes('assets/logo_cireng_indi.png') ||
                !member.includes("classList.add('hide')"))
               throw Error('Opening Cireng Indi logo not wired for existing APKs');
