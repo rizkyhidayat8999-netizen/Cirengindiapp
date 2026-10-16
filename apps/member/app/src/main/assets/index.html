@@ -1889,18 +1889,22 @@ async function defaultAddr(id){
 }
 
 const cartPendingById=new Map();
+function cartDisplaySignature(c){
+ const items=Array.isArray(c?.items)?c.items:[];
+ return JSON.stringify([Number(c?.subtotal||0),...items.map(i=>
+  [i.variant_id,i.quantity,i.variant?.price,i.variant?.name,i.variant?.product?.name])]);
+}
 function renderCart(c){
  if(state.route!=='cart')return;
  const previousScroll=root.querySelector('.ciCartScreen')?.scrollTop||0;
  const items=Array.isArray(c?.items)?c.items:[];
- const signature=JSON.stringify([Number(c?.subtotal||0),...items.map(i=>
-  [i.variant_id,i.quantity,i.variant?.price,i.variant?.name,i.variant?.product?.name])]);
+ const signature=cartDisplaySignature(c);
  if(root.querySelector('.ciCartScreen')?.dataset.renderSignature===signature)return;
  const itemCount=items.length;
  const rows=items.map(i=>{
   const v=i.variant||{},p=v.product||{},id=esc(i.variant_id),qty=Number(i.quantity||0);
   const unit=Number(v.price??p.base_price??0);
-  return '<article class="ciCartItem">'+
+  return '<article class="ciCartItem" data-variant-id="'+id+'">'+
    '<img class="ciCartItemPhoto" '+photoAttrs(p)+'>'+
    '<div class="ciCartItemInfo"><h2>'+esc(p.name||'Produk Cireng Indi')+'</h2>'+
    '<span class="ciCartVariant">'+esc(v.name||'')+'</span>'+
@@ -1937,6 +1941,30 @@ async function cart(){
   }
  }catch(e){if(state.route==='cart')fail(e)}
 }
+
+/* Keep every cart product <img> node mounted for plus/minus taps. */
+function updateCartQuantityInPlace(cart,id,quantity){
+ if(state.route!=='cart'||quantity<=0)return false;
+ const page=root.querySelector('.ciCartScreen');
+ if(!page)return false;
+ const rows=[...page.querySelectorAll('.ciCartItem')];
+ const row=rows.find(el=>el.dataset.variantId===id);
+ if(!row||rows.length!==cart.items.length)return false;
+ const item=cart.items.find(x=>x.variant_id===id);
+ const output=row.querySelector('.ciCartQty output');
+ const price=row.querySelector('.ciCartLinePrice');
+ const controls=row.querySelectorAll('.ciCartQty button');
+ const subtotal=root.querySelector('.ciCartSummary strong');
+ if(!item||!output||!price||controls.length!==2||!subtotal)return false;
+ const unit=Number(item.variant?.price??item.variant?.product?.base_price??0);
+ output.textContent=String(quantity);
+ price.textContent=rp(unit*quantity);
+ controls[0].setAttribute('onclick',"cartQty('"+esc(id)+"',"+(quantity-1)+")");
+ controls[1].setAttribute('onclick',"cartQty('"+esc(id)+"',"+(quantity+1)+")");
+ subtotal.textContent=rp(cart.subtotal);
+ page.dataset.renderSignature=cartDisplaySignature(cart);
+ return true;
+}
 function cartQty(id,q){
  const old=state.cartSnapshot;
  if(!Array.isArray(old?.items))return;
@@ -1949,7 +1977,7 @@ function cartQty(id,q){
   return sum+Number(v.price??v.product?.base_price??0)*Number(i.quantity||0);
  },0);
  state.cartSnapshot={...old,items,subtotal};
- renderCart(state.cartSnapshot);
+ if(!updateCartQuantityInPlace(state.cartSnapshot,id,quantity))renderCart(state.cartSnapshot);
  let request=cartPendingById.get(id);
  if(!request){request={desired:quantity,revision:0,task:null};cartPendingById.set(id,request)}
  request.desired=quantity;
