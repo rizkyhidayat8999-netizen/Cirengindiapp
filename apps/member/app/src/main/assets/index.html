@@ -459,7 +459,7 @@ function renderPromoCarousel(){
   '<article class="banner forePromo '+(i===0?'is-active':'')+'" style="--slide-bg:'+p.bg+';--slide-tone:'+p.tone+'" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' dari 4: '+esc(p.title)+'" aria-hidden="'+(i!==0)+'">'+
   '<img class="forePromoLogo" src="assets/logo_cireng_indi.png" alt="" aria-hidden="true">'+
   '<div class="forePromoCopy"><span class="forePromoEyebrow">'+esc(p.eyebrow)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.sub)+'</p></div>'+
-  '<div class="forePromoImage"><img src="assets/'+p.photo+'" data-photo-id="'+p.id+'" data-local-photo="'+p.photo+'" onerror="photoFallback(this)" alt="'+esc(p.eyebrow)+'" loading="'+(i===0?'eager':'lazy')+'" decoding="async"></div>'+
+  '<div class="forePromoImage"><img src="assets/'+p.photo+'" data-photo-id="'+p.id+'" data-local-photo="'+p.photo+'" onerror="photoFallback(this)" alt="'+esc(p.eyebrow)+'" loading="eager" decoding="async"></div>'+
   '</article>').join('');
  const dots=MEMBER_HERO_PROMOS.map((p,i)=>
   '<button type="button" class="'+(i===0?'active':'')+'" onclick="heroSlide('+i+')" aria-label="Banner '+(i+1)+'" aria-pressed="'+(i===0)+'"></button>').join('');
