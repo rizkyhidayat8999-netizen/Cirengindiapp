@@ -884,6 +884,132 @@ html,body{background:#fff9f2!important}
  .ciVividHome .heroDots button{transition:none!important}
 }
 
+
+
+/* 2026-10-17 Catalog video fixes: no floating dock inside the scrolling WebView.
+   Scoped to the Member's store so checkout, Home and Owner layout are untouched. */
+#root > .app:has(.storeHead){scroll-padding-top:calc(var(--ci-status-clearance,32px) + 62px)}
+#root:has(> .ciCartDock) > .app:has(.storeHead){
+ padding-bottom:calc(162px + var(--ci-gesture-clearance,14px))!important;
+}
+#root > .ciCartDock{
+ position:fixed!important;
+ left:50%!important;right:auto!important;
+ bottom:calc(72px + var(--ci-gesture-clearance,14px))!important;
+ transform:translateX(-50%)!important;
+ box-sizing:border-box!important;
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ width:min(calc(100% - 28px),728px)!important;
+ max-width:728px!important;min-height:48px!important;
+ padding:10px 14px!important;gap:11px!important;
+ border:1px solid #94533f!important;border-radius:17px!important;
+ background:#945039!important;color:#fff!important;
+ box-shadow:0 5px 16px rgba(83,45,27,.17)!important;
+ font-size:13px!important;font-weight:750!important;
+ font-family:inherit!important;line-height:1.2!important;
+ z-index:92!important;touch-action:manipulation;cursor:pointer;
+ contain:layout paint;
+}
+#root > .ciCartDock:active{background:#854631!important}
+#root > .ciCartDock .ciCartDockLeft{min-width:0;display:flex;align-items:center;gap:8px;flex:1;text-align:left;white-space:nowrap}
+#root > .ciCartDock .ciCartDockLeft>.icon{width:19px;height:19px;flex:none}
+#root > .ciCartDock .ciCartDockText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#root > .ciCartDock .ciCartDockCount{width:24px;height:24px;min-width:24px;display:inline-grid;place-items:center;padding:0 3px;border-radius:99px;background:#c76f4d;color:#fff;font-size:12px;font-weight:800}
+#root > .ciCartDock .ciCartDockTotal{font-size:14px;line-height:1.1;white-space:nowrap;font-weight:850}
+#root > .ciCartDock>.icon{width:17px;height:17px;flex:none}
+#root > .app:has(.storeHead) #ciCatalogFilters{
+ position:sticky;top:var(--ci-status-clearance,32px);z-index:30;
+ background:#fff8f0!important;
+ border-bottom:1px solid #ede0d3;
+ box-shadow:0 4px 10px rgba(96,53,31,.055);
+ padding-top:9px;padding-bottom:10px;
+ margin-top:-2px;gap:7px;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;
+ overscroll-behavior-x:contain;
+}
+#root > .app:has(.storeHead) #ciCatalogFilters .chip{
+ min-height:35px!important;
+ padding:7px 12px!important;
+ border-radius:999px!important;
+ font-size:12px!important;
+ line-height:1.2!important;
+ box-shadow:none!important;
+}
+#root > .app:has(.storeHead) .ciStoreRecommend{padding-top:19px!important;padding-bottom:9px!important}
+#root > .app:has(.storeHead) .ciStoreRecommend h2{margin-bottom:8px;font-size:21px;line-height:1.26}
+#root > .app:has(.storeHead) .ciStoreRecommend p{font-size:12px;margin:0}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll{
+ padding:0 16px 7px;gap:10px;
+ scroll-snap-type:x mandatory;scrollbar-width:none;
+}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard{
+ min-width:min(285px,80vw)!important;
+ width:min(285px,80vw)!important;
+ border-radius:18px!important;
+ min-height:129px;
+ padding:10px!important;
+ grid-template-columns:87px minmax(0,1fr) 32px!important;
+ gap:9px!important;
+ border:1px solid #e7d6c6;
+ scroll-snap-align:start;
+ box-shadow:0 4px 11px #7845270e;
+}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard img{width:87px!important;height:97px!important;object-fit:cover!important;border-radius:12px}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard h3{font-size:15.5px;line-height:1.2;margin-bottom:4px}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard .meta{font-size:11px;line-height:1.35}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard .price{font-size:16.5px;margin-top:7px}
+#root > .app:has(.storeHead) .ciStoreRecommend+.hscroll .pCard .add{width:30px;height:30px;border-radius:11px}
+#root > .app:has(.storeHead) .section:has(+ #ciCatalogProducts){padding-top:13px!important}
+#root > .app:has(.storeHead) .section:has(+ #ciCatalogProducts) h2{margin-bottom:6px;font-size:21px}
+#root > .app:has(.storeHead) #ciCatalogProducts{scroll-margin-top:calc(var(--ci-status-clearance,32px) + 61px)}
+#root > .app:has(.storeHead) .ciWebsiteCategory{padding-bottom:8px}
+#root > .app:has(.storeHead) .ciWebsiteCategoryTitle{padding:10px 2px 10px}
+#root > .app:has(.storeHead) .ciWebsiteCategoryTitle h3{font-size:16px}
+#root > .app:has(.storeHead) .ciWebsiteCategoryTitle span{font-size:11px}
+#root > .app:has(.storeHead) .ciWebsiteCategory .ciCatalogProduct{
+ display:grid;
+ grid-template-columns:88px minmax(0,1fr) 36px;
+ align-items:center;
+ gap:11px;
+ padding:11px!important;
+ min-height:111px;
+ margin-bottom:10px!important;
+ border-radius:17px!important;
+ background:#fffdfa!important;
+ box-shadow:0 3px 9px rgba(89,54,30,.055)!important;
+ overflow:hidden;touch-action:pan-y;
+}
+#root > .app:has(.storeHead) .ciCatalogProduct img{width:88px!important;height:88px!important;aspect-ratio:1/1;object-fit:cover!important;border-radius:13px!important}
+#root > .app:has(.storeHead) .ciCatalogProductCopy{min-width:0}
+#root > .app:has(.storeHead) .ciCatalogProductCopy h3{margin:0 0 4px;font-size:16px;line-height:1.25;font-weight:800;color:#30221c;overflow-wrap:anywhere}
+#root > .app:has(.storeHead) .ciCatalogProductCopy .ciBestSellerBadge{font-size:9.5px;padding:3px 7px;margin:1px 0 5px}
+#root > .app:has(.storeHead) .ciCatalogProductCopy p{
+ font-size:12px!important;line-height:1.42!important;color:#85746b;
+ display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+ overflow:hidden;overflow-wrap:anywhere
+}
+#root > .app:has(.storeHead) .ciCatalogProductCopy .price{font-size:17px!important;line-height:1.2!important;margin-top:7px;color:#813c28}
+#root > .app:has(.storeHead) .ciCatalogProduct>.add{
+ width:34px!important;height:34px!important;
+ border-radius:11px!important;padding:6px!important;background:#985039;
+ justify-self:end;
+}
+#root > .app:has(.storeHead) .ciCatalogProduct>.add .icon{width:19px;height:19px}
+#root > .app:has(.storeHead) .ciCatalogProduct:focus-visible{outline:2px solid #985039;outline-offset:2px}
+@media(max-width:360px){
+ #root > .ciCartDock{width:calc(100% - 20px)!important;padding:9px 11px!important;gap:7px!important}
+ #root > .ciCartDock .ciCartDockTotal{font-size:12.5px}
+ #root > .ciCartDock .ciCartDockText{font-size:12px}
+ #root > .app:has(.storeHead) .ciWebsiteCategory .ciCatalogProduct{grid-template-columns:75px minmax(0,1fr) 32px;gap:9px;padding:9px!important}
+ #root > .app:has(.storeHead) .ciCatalogProduct img{width:75px!important;height:78px!important}
+ #root > .app:has(.storeHead) .ciCatalogProductCopy h3{font-size:14.5px}
+ #root > .app:has(.storeHead) .ciCatalogProductCopy .price{font-size:15px!important}
+ #root > .app:has(.storeHead) .ciCatalogProduct>.add{width:32px!important;height:32px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ #root > .ciCartDock, #root > .app:has(.storeHead) .ciCatalogProduct{transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1192,7 +1318,7 @@ function storeCatalogByCategory(products,categories,bootstrap,selection){
   group.products.map(p=>prow(p,bootstrap)).join('')+'</section>').join('');
 }
 
-async function store(){try{const b=await boot();if(state.route!=='store')return;const ps=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&(state.category==='all'||(state.category==='bestseller'?p.best_seller:p.category_id===state.category))));const cats=websiteCatalogueOrder(b.categories||[]);const rec=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&p.best_seller)).slice(0,5);root.innerHTML=shell(`<div class="storeHead"><h1><img class="storeLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"><span>Cireng Indi</span></h1><div class="segment"><button class="${state.fulfillment==='pickup'?'active':''}" onclick="setFulfillment('pickup')">Pick Up</button><button class="${state.fulfillment==='delivery'?'active':''}" onclick="setFulfillment('delivery')">Delivery</button></div><p class="storeTagline">Pesan cepat, stok real-time, tampilan lebih premium.</p></div><div class="locationCard"><div class="locrow" role="button" tabindex="0" aria-label="Buka lokasi Outlet Cireng Indi di Google Maps" onclick="showOutlet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOutlet()}"><div class="locicon ciStoreMapsIcon">${serviceLogo('maps')}</div><div class="grow"><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div>${icon('i-right')}</div>${state.fulfillment==='delivery'?`<div class="locrow" role="button" tabindex="0" aria-label="Pilih alamat pengiriman pelanggan" onclick="openDeliveryLocation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDeliveryLocation()}"><div class="locicon">${icon('i-pin')}</div><div class="grow"><b>Lokasi pengiriman</b><span>${esc((state.addressesSnapshot||[]).find(a=>a.is_default)?.address_line||'Pilih lokasi saya atau alamat tersimpan')}</span></div>${icon('i-right')}</div>`:`<div class="locrow"><div class="locicon">${icon('i-bag')}</div><div class="grow"><b>Ambil di outlet</b><span>Pesanan disiapkan untuk pickup</span></div>${icon('i-right')}</div>`}</div><div class="chips" id="ciCatalogFilters" aria-label="Filter kategori"><button class="chip ${state.category==='all'?'active':''}" onclick="setCat('all')" aria-pressed="${state.category==='all'}">Semua</button>${cats.slice(0,1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}<button class="chip ${state.category==='bestseller'?'active':''}" onclick="setCat('bestseller')" aria-pressed="${state.category==='bestseller'}">Best Seller</button>${cats.slice(1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}</div><div class="promo" role="button" tabindex="0" onclick="go('vouchers')" onkeydown="if(event.key==='Enter')go('vouchers')"><div class="circle">${icon('i-gift')}</div><div class="grow"><b>Voucher Eksklusif Member</b><span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}</div><div class="section ciStoreRecommend" style="padding-bottom:12px"><h2>Best Seller Cireng Indi</h2><p>Mulai dari menu Cireng favorit pelanggan</p></div><div class="hscroll">${rec.map(p=>pcard(p,b)).join('')}</div><div class="section" style="padding-bottom:2px"><h2>Menu Cireng Indi</h2></div><div class="productList ciWebsiteProductList">${storeCatalogByCategory(ps,cats,b,state.category)}</div>`, 'store');void cartBar()}finally{loading(false)}}
+async function store(){try{const b=await boot();if(state.route!=='store')return;const ps=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&(state.category==='all'||(state.category==='bestseller'?p.best_seller:p.category_id===state.category))));const cats=websiteCatalogueOrder(b.categories||[]);const rec=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&p.best_seller)).slice(0,5);root.innerHTML=shell(`<div class="storeHead"><h1><img class="storeLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"><span>Cireng Indi</span></h1><div class="segment"><button class="${state.fulfillment==='pickup'?'active':''}" onclick="setFulfillment('pickup')">Pick Up</button><button class="${state.fulfillment==='delivery'?'active':''}" onclick="setFulfillment('delivery')">Delivery</button></div><p class="storeTagline">Pesan cepat, stok real-time, tampilan lebih premium.</p></div><div class="locationCard"><div class="locrow" role="button" tabindex="0" aria-label="Buka lokasi Outlet Cireng Indi di Google Maps" onclick="showOutlet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOutlet()}"><div class="locicon ciStoreMapsIcon">${serviceLogo('maps')}</div><div class="grow"><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div>${icon('i-right')}</div>${state.fulfillment==='delivery'?`<div class="locrow" role="button" tabindex="0" aria-label="Pilih alamat pengiriman pelanggan" onclick="openDeliveryLocation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDeliveryLocation()}"><div class="locicon">${icon('i-pin')}</div><div class="grow"><b>Lokasi pengiriman</b><span>${esc((state.addressesSnapshot||[]).find(a=>a.is_default)?.address_line||'Pilih lokasi saya atau alamat tersimpan')}</span></div>${icon('i-right')}</div>`:`<div class="locrow"><div class="locicon">${icon('i-bag')}</div><div class="grow"><b>Ambil di outlet</b><span>Pesanan disiapkan untuk pickup</span></div>${icon('i-right')}</div>`}</div><div class="chips" id="ciCatalogFilters" aria-label="Filter kategori"><button class="chip ${state.category==='all'?'active':''}" onclick="setCat('all')" aria-pressed="${state.category==='all'}">Semua</button>${cats.slice(0,1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}<button class="chip ${state.category==='bestseller'?'active':''}" onclick="setCat('bestseller')" aria-pressed="${state.category==='bestseller'}">Best Seller</button>${cats.slice(1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}</div><div class="promo" role="button" tabindex="0" onclick="go('vouchers')" onkeydown="if(event.key==='Enter')go('vouchers')"><div class="circle">${icon('i-gift')}</div><div class="grow"><b>Voucher Eksklusif Member</b><span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}</div><div class="section ciStoreRecommend" style="padding-bottom:12px"><h2>Best Seller Cireng Indi</h2><p>Mulai dari menu Cireng favorit pelanggan</p></div><div class="hscroll">${rec.map(p=>pcard(p,b)).join('')}</div><div class="section" style="padding-bottom:2px"><h2>Menu Cireng Indi</h2></div><div class="productList ciWebsiteProductList" id="ciCatalogProducts">${storeCatalogByCategory(ps,cats,b,state.category)}</div>`, 'store');void cartBar()}finally{loading(false)}}
 const CIRENG_OUTLET_GOOGLE_MAPS='https://share.google/Vm2DfxTQKNcOuuiBM';
 function showOutlet(){Native.openUrl(CIRENG_OUTLET_GOOGLE_MAPS)}
 async function openDeliveryLocation(){
@@ -1353,8 +1479,18 @@ function photoAttrs(p){
  (id?' data-photo-id="'+id+'" data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
 function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
-function prow(p,b){const v=variantFor(p,b);return `<div class="prow" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
-async function setCat(id){state.category=id;await store()}async function openP(id){const b=await boot();const p=(b.products||[]).find(x=>x.id===id);if(!p)return;state.product={p,vars:(b.variants||[]).filter(v=>v.product_id===id)};state.qty=1;await go('product')}
+function prow(p,b){const v=variantFor(p,b);return `<article class="prow ciCatalogProduct" tabindex="0" role="button" aria-label="Detail ${esc(p.name)}" onclick="openP('${p.id}')" onkeydown="if(event.key==='Enter'){openP('${p.id}')}" ><img ${photoAttrs(p)}><div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></article>`}
+async function setCat(id){
+ if(state.category===id)return;
+ state.category=id;
+ await store();
+ if(state.route==='store'){
+  const target=root.querySelector('#ciCatalogProducts');
+  if(target)target.scrollIntoView({block:'start',behavior:'auto'});
+  const selected=root.querySelector('#ciCatalogFilters .chip.active');
+  selected?.scrollIntoView({inline:'nearest',block:'nearest',behavior:'auto'});
+ }
+}async function openP(id){const b=await boot();const p=(b.products||[]).find(x=>x.id===id);if(!p)return;state.product={p,vars:(b.variants||[]).filter(v=>v.product_id===id)};state.qty=1;await go('product')}
 function productOptionsMarkup(vars,minPrice,selectedId){
  return vars.map(v=>{
   const available=v.active!==false&&Number(v.stock||0)>0;
@@ -1483,7 +1619,36 @@ function showSheet(){
 function closeProductSheet(){document.getElementById('sheet')?.remove()}
 function sheetAddSuggestion(id){closeProductSheet();quickAddOrSelect(id)}
 
-async function cartBar(){try{const c=await api('cart');state.cartSnapshot=c;if(state.route!=='store')return;document.querySelector('.app > .cartbar')?.remove();const n=(c.items||[]).reduce((a,x)=>a+Number(x.quantity||0),0);if(n){document.querySelector('.app')?.insertAdjacentHTML('beforeend',`<div class="cartbar" onclick="go('cart')"><div class="grow">${icon('i-bag','sm')} Cek Keranjang <span class="count">${n}</span></div><b>${rp(c.subtotal)}</b>${icon('i-right')}</div>`)}}catch(e){}}
+/* Cart dock is a SIBLING of the scrollable .app, not a descendant:
+   Android WebView can otherwise move a fixed element with the scrolling content. */
+let ciCartDockSequence=0;
+function renderCartDock(cart){
+ if(state.route!=='store')return;
+ const items=Array.isArray(cart?.items)?cart.items:[];
+ const amount=items.reduce((total,item)=>total+Math.max(0,Number(item.quantity)||0),0);
+ root.querySelector(':scope > .ciCartDock')?.remove();
+ if(!amount)return;
+ const nav=root.querySelector(':scope > .bottomnav');
+ if(!nav)return;
+ nav.insertAdjacentHTML('beforebegin',
+  '<button type="button" class="cartbar ciCartDock" aria-label="Cek keranjang berisi '+amount+' produk. Total '+rp(cart.subtotal||0)+'" onclick="go(\'cart\')">'+
+   '<span class="ciCartDockLeft">'+icon('i-bag','sm')+'<span class="ciCartDockText">Cek Keranjang</span><span class="ciCartDockCount">'+amount+'</span></span>'+
+   '<strong class="ciCartDockTotal">'+rp(cart.subtotal||0)+'</strong>'+icon('i-right','sm')+
+  '</button>');
+}
+async function cartBar(){
+ const request=++ciCartDockSequence;
+ if(state.route!=='store')return;
+ if(state.cartSnapshot)renderCartDock(state.cartSnapshot);
+ try{
+  const cart=await api('cart');
+  if(request!==ciCartDockSequence||state.route!=='store')return;
+  state.cartSnapshot=cart;
+  renderCartDock(cart);
+ }catch(e){
+  // Keep the last confirmed cart visible when temporarily offline.
+ }
+}
 
 /* A single explicit customer action starts GPS; no tracking on app launch. */
 function customerGpsSupported(){
