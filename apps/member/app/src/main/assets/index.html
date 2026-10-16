@@ -463,10 +463,8 @@ function orderTimeline(order){
  }).join('')+'</div>';
 }
 
-async function orders(){
- loading(true);try{
-  const d=state.ordersSnapshot.length?{orders:state.ordersSnapshot}:await api('orders');const os=d.orders||[];state.ordersSnapshot=os;
-  if(state.route!=='orders')return;root.innerHTML=shell(`${uiTop('Riwayat Pesanan','home')}<div class="section">${os.map(o=>{
+function renderOrders(os){
+ if(state.route!=='orders')return;root.innerHTML=shell(`${uiTop('Riwayat Pesanan','home')}<div class="section">${os.map(o=>{
    const p=o.payment||{},courier=o.courier||{},wa=String(courier.whatsapp||'').replace(/[^0-9]/g,'');
    const payText=p.method==='transfer'?'Transfer Bank':'COD';
    const statusText={pending:'Menunggu pembayaran',submitted:'Bukti dikirim, menunggu Owner',paid:'Pembayaran dikonfirmasi',rejected:'Bukti ditolak',cancelled:'Dibatalkan'}[p.status]||'Menunggu';
@@ -479,7 +477,15 @@ async function orders(){
    ${p.proof_url?`<button class="outline" onclick="Native.openUrl('${esc(p.proof_url)}')">Lihat bukti transfer</button>`:''}
    <div class="orderFoot"><div class="grow"><b>${rp(o.total)}</b></div>${o.status==='pending'&&p.status!=='paid'&&p.status!=='submitted'?`<button class="outline" onclick="cancelOrder('${o.id}')">Batalkan</button>`:`<button class="outline" onclick="go('store')">Beli Lagi</button>`}</div></div>`;
   }).join('')||`<p style="text-align:center;color:var(--muted)">Belum ada pesanan.</p>`}</div>`,'orders');
- }catch(e){fail(e)}finally{loading(false)}
+}
+async function orders(){
+ // Render immediately from memory; never display a blank waiting screen.
+ renderOrders(state.ordersSnapshot||[]);
+ try{
+  const d=await api('orders');
+  state.ordersSnapshot=d.orders||[];
+  if(state.route==='orders')renderOrders(state.ordersSnapshot);
+ }catch(e){if(state.route==='orders')fail(e)}
 }
 async function cancelOrder(id){if(!confirm('Batalkan pesanan? Stok akan dikembalikan.'))return;loading(true);try{await api('order_cancel',{id});await orders()}catch(e){fail(e)}finally{loading(false)}}
 
