@@ -1021,6 +1021,10 @@ html,body{background:#fff9f2!important}
 #root > .app .ciCatalogProduct[hidden]{display:none!important}
 #root > .app .ciCatalogProduct img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover}
 
+
+/* Checkout cannot be submitted until server-side cart validation is complete. */
+.ciCheckoutFooter button:disabled{opacity:.67;cursor:progress;box-shadow:none}
+
 </style>
 </head>
 <body>
@@ -1975,26 +1979,51 @@ async function flushCartQty(id,request){
  }
 }
 
+
+/* Fast checkout: use a previously verified cart to paint instantly, then
+   verify amounts/stocks server-side before enabling the actual order button. */
+let checkoutRequestId=0;
 async function checkout(){
-  const oldScroll=state.route==='checkout'&&document.querySelector('.ciCheckoutScreen')?document.querySelector('.ciCheckoutScreen').scrollTop:0;
-  const before=document.querySelector('.ciCheckoutScreen');
-  if(before){
-    const savedPay=document.querySelector('input[name="copay"]:checked')?.value;
-    if(savedPay)state.checkoutPayment=savedPay;
-    const savedBank=document.getElementById('cobank')?.value;
-    if(savedBank)state.checkoutBank=savedBank;
-    const savedAddress=document.getElementById('coaddr')?.value;
-    if(savedAddress)state.checkoutAddress=savedAddress;
-  }
-  try{
-    if(cartPendingById.size)await Promise.all([...cartPendingById.values()].map(x=>x.task));
-    const [c,b]=await Promise.all([api('cart'),state.catalogFetched?boot():freshCatalog()]);
-    state.cartSnapshot=c;
-    if(state.route!=='checkout')return;
-    if(!(c.items||[]).length)return go('cart');
+ const request=++checkoutRequestId;
+ const screen=root.querySelector('.ciCheckoutScreen');
+ const oldScroll=screen?.scrollTop||0;
+ if(screen){
+   const pay=document.querySelector('input[name="copay"]:checked')?.value;
+   if(pay)state.checkoutPayment=pay;
+   const bank=document.getElementById('cobank')?.value;
+   if(bank)state.checkoutBank=bank;
+   const address=document.getElementById('coaddr')?.value;
+   if(address)state.checkoutAddress=address;
+ }
+ state.checkoutVerified=false;
+ const button=root.querySelector('.ciCheckoutFooter button');
+ if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+ try{
+   // Optimistic screen uses real, previously fetched cart and bank data.
+   // Never offer an active Place Order button with unverified data.
+   if(state.cartSnapshot?.items?.length&&state.boot&&state.catalogFetched&&
+      !cartPendingById.size){
+     await renderCheckoutSnapshot(state.cartSnapshot,state.boot,false,oldScroll);
+   }
+   if(cartPendingById.size)await Promise.all([...cartPendingById.values()].map(x=>x.task));
+   const [c,b]=await Promise.all([api('cart'),state.catalogFetched?boot():freshCatalog()]);
+   if(request!==checkoutRequestId||state.route!=='checkout')return;
+   state.cartSnapshot=c;
+   if(!(c.items||[]).length)return go('cart');
+   await renderCheckoutSnapshot(c,b,true,oldScroll);
+ }catch(e){
+   if(request!==checkoutRequestId||state.route!=='checkout')return;
+   state.checkoutVerified=false;
+   const action=root.querySelector('.ciCheckoutFooter button');
+   if(action){action.disabled=true;action.setAttribute('aria-busy','false');}
+   fail(e);
+ }
+}
+async function renderCheckoutSnapshot(c,b,verified,oldScroll){
+ if(state.route!=='checkout')return;
     const delivery=state.fulfillment==='delivery';
     let as=state.addressesSnapshot||[];
-    if(delivery&&!as.length){try{as=(await api('addresses')).addresses||[];state.addressesSnapshot=as;}catch(e){as=[];}}
+    if(delivery&&!as.length&&verified){try{as=(await api('addresses')).addresses||[];state.addressesSnapshot=as;}catch(e){as=[];}}
     const bank=b.bank_transfer||{};
     const banks=Array.isArray(bank.accounts)&&bank.accounts.length?bank.accounts:[bank].filter(a=>a.bank_name&&a.account_number);
     const canTransfer=!!bank.enabled&&banks.length>0;
@@ -2018,6 +2047,19 @@ async function checkout(){
       return `<article class="ciCheckoutItem"><div class="ciCheckoutItemInfo"><b>${esc(p.name||'Produk Cireng Indi')}</b><small>${esc(v.name||'')} · ${qty} item</small><div class="ciCheckoutItemPrice">${rp(unit*qty)}</div></div><img ${photoAttrs(prd)}><div class="ciCheckoutItemBottom"><button type="button" class="ciCheckoutTextAction" onclick="openCheckoutProduct('${esc(p.id)}')">Ubah</button><div class="ciCheckoutStepper"><button type="button" aria-label="Kurangi ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty-1})">${icon('i-minus')}</button><output>${qty}</output><button type="button" aria-label="Tambah ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty+1})">${icon('i-plus')}</button></div></div></article>`;
     }).join('');
     const suggestedHtml=suggestions.map(x=>`<div class="ciCheckoutSuggestion"><img ${photoAttrs(x.p)}><div class="ciCheckoutGrow"><b>${esc(x.p.name)}</b><small>${rp(x.first.price)}</small></div><button type="button" onclick="checkoutAddSuggested('${esc(x.p.id)}')" aria-label="Tambah ${esc(x.p.name)}">${icon('i-plus')}</button></div>`).join('');
+    const viewSignature=JSON.stringify([
+      state.fulfillment,state.checkoutPayment,state.selectedVoucherId,subtotal,discount,canTransfer,
+      ...((c.items||[]).map(i=>[i.variant_id,i.quantity,i.variant?.price,i.variant?.name,i.variant?.product?.name])),
+      ...as.map(x=>[x.id,x.label,x.address_line,x.is_default]),
+      ...(banks.map(x=>[x.code,x.account_number]))
+    ]);
+    const existing=root.querySelector('.ciCheckoutScreen');
+    if(existing?.dataset.renderSignature===viewSignature){
+      state.checkoutVerified=verified;
+      const action=root.querySelector('.ciCheckoutFooter button');
+      if(action){action.disabled=!verified;action.setAttribute('aria-busy',String(!verified));}
+      return;
+    }
     root.innerHTML=`<div class="app ciCheckoutScreen">
       <header class="ciCheckoutTop"><button type="button" onclick="go('cart')" aria-label="Kembali ke keranjang">${icon('i-left')}</button><h1>Checkout</h1><img src="assets/logo_cireng_indi.png" alt="Cireng Indi"></header>
       <div class="ciCheckoutMode"><div class="ciCheckoutModeCard"><span class="ciCheckoutIcon">${icon(delivery?'i-truck':'i-bag')}</span><div class="ciCheckoutGrow"><b>${delivery?'Delivery':'Pick Up'}</b><small>${delivery?'Diantar kurir pilihan Owner':'Ambil langsung di outlet'}</small></div><button class="ciCheckoutOutline" type="button" onclick="checkoutSwitchMode()">Ubah</button></div></div>
@@ -2034,8 +2076,11 @@ async function checkout(){
       </section>
       <section class="ciCheckoutSection"><h2>Rincian Pembayaran</h2><div class="ciCheckoutBill"><div class="ciCheckoutBillRow"><span>Harga produk</span><b>${rp(subtotal)}</b></div><div class="ciCheckoutBillRow discount"><span>Diskon voucher</span><b id="checkoutDiscount">${discount?'-'+rp(discount):rp(0)}</b></div><div class="ciCheckoutBillTotal"><span>Total Pembayaran</span><strong id="checkoutBillTotal">${rp(subtotal-discount)}</strong></div></div>${delivery?'<p style="font-size:11px;color:#806f63;margin-bottom:0">Ongkir belum termasuk dan akan dikonfirmasi Owner.</p>':''}</section>
       </div><footer class="ciCheckoutFooter"><button type="button" onclick="placeOrder()">Pesan Sekarang</button><small id="checkoutEstimate" data-subtotal="${subtotal}">Estimasi ${rp(subtotal-discount)}${delivery?' · belum termasuk ongkir':''}</small></footer>`;
-    if(oldScroll){const scroller=root.querySelector('.ciCheckoutScreen');if(scroller)scroller.scrollTop=oldScroll;}
-  }catch(e){fail(e)}
+    const screen=root.querySelector('.ciCheckoutScreen');
+    if(screen){screen.dataset.renderSignature=viewSignature;if(oldScroll)screen.scrollTop=oldScroll;}
+    state.checkoutVerified=verified;
+    const submit=root.querySelector('.ciCheckoutFooter button');
+    if(submit){submit.disabled=!verified;submit.setAttribute('aria-busy',String(!verified));}
 }
 
 function checkoutSwitchMode(){
@@ -2081,6 +2126,9 @@ function checkoutApplyBestVoucher(){
 }
 
 async function checkoutQty(id,q){
+  state.checkoutVerified=false;
+  const action=root.querySelector('.ciCheckoutFooter button');
+  if(action)action.disabled=true;
   const c=state.cartSnapshot;
   const current=(c?.items||[]).find(x=>x.variant_id===id);
   if(!current)return;
@@ -2092,6 +2140,9 @@ async function checkoutQty(id,q){
 }
 
 async function checkoutAddSuggested(id){
+  state.checkoutVerified=false;
+  const action=root.querySelector('.ciCheckoutFooter button');
+  if(action)action.disabled=true;
   const p=state.boot?.products?.find(x=>x.id===id);
   if(!p)return;
   const variants=(state.boot?.variants||[]).filter(v=>v.product_id===id&&v.active!==false&&Number(v.stock||0)>0);
@@ -2116,6 +2167,7 @@ function checkoutBagToggle(){state.checkoutBag=!!document.getElementById('checko
 
 async function placeOrder(){
  if(state.placingOrder)return;
+ if(!state.checkoutVerified)return toast('Keranjang sedang diverifikasi. Coba lagi setelah total diperbarui.');
  state.placingOrder=true;loading(true);
  try{
   const delivery=state.fulfillment==='delivery';
