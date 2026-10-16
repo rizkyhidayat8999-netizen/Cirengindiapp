@@ -1249,6 +1249,7 @@ const OFFICIAL_IMAGE_SLUGS=[
 const PHOTO_BASE='https://cirengindi.com/assets/images/products/';
 const BRANDED_BASE='https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/member/app/src/main/assets/assets/';
 const AI_CIRENG_PHOTO_URL=BRANDED_BASE+'ai_cireng_styled.webp';
+const AI_PARTNER_PHOTO_URL=BRANDED_BASE+'ai_cireng_partner.webp';
 function officialImageId(p){
  const key=String(p?.source_key||'');
  const number=Number(key.replace('app-product-',''));
@@ -1275,6 +1276,7 @@ function photoFallback(image){
   image.src='assets/'+(image.dataset.localPhoto||'product_cireng.webp');
  }
 }
+let partnerPhotoPromise=null;
 const upgradedImages=new Map();
 const upgradedImageObserver=typeof IntersectionObserver==='function'
  ?new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{
@@ -1286,6 +1288,21 @@ function upgradeImageWhenReady(img){
  const id=Number(img.dataset.photoId);
  if(!Number.isInteger(id)||id<1||id>31||img.dataset.upgradeRequested)return;
  img.dataset.upgradeRequested='1';
+ if(img.dataset.photoRole==='partner'){
+  if(!partnerPhotoPromise){
+   partnerPhotoPromise=new Promise(resolve=>{
+    const probe=new Image();probe.onload=()=>resolve(AI_PARTNER_PHOTO_URL);
+    probe.onerror=()=>resolve(null);probe.src=AI_PARTNER_PHOTO_URL;
+   });
+  }
+  partnerPhotoPromise.then(uri=>{
+   if(!uri||!img.isConnected)return;
+   const previous=img.src;
+   img.onerror=()=>{img.onerror=null;img.src=previous};
+   img.src=uri;
+  });
+  return;
+ }
  if(!upgradedImages.has(id)){
   upgradedImages.set(id,new Promise(resolve=>{
    const remote=id===1?AI_CIRENG_PHOTO_URL:BRANDED_BASE+'official_'+String(id).padStart(2,'0')+'.webp';
@@ -1978,7 +1995,7 @@ function partner(){
   root.innerHTML=shell(uiTop('Kemitraan Cireng Indi','home')+
   '<main class="ciPartnerPage" aria-label="Program kemitraan Cireng Indi">'+
   '<section class="ciPartnerHero">'+
-   '<div class="ciPartnerHeroMedia"><img src="assets/product_cireng.webp" data-photo-id="1" data-local-photo="product_cireng.webp" onerror="photoFallback(this)" alt="Cireng Indi homemade untuk program reseller dan kemitraan" decoding="async" loading="eager"><span class="ciPartnerPhotoStamp"><img src="assets/logo_cireng_indi.png" alt=""><span>Cireng Indi · Tanah Grogot</span></span></div>'+
+   '<div class="ciPartnerHeroMedia"><img src="assets/product_cireng.webp" data-photo-id="1" data-photo-role="partner" data-local-photo="product_cireng.webp" onerror="photoFallback(this)" alt="Cireng Indi homemade untuk program reseller dan kemitraan" decoding="async" loading="eager"><span class="ciPartnerPhotoStamp"><img src="assets/logo_cireng_indi.png" alt=""><span>Cireng Indi · Tanah Grogot</span></span></div>'+
    '<div class="ciPartnerHeroText">'+
     '<span class="ciPartnerEyebrow">Cireng Indi · Tanah Grogot</span>'+
     '<h2>Bertumbuh bersama Cireng Indi</h2>'+
