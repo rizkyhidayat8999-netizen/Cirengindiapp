@@ -753,6 +753,137 @@ html,body{background:#fff9f2!important}
 #ciCatalogFilters .chip.active{border-color:#985039;background:#f7e8db;color:#85432e}
 @media(max-width:375px){.ciWebsiteCategoryTitle h3{font-size:16px}.ciWebsiteProductList{padding-inline:12px}.ciWebsiteCategory .prow{grid-template-columns:77px minmax(0,1fr) 35px;gap:9px;padding:10px}.ciWebsiteCategory .prow img{width:77px;height:79px}.ciWebsiteCategory .prow h3{font-size:15.5px}.ciWebsiteCategory .prow .price{font-size:16px}}
 
+
+/* Cireng Indi Vivid UI — Home + Partnership, brand-consistent Android WebView
+   Deliberately static or GPU-friendly transitions only; honors reduced motion. */
+#root>.app:has(.ciVividHome){background:linear-gradient(180deg,#fffaf3 0%,#fff7ee 60%,#fffdf9 100%)!important}
+.ciVividHome{max-width:760px;width:100%;margin:0 auto;padding:0 0 15px;overflow:hidden;color:#35241d}
+.ciVividMasthead{padding:4px 16px 12px;display:flex;gap:10px;align-items:center;min-height:58px}
+.ciVividMastheadLogo{width:46px;height:46px;object-fit:contain;flex:none;filter:drop-shadow(0 3px 5px rgba(87,50,24,.12))}
+.ciVividMastheadName{flex:1;min-width:0}
+.ciVividMastheadName strong{display:block;font-size:15px;letter-spacing:-.25px;color:#3f281e;font-weight:850;line-height:1.25}
+.ciVividMastheadName small{display:block;font-size:10.5px;color:#927a68;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ciVividMastheadOrders{border:1px solid #eedecf;border-radius:14px;width:39px;height:39px;flex:none;display:grid;place-items:center;background:#fff6ed;color:#95513b;padding:8px;box-shadow:0 3px 10px rgba(126,83,54,.06)}
+.ciVividMastheadOrders .icon{width:21px;height:21px}
+.ciVividHome .hero.heroFore{width:calc(100% - 32px)!important;max-height:none!important;aspect-ratio:1.86!important;min-height:176px!important;margin:3px 16px 16px!important;border-radius:21px!important;background:#f3dcc0!important;box-shadow:0 12px 24px rgba(115,67,36,.13)}
+.ciVividHome .heroFore .heroSlides>.ciVividHeroSlide{
+ padding:0!important;display:block!important;grid-template-columns:none!important;
+ background:linear-gradient(115deg,var(--slide-bg),#fff3e4 53%,var(--slide-tone))!important;
+ transition:opacity .3s ease!important;border:1px solid rgba(241,214,190,.65)!important;
+}
+.ciVividHome .heroFore .ciVividHeroSlide.is-active{pointer-events:auto!important;visibility:visible!important}
+.ciVividHeroText{position:absolute;top:50%;left:17px;transform:translateY(-50%);width:53%;max-width:250px;z-index:4;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.ciVividHeroText .ciVividEyebrow{font-size:9px;font-weight:850;letter-spacing:.9px;line-height:1.25;color:#9d654b}
+.ciVividHeroText h2{font-size:clamp(16px,4.4vw,29px);font-weight:900;line-height:1.12;letter-spacing:-.4px;color:#4f3022;overflow-wrap:anywhere;max-width:100%;margin:0}
+.ciVividHeroText p{color:#80604e;font-size:clamp(10px,2.5vw,13px);line-height:1.42;margin:0;max-width:96%;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ciVividHeroAction{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:32px;margin-top:3px;padding:8px 12px;border:0;border-radius:11px;background:#965039;color:#fff;font-size:11px;font-weight:850;box-shadow:0 3px 9px rgba(109,57,39,.12);white-space:nowrap}
+.ciVividHeroAction .icon{width:14px;height:14px}
+.ciVividHeroVisual{position:absolute;top:0;right:0;width:56%;height:100%;border-radius:0 20px 20px 0;overflow:hidden;background:linear-gradient(90deg,#edcda6,#f5e2cf)}
+.ciVividHeroVisual:before{content:"";position:absolute;z-index:2;pointer-events:none;inset:0;background:linear-gradient(90deg,var(--slide-bg) 0%,rgba(255,247,238,.52) 11%,transparent 40%),linear-gradient(0deg,rgba(124,56,23,.12),transparent 55%)}
+.ciVividHeroVisual img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;object-position:center!important;border-radius:0!important;background:#ead3b5!important;filter:saturate(1.1) contrast(1.035)!important;max-width:unset!important;max-height:unset!important}
+.ciVividHeroGlow{position:absolute;pointer-events:none;inset:auto -25px -48px auto;width:145px;height:105px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,218,151,.18),transparent 70%);z-index:3}
+.ciVividHome .heroFore .heroDots{bottom:9px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;gap:7px!important}
+.ciVividHome .heroDots button{width:7px!important;height:7px!important;background:rgba(127,93,70,.37)!important;transition:width .2s ease!important}
+.ciVividHome .heroDots button.active{width:24px!important;background:#985039!important}
+.ciVividHome .ciVividMember{margin:0 16px 0!important;padding:17px 16px 16px!important;border-radius:22px!important;background:#fff!important;border:1px solid #efe0d3!important;box-shadow:0 8px 22px rgba(99,63,37,.055)!important;position:relative!important;z-index:2!important}
+.ciVividMember h2{font-size:clamp(20px,5.6vw,26px)!important;line-height:1.25;letter-spacing:-.6px;margin:0 0 5px!important;font-weight:850;color:#38251e}
+.ciVividWelcome{font-size:11.5px;color:#917c6e;margin:0 0 14px;line-height:1.35}
+.ciVividWelcome span{font-size:15px;color:#d6a459;margin-left:3px}
+.ciVividMemberPills{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;align-items:stretch}
+.ciVividMemberPills .pill{margin:0;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:40px;padding:8px 4px;border-radius:14px;font-size:clamp(10px,2.55vw,12px);font-weight:850;white-space:nowrap;line-height:1.15;border:1px solid transparent}
+.ciVividMemberPills .pill .icon{width:16px;height:16px;flex:none}
+.ciVividMemberPills .ciVividPointPill{background:#fff8e9;color:#5c3e2c}
+.ciVividMemberPills .voucherLink{background:#fff0e6!important;color:#87492d!important;border-color:#f0d9c7}
+.ciVividMemberPills .ciVividActivePill{background:#eaf6ee!important;color:#287552!important}
+.ciVividHome .ciVividCollection{padding:25px 0 4px}
+.ciVividSectionHeading{padding:0 17px;margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:9px}
+.ciVividSectionHeading h2{margin:0;flex:1;min-width:0;font-size:clamp(19px,5vw,23px);letter-spacing:-.55px;line-height:1.25;font-weight:850;color:#34211b}
+.ciVividSeeAll{flex:none;display:flex;align-items:center;gap:4px;margin-top:4px;padding:3px 0;background:transparent;border:0;font-weight:800;font-size:11px;color:#9a5138;white-space:nowrap}
+.ciVividSeeAll .icon{width:16px;height:16px}
+.ciVividHome .ciVividPopularScroll{padding-left:16px;padding-right:16px;scroll-snap-type:x mandatory;scrollbar-width:none;gap:12px}
+.ciVividPopularScroll::-webkit-scrollbar{display:none}
+.ciVividHome .ciVividPopularScroll .pCard{min-width:min(310px,82vw)!important;width:min(310px,82vw);min-height:146px;display:grid;grid-template-columns:108px minmax(0,1fr) 30px;column-gap:9px;padding:11px;border:1px solid #ead7c7;border-radius:20px;box-shadow:0 6px 18px rgba(112,76,53,.065);background:#fff;align-items:center;scroll-snap-align:start}
+.ciVividPopularScroll .pCard>div{min-width:0;align-self:center}
+.ciVividPopularScroll .pCard img{display:block;width:108px;height:123px;object-fit:cover!important;border-radius:14px!important;background:#f9efe3!important}
+.ciVividPopularScroll .pCard h3{font-size:16px!important;font-weight:800;line-height:1.25;margin:0 0 5px;color:#32221b}
+.ciVividPopularScroll .pCard .ciBestSellerBadge{font-size:9px;margin:0 0 7px}
+.ciVividPopularScroll .pCard .meta{color:#88746b;font-size:10.5px;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.ciVividPopularScroll .pCard .price{font-size:18px;margin-top:7px;color:#9a4b30;line-height:1.2}
+.ciVividPopularScroll .pCard .add{width:29px;height:29px;min-width:29px;border-radius:10px;padding:6px;align-self:center;background:#995139;box-shadow:none}
+.ciVividPopularScroll .pCard .add .icon{width:17px;height:17px}
+.ciVividPerks{padding-top:21px!important}
+.ciVividSectionSub{margin:-7px 17px 15px;color:#897566;line-height:1.4;font-size:11.5px}
+.ciVividHome .ciVividFeatureGrid{padding:0 16px;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.ciVividFeature{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;min-width:0;min-height:158px;text-align:left;padding:12px!important;border-radius:19px!important;background:linear-gradient(140deg,#fffefa 16%,#fff0e2)!important;border:1px solid #efddcf!important;box-shadow:0 4px 14px rgba(105,61,35,.045)!important;transition:transform .17s ease,box-shadow .17s ease}
+.ciVividFeature:active{transform:scale(.984);box-shadow:none!important}
+.ciVividFeature:before{content:"";pointer-events:none;position:absolute;width:105px;height:105px;right:-34px;bottom:-35px;z-index:-1;background:radial-gradient(circle,#e8b98f66,#f3cfb000 73%)}
+.ciVividFeature .ciVividFeatureTop{display:flex;align-items:center;justify-content:space-between;width:100%;margin:0 0 12px!important;color:#9d5337}
+.ciVividFeatureIcon{display:grid!important;place-items:center;width:40px;height:40px;margin:0!important;border-radius:14px;background:#fae9dd;color:#965137}
+.ciVividFeatureIcon .icon{width:20px;height:20px}
+.ciVividFeatureTop>.icon{width:17px;height:17px}
+.ciVividFeature b{font-size:13px;line-height:1.25;color:#3b291f;position:relative;z-index:1;margin:0 0 7px!important}
+.ciVividFeature>span:not(.ciVividFeatureTop):not(.ciVividFeatureArt){font-size:10.5px;color:#816d60;line-height:1.45;position:relative;z-index:1;margin:0!important;max-width:95%}
+.ciVividFeatureArt{position:absolute!important;right:10px;bottom:-8px;z-index:0;font-size:50px!important;font-weight:700;color:#b56e3f36!important;line-height:1!important;transform:rotate(-13deg);pointer-events:none}
+.ciVividReseller{background:linear-gradient(145deg,#fffcf5,#f9ebda)!important}
+.ciVividCafe{background:linear-gradient(145deg,#fffbf4,#f0eadf)!important}
+.ciVividReferral{background:linear-gradient(145deg,#fffaf3,#f9ebe8)!important}
+.ciVividHome button:focus-visible{outline:2px solid #985039;outline-offset:3px}
+.ciServiceLogo{display:inline-block;width:21px;height:21px;flex:none;vertical-align:middle}
+.ciStoreMapsIcon .ciServiceLogo{width:25px;height:25px}
+.ciPartnerButton .ciWhatsAppLogo{width:20px;height:20px;color:white}
+.ciPartnerButtonSecondary .ciWhatsAppLogo{color:#249f58}
+.ciAddressMapLink .ciGoogleMapsLogo{width:17px;height:17px}
+.ciPartnerFootInfo .ciGoogleMapsLogo{width:17px;height:17px}
+.orderCard .ciWhatsAppLogo{width:16px;height:16px;margin-right:3px;color:#26a65b}
+.ciPartnerPage{padding-top:17px}
+.ciPartnerHero{border-radius:23px;overflow:hidden;box-shadow:0 9px 24px rgba(92,61,41,.07)}
+.ciPartnerHeroMedia{height:clamp(172px,49vw,250px)!important;background:#f8e8d3}
+.ciPartnerHeroMedia>img{width:100%;height:100%;object-fit:cover!important;object-position:center 48%;filter:saturate(1.09) contrast(1.03)}
+.ciPartnerHeroMedia:after{background:linear-gradient(0deg,rgba(74,42,25,.36) 0,transparent 48%)}
+.ciPartnerPhotoStamp{position:absolute;bottom:11px;left:13px;z-index:4;display:flex;gap:6px;align-items:center;background:rgba(255,251,245,.95);border-radius:999px;padding:5px 10px 5px 6px;border:1px solid #f4e5d9;color:#805039;font-size:9.5px;font-weight:850;letter-spacing:.15px;box-shadow:0 4px 12px rgba(76,42,24,.12)}
+.ciPartnerPhotoStamp img{height:26px;width:26px;object-fit:contain}
+.ciPartnerHeroText{padding:17px 16px 19px}
+.ciPartnerHeroText h2{font-size:clamp(21px,5.3vw,27px);margin-top:11px;line-height:1.16}
+.ciPartnerHeroText p{font-size:12px;line-height:1.6}
+.ciPartnerStat{background:#fff7ed;border-radius:15px;padding:11px;border-color:#f0deca}
+.ciPartnerStat b{font-size:clamp(14px,4vw,18px);line-height:1.2;white-space:nowrap}
+.ciPartnerStat span{line-height:1.35}
+.ciPartnerButton{min-height:43px;font-size:12px;padding:9px 11px;gap:8px;box-shadow:none}
+.ciPartnerButton:active{transform:scale(.99)}
+.ciPartnerSection{margin-top:22px}
+.ciPartnerFeatures{gap:9px}
+.ciPartnerFeature{border-radius:17px;min-height:120px}
+.ciPartnerFeature b{font-size:12.5px}
+.ciPartnerFeature p{font-size:11px}
+@media(max-width:370px){
+ .ciVividHome .hero.heroFore{width:calc(100% - 24px)!important;margin:3px 12px 15px!important;min-height:167px!important}
+ .ciVividMasthead{padding-inline:12px}
+ .ciVividHeroText{left:12px;gap:4px;max-width:54%}
+ .ciVividHeroText h2{font-size:16px}
+ .ciVividHeroText p{font-size:9.6px}
+ .ciVividHeroAction{padding:7px 10px;font-size:10px;min-height:30px}
+ .ciVividHome .ciVividMember{margin-inline:12px!important;padding:15px 12px!important}
+ .ciVividMemberPills .pill{font-size:10px;gap:3px}
+ .ciVividPopularScroll .pCard{min-width:282px!important;width:282px;grid-template-columns:98px minmax(0,1fr) 29px}
+ .ciVividPopularScroll .pCard img{width:98px;height:119px}
+ .ciVividHome .ciVividFeatureGrid{padding-inline:12px}
+ .ciVividSectionHeading{padding-inline:13px}
+ .ciVividFeature{min-height:159px;padding:11px!important}
+}
+@media(min-width:550px){
+ .ciVividHome .hero.heroFore{min-height:260px!important}
+ .ciVividHeroText{left:27px;gap:10px;max-width:47%}
+ .ciVividHeroAction{height:41px;font-size:13px;padding-inline:16px}
+ .ciVividMasthead{padding-inline:22px}
+ .ciVividHome .ciVividMember{margin-inline:20px!important;padding-inline:22px!important}
+ .ciVividHome .ciVividFeatureGrid{padding-inline:20px}
+ .ciVividFeature{min-height:170px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ciVividFeature,.ciVividHome .heroFore .heroSlides>.ciVividHeroSlide,
+ .ciVividHome .heroDots button{transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -774,6 +905,7 @@ html,body{background:#fff9f2!important}
 <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></symbol>
 <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
 <symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M7 9H6v1M17 15h1v-1"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"/></symbol>
 <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
 <symbol id="i-location" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></symbol>
