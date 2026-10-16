@@ -836,6 +836,14 @@ function previewPage(r){
  const titles={home:'Beranda Cireng Indi',store:'Menu Cireng Indi',product:'Detail Produk',addresses:'Alamat Pengiriman',cart:'Keranjang',checkout:'Checkout',orders:'Pesanan Saya',rewards:'Point & Reward',vouchers:'Voucher Saya',partner:'Kemitraan Cireng Indi',settings:'Pengaturan',profile:'Akun'};
  root.innerHTML=shell(`<section class="section instantPreview"><h2>${esc(titles[r]||'Cireng Indi')}</h2></section>`,r==='product'?'store':r);
 }
+
+/* Branded service icons use vector marks, never letter substitutes or emoji. */
+function serviceLogo(service){
+ if(service==='whatsapp')return '<svg class="ciServiceLogo ciWhatsAppLogo" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.966-.273-.099-.47-.148-.668.15-.198.297-.768.966-.94 1.164-.173.198-.347.223-.644.075-.297-.149-1.255-.463-2.39-1.475-.883-.787-1.48-1.76-1.653-2.057-.173-.297-.018-.458.13-.606.133-.133.297-.347.446-.52.149-.174.198-.298.297-.496.1-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.205-.242-.58-.487-.502-.669-.511-.173-.009-.371-.011-.569-.011s-.52.075-.792.372c-.272.297-1.04 1.016-1.04 2.478s1.065 2.875 1.213 3.073c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.693.626.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.29.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.739.98.998-3.646-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.002-5.448 4.438-9.883 9.887-9.883a9.82 9.82 0 0 1 6.99 2.894 9.825 9.825 0 0 1 2.893 6.994c-.003 5.448-4.438 9.884-9.888 9.884m8.413-18.298A11.815 11.815 0 0 0 12.052 0C5.495 0 .158 5.337.155 11.893c-.001 2.095.547 4.14 1.588 5.945L.057 24l6.305-1.654a11.86 11.86 0 0 0 5.685 1.448h.005c6.556 0 11.893-5.337 11.896-11.894a11.82 11.82 0 0 0-3.484-8.413Z"/></svg>';
+ if(service==='maps')return '<svg class="ciServiceLogo ciGoogleMapsLogo" aria-hidden="true" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 4C13 4 5 12.7 5 23.3c0 6.5 3.4 12 7.2 16.5L24 24V4Z"/><path fill="#34A853" d="M24 4v20l13 15.8c3.8-4.5 6-10 6-16.5C43 12.7 35 4 24 4Z"/><path fill="#FBBC04" d="M12.2 39.8c3.7 5.4 7.7 9 11.8 14.2 4.1-5.2 8.1-8.8 13-14.2L24 24 12.2 39.8Z" transform="translate(0 -6)"/><path fill="#EA4335" d="M24 4a19 19 0 0 0-14.1 6.4L24 24l11.7-15.1A19.1 19.1 0 0 0 24 4Z"/><circle cx="24" cy="23" r="7.5" fill="#FFF"/><circle cx="24" cy="23" r="4.1" fill="#4285F4"/></svg>';
+ return '';
+}
+
 const icon=(id,cls='')=>`<svg class="icon ${cls}"><use href="#${id}"></use></svg>`;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rp=v=>'Rp'+Number(v||0).toLocaleString('id-ID');
@@ -948,26 +956,71 @@ async function go(r){
  }catch(e){if(navId===key)fail(e)}
 }
 
+
 const MEMBER_HERO_PROMOS=[
- {eyebrow:'CIRENG INDI • HOMEMADE',title:'Renyah di luar, lembut di dalam',sub:'Camilan keluarga, dibuat dengan sepenuh hati',photo:'product_cireng.webp',id:1,bg:'#f8f0e5',tone:'#f4dfca'},
- {eyebrow:'MENU FROZEN',title:'Praktis untuk stok di rumah',sub:'Pilihan frozen food siap diolah',photo:'product_chicken_katsu.webp',id:7,bg:'#fff5e9',tone:'#f6dcbf'},
- {eyebrow:'JAMU & MINUMAN',title:'Segarnya pilihan hari ini',sub:'Pilihan jamu khas Cireng Indi',photo:'product_jamu.webp',id:23,bg:'#f3f5eb',tone:'#dceacb'},
- {eyebrow:'MENU LAINNYA',title:'Manis untuk dinikmati bersama',sub:'Puding dan camilan pelengkap',photo:'product_puding.webp',id:29,bg:'#fbf0f1',tone:'#efcfda'}
+ {eyebrow:'SIGNATURE CIRENG INDI',title:'Camilan rumahan, selalu bikin rindu',sub:'Cireng homemade favorit untuk dinikmati bersama.',photo:'product_cireng.webp',id:1,bg:'#fff4e5',tone:'#efd3b0',category:'all'},
+ {eyebrow:'MENU FROZEN',title:'Praktis untuk stok di rumah',sub:'Pilihan frozen food siap diolah untuk keluarga.',photo:'product_chicken_katsu.webp',id:7,bg:'#fff2e3',tone:'#e4bea1',category:'all'},
+ {eyebrow:'JAMU & MINUMAN',title:'Segarnya racikan khas Indi',sub:'Minuman tradisional untuk menemani hari.',photo:'product_jamu.webp',id:23,bg:'#f3f3e6',tone:'#d5dfc4',category:'all'},
+ {eyebrow:'MENU SPESIAL',title:'Ada yang manis untukmu',sub:'Lengkapi waktu santai dengan menu pilihan.',photo:'product_puding.webp',id:29,bg:'#fff1ed',tone:'#f0d5cb',category:'all'}
 ];
+function openHeroCategory(category){
+ state.category=category||'all';
+ go('store');
+}
 function renderPromoCarousel(){
- const panels=MEMBER_HERO_PROMOS.map((p,i)=>
-  '<article class="banner forePromo '+(i===0?'is-active':'')+'" style="--slide-bg:'+p.bg+';--slide-tone:'+p.tone+'" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' dari 4: '+esc(p.title)+'" aria-hidden="'+(i!==0)+'">'+
-  '<img class="forePromoLogo" src="assets/logo_cireng_indi.png" alt="" aria-hidden="true">'+
-  '<div class="forePromoCopy"><span class="forePromoEyebrow">'+esc(p.eyebrow)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.sub)+'</p></div>'+
-  '<div class="forePromoImage"><img src="assets/'+p.photo+'" data-photo-id="'+p.id+'" data-local-photo="'+p.photo+'" onerror="photoFallback(this)" alt="'+esc(p.eyebrow)+'" loading="eager" decoding="async"></div>'+
+ const slides=MEMBER_HERO_PROMOS.map((p,i)=>
+  '<article class="banner forePromo ciVividHeroSlide '+(i===0?'is-active':'')+'" style="--slide-bg:'+p.bg+';--slide-tone:'+p.tone+'" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' dari 4: '+esc(p.title)+'" aria-hidden="'+(i!==0)+'">'+
+   '<div class="ciVividHeroText"><span class="ciVividEyebrow">'+esc(p.eyebrow)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.sub)+'</p>'+
+   '<button type="button" class="ciVividHeroAction" onclick="openHeroCategory(\''+esc(p.category)+'\')" tabindex="'+(i===0?'0':'-1')+'">Lihat Produk '+icon('i-right','sm')+'</button></div>'+
+   '<div class="ciVividHeroVisual" aria-hidden="true"><img src="assets/'+esc(p.photo)+'" data-photo-id="'+p.id+'" data-local-photo="'+esc(p.photo)+'" decoding="async" loading="'+(i===0?'eager':'lazy')+'" onerror="photoFallback(this)" alt=""><span class="ciVividHeroGlow"></span></div>'+
   '</article>').join('');
  const dots=MEMBER_HERO_PROMOS.map((p,i)=>
   '<button type="button" class="'+(i===0?'active':'')+'" onclick="heroSlide('+i+')" aria-label="Banner '+(i+1)+'" aria-pressed="'+(i===0)+'"></button>').join('');
- return '<section class="hero heroFore" aria-label="Promo Cireng Indi"><div class="heroSlides">'+panels+
+ return '<section class="hero heroFore ciVividHero" aria-label="Promo Cireng Indi"><div class="heroSlides">'+slides+
  '</div><div class="heroDots" role="group" aria-label="Pilih banner">'+dots+'</div></section>';
 }
 
-function renderHome(){const m=state.me||{profile:{},points:0};const firstName=memberFirstName();const b=state.boot||{products:[],variants:[],categories:[]};const fav=(b.products||[]).filter(p=>p.best_seller).sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,4);root.innerHTML=shell(`${renderPromoCarousel()}<div class="member"><h2 id="memberGreeting">Hai${firstName?', '+esc(firstName):''}!</h2><div class="pills"><span class="pill">${icon('i-star','sm')} <span id="memberPoints">${Number(m.points||0)} Point</span></span><button class="pill level voucherLink" onclick="go('vouchers')">${icon('i-gift','sm')} Voucher <span data-voucher-count>${state.vouchers.filter(v=>v.status==='available').length}</span></button><span class="pill ok">Aktif</span></div></div><div class="section"><h2>Populer di Cireng Indi</h2><div class="hscroll" id="homePopularList">${fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>'}</div></div><div class="section" style="padding-top:2px"><h2>Spesial Untukmu di Cireng Indi</h2><div class="featureGrid"><button class="feature" onclick="go('rewards')"><div class="circle">${icon('i-gift')}</div><b>Reward</b><span>Tukar point dengan hadiah</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-store')}</div><b>Paket Reseller</b><span>Dapatkan harga khusus</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-coffee')}</div><b>Paket Cafe & Usaha</b><span>Untuk partner bisnis kuliner</span></button><button class="feature" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><b>Ajak Teman</b><span>Bagikan kode referral Cireng Indi</span></button></div></div>`, 'home');
+
+function renderHome(){
+ const m=state.me||{profile:{},points:0};
+ const firstName=memberFirstName();
+ const b=state.boot||{products:[],variants:[],categories:[]};
+ const fav=(b.products||[]).filter(p=>p.active!==false&&p.best_seller)
+   .sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,5);
+ root.innerHTML=shell(
+  '<main class="ciVividHome">'+
+  '<header class="ciVividMasthead">'+
+   '<img src="assets/logo_cireng_indi.png" alt="Cireng Indi" class="ciVividMastheadLogo">'+
+   '<div class="ciVividMastheadName"><strong>Cireng Indi</strong><small>Homemade dari Tanah Grogot</small></div>'+
+   '<button type="button" class="ciVividMastheadOrders" aria-label="Lihat status pesanan" onclick="go(\'orders\')">'+icon('i-receipt')+'</button>'+
+  '</header>'+
+  renderPromoCarousel()+
+  '<section class="member ciVividMember">'+
+   '<h2 id="memberGreeting">Hai'+(firstName?', '+esc(firstName):'')+'!</h2>'+
+   '<p class="ciVividWelcome">Selamat datang di Cireng Indi <span aria-hidden="true">✦</span></p>'+
+   '<div class="pills ciVividMemberPills">'+
+    '<span class="pill ciVividPointPill">'+icon('i-star','sm')+' <span id="memberPoints">'+Number(m.points||0)+' Point</span></span>'+
+    '<button type="button" class="pill level voucherLink" onclick="go(\'vouchers\')">'+icon('i-gift','sm')+' Voucher <span data-voucher-count>'+state.vouchers.filter(v=>v.status==='available').length+'</span></button>'+
+    '<span class="pill ok ciVividActivePill">'+icon('i-check','sm')+' Aktif</span>'+
+   '</div>'+
+  '</section>'+
+  '<section class="ciVividCollection" aria-labelledby="ciPopularHeading">'+
+   '<div class="ciVividSectionHeading"><h2 id="ciPopularHeading">Populer di Cireng Indi</h2><button type="button" class="ciVividSeeAll" onclick="go(\'store\')">Lihat Semua '+icon('i-right','sm')+'</button></div>'+
+   '<div class="hscroll ciVividPopularScroll" id="homePopularList">'+
+    (fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>')+
+   '</div>'+
+  '</section>'+
+  '<section class="ciVividCollection ciVividPerks" aria-labelledby="ciSpecialHeading">'+
+   '<div class="ciVividSectionHeading"><h2 id="ciSpecialHeading">Spesial Untukmu</h2></div>'+
+   '<p class="ciVividSectionSub">Temukan lebih banyak manfaat bersama Cireng Indi</p>'+
+   '<div class="featureGrid ciVividFeatureGrid">'+
+    '<button class="feature ciVividFeature ciVividReward" onclick="go(\'rewards\')"><span class="ciVividFeatureTop"><span class="ciVividFeatureIcon">'+icon('i-gift')+'</span>'+icon('i-right','sm')+'</span><b>Reward</b><span>Kumpulkan poin dan dapatkan keuntungan menarik.</span><span class="ciVividFeatureArt" aria-hidden="true">✦</span></button>'+
+    '<button class="feature ciVividFeature ciVividReseller" onclick="go(\'partner\')"><span class="ciVividFeatureTop"><span class="ciVividFeatureIcon">'+icon('i-store')+'</span>'+icon('i-right','sm')+'</span><b>Paket Reseller</b><span>Mulai peluang usaha bersama produk pilihan Cireng Indi.</span><span class="ciVividFeatureArt" aria-hidden="true">▧</span></button>'+
+    '<button class="feature ciVividFeature ciVividCafe" onclick="go(\'partner\')"><span class="ciVividFeatureTop"><span class="ciVividFeatureIcon">'+icon('i-coffee')+'</span>'+icon('i-right','sm')+'</span><b>Kafe & Usaha</b><span>Konsultasikan kebutuhan bisnis dan pengadaan produk.</span><span class="ciVividFeatureArt" aria-hidden="true">✧</span></button>'+
+    '<button class="feature ciVividFeature ciVividReferral" onclick="shareReferral()"><span class="ciVividFeatureTop"><span class="ciVividFeatureIcon">'+icon('i-users')+'</span>'+icon('i-right','sm')+'</span><b>Ajak Teman</b><span>Bagikan kode referral untuk berbelanja bersama.</span><span class="ciVividFeatureArt" aria-hidden="true">♡</span></button>'+
+   '</div>'+
+  '</section>'+
+  '</main>','home');
  if(state.route==='home'){startHero();refreshVoucherCount()}
 }
 function refreshHomeData(){
