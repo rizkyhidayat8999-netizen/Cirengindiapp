@@ -159,6 +159,14 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .option .radio{flex:none}
 .orderStep small{display:block;font-size:8px;line-height:1.1;margin:3px 0 0;color:#81736a}
 
+
+#launchBrand{position:fixed;inset:0;z-index:2200;background:#f9f2e9;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:1;visibility:visible;transition:opacity .26s ease,visibility .26s ease}
+#launchBrand.hide{opacity:0;visibility:hidden}
+#launchBrand .brandPanel{text-align:center;padding:20px}
+#launchBrand img{display:block;width:112px;height:112px;object-fit:contain;margin:0 auto 14px;filter:drop-shadow(0 5px 10px rgba(100,55,25,.12))}
+#launchBrand strong{font-size:23px;color:#482719;display:block}#launchBrand span{font-size:12px;color:#857567;display:block;margin-top:8px}
+.heroSlides>.banner{background:#f7eee5;object-fit:cover}
+.pCard img,.prow img,.orderMode .pic img,.productHero img,.orderProduct img{object-fit:contain;background:#f7eee5!important}
 </style>
 </head>
 <body>
@@ -186,7 +194,7 @@ input,select,textarea{min-height:48px;border-radius:12px}
 <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/></symbol>
 <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1.7-1L14.5 3h-5L9 6a8 8 0 0 0-1.7 1L5 6 3 9.5 5 11a7 7 0 0 0 0 2l-2 1.5L5 18l2.3-1a8 8 0 0 0 1.7 1l.5 3h5l.5-3a8 8 0 0 0 1.7-1l2.3 1 2-3.5L19 13a7 7 0 0 0 .1-1Z"/></symbol>
 </defs></svg>
-<div id="root"></div><div id="toast" class="toast"></div>
+<div id="launchBrand" role="status" aria-label="Membuka Cireng Indi"><div class="brandPanel"><img src="assets/logo_cireng_indi.png" alt="Logo asli Cireng Indi" decoding="sync"><strong>Cireng Indi</strong><span>Frozen Homemade · Tanah Grogot</span></div></div><div id="root"></div><div id="toast" class="toast"></div>
 <script>
 const SB='https://tbviryuimoxgapubdjio.supabase.co', KEY='sb_publishable_DxP6XDJP2XfZAC45pAniHQ_1WJqC4Fr';
 const state={session:null,boot:null,me:null,route:'',category:'all',product:null,qty:1,fulfillment:'delivery',vouchers:[],selectedVoucherId:null,ordersSnapshot:[],addressesSnapshot:[]};
@@ -308,7 +316,7 @@ async function go(r){
   if(navId===key&&state.route===r&&r!=='checkout'&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(r,root.innerHTML);
  }catch(e){if(navId===key)fail(e)}
 }
-function renderHome(){const m=state.me||{profile:{full_name:'Member Cireng Indi',username:'Member'},points:0};const b=state.boot||{products:[],variants:[],categories:[]};const fav=(b.products||[]).filter(p=>p.best_seller).sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,4);root.innerHTML=shell(`<section class="hero" aria-label="Promo Cireng Indi"><div class="heroSlides"><img class="banner is-active" src="assets/official_banner_01.webp" data-banner-id="1" alt="Cireng Indi homemade" onerror="bannerFallback(this)" fetchpriority="high"><img class="banner" src="assets/official_banner_02.webp" data-banner-id="2" alt="Ebi Furai Cireng Indi" onerror="bannerFallback(this)"><img class="banner" src="assets/official_banner_03.webp" data-banner-id="3" alt="Jamu Indi’s Kitchen" onerror="bannerFallback(this)"><img class="banner" src="assets/official_banner_04.webp" data-banner-id="4" alt="Puding Cireng Indi" onerror="bannerFallback(this)"></div><div class="heroCopy"><b>Renyah di luar, lembut di dalam</b><span>Camilan Cireng pilihan keluarga</span></div><div class="heroDots"><button class="active" onclick="heroSlide(0)" aria-label="Banner 1"></button><button onclick="heroSlide(1)" aria-label="Banner 2"></button><button onclick="heroSlide(2)" aria-label="Banner 3"></button><button onclick="heroSlide(3)" aria-label="Banner 4"></button></div></section><div class="member"><h2 id="memberGreeting">Hai, ${esc(m.profile.full_name||m.profile.username)}!</h2><div class="pills"><span class="pill">${icon('i-star','sm')} <span id="memberPoints">${Number(m.points||0)} Point</span></span><button class="pill level voucherLink" onclick="go('vouchers')">${icon('i-gift','sm')} Voucher <span data-voucher-count>${state.vouchers.filter(v=>v.status==='available').length}</span></button><span class="pill ok">Aktif</span></div></div><div class="section"><h2>Populer di Cireng Indi</h2><div class="hscroll" id="homePopularList">${fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>'}</div></div><div class="section"><h2>Mau Pesan Apa Hari Ini?</h2><div class="grid2"><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_02.webp" data-photo-id="2" data-local-photo="product_cireng_isi.webp" onerror="photoFallback(this)" alt="Cireng Isi" decoding="async"></div><div class="body"><b>Siap Makan</b><span>Langsung nikmati camilan favoritmu</span></div></button><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_22.webp" data-photo-id="22" data-local-photo="product_mix.webp" onerror="photoFallback(this)" alt="Frozen Mix Platter" decoding="async"></div><div class="body"><b>Frozen</b><span>Stok camilan praktis di rumah</span></div></button></div></div><div class="section" style="padding-top:2px"><h2>Spesial Untukmu di Cireng Indi</h2><div class="featureGrid"><button class="feature" onclick="go('rewards')"><div class="circle">${icon('i-gift')}</div><b>Reward</b><span>Tukar point dengan hadiah</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-store')}</div><b>Paket Reseller</b><span>Dapatkan harga khusus</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-coffee')}</div><b>Paket Cafe & Usaha</b><span>Untuk partner bisnis kuliner</span></button><button class="feature" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><b>Ajak Teman</b><span>Bagikan kode referral Cireng Indi</span></button></div></div>`, 'home');
+function renderHome(){const m=state.me||{profile:{full_name:'Member Cireng Indi',username:'Member'},points:0};const b=state.boot||{products:[],variants:[],categories:[]};const fav=(b.products||[]).filter(p=>p.best_seller).sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,4);root.innerHTML=shell(`<section class="hero" aria-label="Promo Cireng Indi"><div class="heroSlides"><img class="banner is-active" src="assets/banner_reseller.webp" data-banner-id="1" alt="Cireng Indi homemade" onerror="bannerFallback(this)" fetchpriority="high"><img class="banner" src="assets/banner_churros.webp" data-banner-id="2" alt="Ebi Furai Cireng Indi" onerror="bannerFallback(this)"><img class="banner" src="assets/banner_cafe.webp" data-banner-id="3" alt="Jamu Indi’s Kitchen" onerror="bannerFallback(this)"><img class="banner" src="assets/banner_puding.webp" data-banner-id="4" alt="Puding Cireng Indi" onerror="bannerFallback(this)"></div><div class="heroCopy"><b>Renyah di luar, lembut di dalam</b><span>Camilan Cireng pilihan keluarga</span></div><div class="heroDots"><button class="active" onclick="heroSlide(0)" aria-label="Banner 1"></button><button onclick="heroSlide(1)" aria-label="Banner 2"></button><button onclick="heroSlide(2)" aria-label="Banner 3"></button><button onclick="heroSlide(3)" aria-label="Banner 4"></button></div></section><div class="member"><h2 id="memberGreeting">Hai, ${esc(m.profile.full_name||m.profile.username)}!</h2><div class="pills"><span class="pill">${icon('i-star','sm')} <span id="memberPoints">${Number(m.points||0)} Point</span></span><button class="pill level voucherLink" onclick="go('vouchers')">${icon('i-gift','sm')} Voucher <span data-voucher-count>${state.vouchers.filter(v=>v.status==='available').length}</span></button><span class="pill ok">Aktif</span></div></div><div class="section"><h2>Populer di Cireng Indi</h2><div class="hscroll" id="homePopularList">${fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>'}</div></div><div class="section"><h2>Mau Pesan Apa Hari Ini?</h2><div class="grid2"><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_02.webp" data-photo-id="2" data-local-photo="product_cireng_isi.webp" onerror="photoFallback(this)" alt="Cireng Isi" decoding="async"></div><div class="body"><b>Siap Makan</b><span>Langsung nikmati camilan favoritmu</span></div></button><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_22.webp" data-photo-id="22" data-local-photo="product_mix.webp" onerror="photoFallback(this)" alt="Frozen Mix Platter" decoding="async"></div><div class="body"><b>Frozen</b><span>Stok camilan praktis di rumah</span></div></button></div></div><div class="section" style="padding-top:2px"><h2>Spesial Untukmu di Cireng Indi</h2><div class="featureGrid"><button class="feature" onclick="go('rewards')"><div class="circle">${icon('i-gift')}</div><b>Reward</b><span>Tukar point dengan hadiah</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-store')}</div><b>Paket Reseller</b><span>Dapatkan harga khusus</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-coffee')}</div><b>Paket Cafe & Usaha</b><span>Untuk partner bisnis kuliner</span></button><button class="feature" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><b>Ajak Teman</b><span>Bagikan kode referral Cireng Indi</span></button></div></div>`, 'home');
  if(state.route==='home'){startHero();refreshVoucherCount()}
 }
 function refreshHomeData(){
@@ -337,7 +345,11 @@ async function home(){
 async function store(){try{const b=await boot();if(state.route!=='store')return;const ps=(b.products||[]).filter(p=>state.category==='all'||p.category_id===state.category);const cats=b.categories||[];const rec=ps.filter(p=>p.best_seller).slice(0,3);root.innerHTML=shell(`<div class="storeHead"><h1><img class="storeLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"><span>Cireng Indi</span></h1><div class="segment"><button class="${state.fulfillment==='pickup'?'active':''}" onclick="setFulfillment('pickup')">Pick Up</button><button class="${state.fulfillment==='delivery'?'active':''}" onclick="setFulfillment('delivery')">Delivery</button></div><p class="storeTagline">Pesan cepat, stok real-time, tampilan lebih premium.</p></div><div class="locationCard"><div class="locrow" role="button" tabindex="0" onclick="showOutlet()" onkeydown="if(event.key==='Enter')showOutlet()"><div class="locicon">${icon('i-store')}</div><div class="grow"><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div>${icon('i-right')}</div>${state.fulfillment==='delivery'?`<div class="locrow" onclick="go('addresses')"><div class="locicon">${icon('i-pin')}</div><div class="grow"><b>Lokasi pengiriman</b><span>Pilih alamat tersimpan</span></div>${icon('i-right')}</div>`:`<div class="locrow"><div class="locicon">${icon('i-bag')}</div><div class="grow"><b>Ambil di outlet</b><span>Pesanan disiapkan untuk pickup</span></div>${icon('i-right')}</div>`}</div><div class="chips"><button class="chip ${state.category==='all'?'active':''}" onclick="setCat('all')">Favorit</button>${cats.map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')">${esc(c.name)}</button>`).join('')}</div><div class="promo" role="button" tabindex="0" onclick="go('vouchers')" onkeydown="if(event.key==='Enter')go('vouchers')"><div class="circle">${icon('i-gift')}</div><div class="grow"><b>Voucher Eksklusif Member</b><span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}</div><div class="section" style="padding-bottom:12px"><h2>Rekomendasi</h2></div><div class="hscroll">${rec.map(p=>pcard(p,b)).join('')}</div><div class="section" style="padding-bottom:2px"><h2>Menu Cireng Indi</h2></div><div class="productList">${ps.map(p=>prow(p,b)).join('')}</div>`, 'store');void cartBar()}finally{loading(false)}}
 function showOutlet(){toast('Outlet utama Cireng Indi • Tanah Grogot, Kalimantan Timur')}
 async function setFulfillment(v){state.fulfillment=v==='pickup'?'pickup':'delivery';await store()}
-function variantFor(p,b){return (b.variants||[]).find(v=>v.product_id===p.id&&v.active!==false&&Number(v.stock||0)>0)||(b.variants||[]).find(v=>v.product_id===p.id)}
+function variantFor(p,b){
+ const vs=(b.variants||[]).filter(v=>v.product_id===p.id&&v.active!==false)
+ .sort((a,b)=>Number(a.price||Infinity)-Number(b.price||Infinity)||Number(a.sort_order||0)-Number(b.sort_order||0));
+ return vs.find(v=>Number(v.stock||0)>0)||vs[0];
+}
 function localPic(n){
  n=String(n||'').toLowerCase();
  if(n.includes('cireng isi'))return'product_cireng_isi.webp';
@@ -384,9 +396,8 @@ function officialImageId(p){
  return /^app-product-\d+$/.test(key)&&Number.isInteger(number)&&number>=1&&number<=31?number:null;
 }
 function pic(p){
- const id=officialImageId(p);
- if(id)return 'assets/official_'+String(id).padStart(2,'0')+'.webp';
- return p?.image_path?img(p.image_path):'assets/'+localPic(p?.name);
+ // Bundled photos work immediately on already installed Android APKs.
+ return 'assets/'+localPic(p?.name);
 }
 function bannerFallback(image){
  const i=Number(image.dataset.bannerId||0);
@@ -399,25 +410,75 @@ function bannerFallback(image){
  image.onerror=null;
 }
 function photoFallback(image){
- const oldStage=Number(image.dataset.photoStage||0);
- const productId=Number(image.dataset.photoId);
- if(!Number.isInteger(productId)||productId<1||productId>31){image.onerror=null;return}
- image.dataset.photoStage=String(oldStage+1);
- if(oldStage===0){image.src=BRANDED_BASE+'official_'+String(productId).padStart(2,'0')+'.webp';return}
- if(oldStage===1){image.src=PHOTO_BASE+OFFICIAL_IMAGE_SLUGS[productId-1]+'.webp?v=20260829-client-final';return}
- if(oldStage===2){image.src='assets/'+(image.dataset.localPhoto||'product_cireng.webp');return}
  image.onerror=null;
+ if(!image.dataset.localRecovery){
+  image.dataset.localRecovery='1';
+  image.src='assets/'+(image.dataset.localPhoto||'product_cireng.webp');
+ }
 }
+const upgradedImages=new Map();
+const upgradedImageObserver=typeof IntersectionObserver==='function'
+ ?new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{
+  if(!isIntersecting)return;
+  upgradedImageObserver.unobserve(target);
+  upgradeImageWhenReady(target);
+ }),{rootMargin:'200px'}):null;
+function upgradeImageWhenReady(img){
+ const id=Number(img.dataset.photoId);
+ if(!Number.isInteger(id)||id<1||id>31||img.dataset.upgradeRequested)return;
+ img.dataset.upgradeRequested='1';
+ if(!upgradedImages.has(id)){
+  upgradedImages.set(id,new Promise(resolve=>{
+   const remote=BRANDED_BASE+'official_'+String(id).padStart(2,'0')+'.webp';
+   const test=new Image();
+   test.onload=()=>resolve(remote);test.onerror=()=>resolve(null);test.src=remote;
+  }));
+ }
+ upgradedImages.get(id).then(url=>{
+  if(url&&img.isConnected){
+   const prior=img.src;
+   img.onerror=()=>{img.onerror=null;img.src=prior};
+   img.src=url;
+  }
+ });
+}
+function observeCatalogPhotos(){
+ for(const img of root.querySelectorAll('img[data-photo-id]:not([data-photo-watched])')){
+  img.dataset.photoWatched='1';
+  if(upgradedImageObserver)upgradedImageObserver.observe(img);else upgradeImageWhenReady(img);
+ }
+}
+const bannerPrefetch=new Map();
+function observeBanners(){
+ const old=['banner_reseller.webp','banner_churros.webp','banner_cafe.webp','banner_puding.webp'];
+ for(const img of root.querySelectorAll('.heroSlides img[data-banner-id]:not([data-banner-watched])')){
+  img.dataset.bannerWatched='1';
+  const index=Number(img.dataset.bannerId);
+  if(index<1||index>4)continue;
+  const uri=BRANDED_BASE+'official_banner_'+String(index).padStart(2,'0')+'.webp';
+  if(!bannerPrefetch.has(index)){
+   bannerPrefetch.set(index,new Promise(resolve=>{
+    const image=new Image();image.onload=()=>resolve(uri);image.onerror=()=>resolve(null);image.src=uri;
+   }));
+  }
+  bannerPrefetch.get(index).then(url=>{
+   if(url&&img.isConnected){
+    img.onerror=()=>{img.onerror=null;img.src='assets/'+old[index-1]};
+    img.src=url;
+   }
+  });
+ }
+}
+new MutationObserver(()=>{observeCatalogPhotos();observeBanners()}).observe(root,{childList:true,subtree:true});
 function photoAttrs(p){
- const id=officialImageId(p);
- const local=localPic(p?.name);
- return 'src="'+esc(pic(p))+'" alt="'+esc(p?.name||'Produk Cireng Indi')+'" decoding="async" loading="lazy"'+
+ const id=officialImageId(p),local=localPic(p?.name);
+ return 'src="assets/'+esc(local)+'" alt="'+esc(p?.name||'Produk Cireng Indi')+'" decoding="async" loading="lazy"'+
  (id?' data-photo-id="'+id+'" data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
 function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
 function prow(p,b){const v=variantFor(p,b);return `<div class="prow" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3><p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
 async function setCat(id){state.category=id;await store()}async function openP(id){const b=await boot();const p=(b.products||[]).find(x=>x.id===id);if(!p)return;state.product={p,vars:(b.variants||[]).filter(v=>v.product_id===id)};state.qty=1;await go('product')}
-async function product(){const x=state.product;if(!x)return go('store');const p=x.p, vars=x.vars||[];const v=vars.find(row=>row.active!==false&&Number(row.stock||0)>0)||vars[0];root.innerHTML=`<div class="app" style="padding-bottom:92px"><section class="productHero"><img ${photoAttrs(p)}><button class="back" onclick="go('store')">${icon('i-left')}</button></section><div class="detail"><h1>${esc(p.name)}</h1><div class="muted">mulai dari</div><div class="price" id="selectedVariantPrice" style="font-size:25px">${rp(v?.price??p.base_price)}</div><p class="muted">${esc(p.description||'Produk pilihan Cireng Indi.')}</p></div><div class="option"><h2>Pilihan Produk <span>Wajib, pilih 1</span></h2>${vars.map((q,i)=>`<div class="optrow" role="button" tabindex="0" aria-label="Pilih ${esc(q.name)}" onclick="selVariant('${q.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selVariant('${q.id}')}" style="${Number(q.stock||0)<=0?'opacity:.45;pointer-events:none':''}"><div class="grow"><b>${esc(q.name)}</b><div class="price" style="font-size:14px">${rp(q.price)}</div></div><div class="radio ${i===0?'on':''}" data-v="${q.id}"></div></div>`).join('')}</div><div class="option"><h2>Catatan <span>Opsional</span></h2><textarea id="pnote" rows="3" placeholder="Contoh: sambal dipisah"></textarea></div><div class="pointsHint">${icon('i-star')} Kamu berpotensi mendapatkan point dari transaksi ini.</div><div class="stickyAction"><div class="qty"><button onclick="changeQty(-1)">${icon('i-minus')}</button><b id="qv">1</b><button class="plus" onclick="changeQty(1)">${icon('i-plus')}</button></div><button class="cta" onclick="addFromProduct()">Tambah ke Keranjang</button></div></div>`;state.product.selected=v?.id||null}
+async function product(){const x=state.product;if(!x)return go('store');const p=x.p, vars=x.vars||[];const v=variantFor(p,{variants:vars});if(v)state.product.selected=v.id;root.innerHTML=`<div class="app" style="padding-bottom:92px"><section class="productHero"><img ${photoAttrs(p)}><button class="back" onclick="go('store')">${icon('i-left')}</button></section><div class="detail"><h1>${esc(p.name)}</h1><div class="muted">mulai dari</div><div class="price" id="selectedVariantPrice" style="font-size:25px">${rp(v?.price??p.base_price)}</div><p class="muted">${esc(p.description||'Produk pilihan Cireng Indi.')}</p></div><div class="option"><h2>Pilihan Produk <span>Wajib, pilih 1</span></h2>${vars.map((q,i)=>`<div class="optrow" role="button" tabindex="0" aria-label="Pilih ${esc(q.name)}" onclick="selVariant('${q.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selVariant('${q.id}')}" style="${Number(q.stock||0)<=0?'opacity:.45;pointer-events:none':''}"><div class="grow"><b>${esc(q.name)}</b><div class="price" style="font-size:14px">${rp(q.price)}</div></div><div class="radio ${q.id===v?.id?'on':''}" data-v="${q.id}"></div></div>`).join('')}</div><div class="option"><h2>Catatan <span>Opsional</span></h2><textarea id="pnote" rows="3" placeholder="Contoh: sambal dipisah"></textarea></div><div class="pointsHint">${icon('i-star')} Kamu berpotensi mendapatkan point dari transaksi ini.</div><div class="stickyAction"><div class="qty"><button onclick="changeQty(-1)">${icon('i-minus')}</button><b id="qv">1</b><button class="plus" onclick="changeQty(1)">${icon('i-plus')}</button></div><button class="cta" onclick="addFromProduct()">Tambah ke Keranjang</button></div></div>`;state.product.selected=v?.id||null}
 function selVariant(id){const v=state.product?.vars?.find(x=>x.id===id);if(!v||Number(v.stock||0)<=0)return;state.product.selected=id;document.querySelectorAll('.radio[data-v]').forEach(e=>e.classList.toggle('on',e.dataset.v===id));const price=document.getElementById('selectedVariantPrice');if(price)price.textContent=rp(v.price)}function changeQty(d){state.qty=Math.max(1,Math.min(20,state.qty+d));qv.textContent=state.qty}
 function quickAddOrSelect(productId){
  const p=state.boot?.products?.find(x=>x.id===productId);
@@ -635,6 +696,8 @@ async function profile(){loading(true);try{const d=await api('me');state.me=d;co
 function shareReferral(){const c=state.me?.profile?.referral_code;if(c)Native.shareText('Kode referral Cireng Indi saya: '+c);else toast('Kode referral belum tersedia.')}async function logout(){loading(true);try{try{await api('logout')}catch(e){}sessionClear();state.boot=null;renderAuth('login')}finally{loading(false)}}
 window.onNativeDeepLink=function(url){try{const u=new URL(url);const p=new URLSearchParams((u.hash||'').replace(/^#/,''));const a=p.get('access_token'),r=p.get('refresh_token');if(a){sessionSave({accessToken:a,refreshToken:r||'',memberId:''});root.innerHTML=`<section class="auth"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Reset Password</h1><div class="form"><label>Password baru</label><input id="npw" type="password"><button class="fullbtn" onclick="changeRecovery()">Simpan Password</button></div></div></section>`}}catch(e){}};async function changeRecovery(){loading(true);try{await api('change_password',{password:npw.value});toast('Password berhasil diubah.');await logout()}catch(e){fail(e)}finally{loading(false)}}
 (async()=>{state.session=sessionRead();readPublicCatalog();if(state.session?.accessToken){try{await go('home');updateCatalogQuietly()}catch(e){fail(e)}}else{renderAuth('login');void freshCatalog().catch(()=>{})}})();
+setTimeout(()=>document.getElementById('launchBrand')?.classList.add('hide'),720);
+setTimeout(()=>document.getElementById('launchBrand')?.remove(),1100);
 </script>
 </body>
 </html>
