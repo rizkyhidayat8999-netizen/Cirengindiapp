@@ -366,6 +366,54 @@ html:has(#root > .app),body:has(#root > .app){
 .ciSheetPrimary{background:#934d36;color:white;border:0}
 .ciSheetSecondary{background:#fff;color:#934d36;border:2px solid #934d36}
 @media(max-width:365px){.ciQtyControl{gap:7px}.ciQtyControl button{width:37px;height:37px}.ciProductBottom{gap:8px;padding-inline:11px}.ciAddToCart{font-size:12px}.ciOptionTitle h2{font-size:18px}}
+
+/* Member cart v3: compact Fore-inspired layout, isolated from store and checkout styles. */
+#root>.ciCartScreen{background:linear-gradient(165deg,#f7fbf8 0%,#f3f8f5 60%,#ffffff 100%)!important;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+.ciCartScreen .ciCartHeader{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:11px;min-height:78px;padding:11px 15px;background:rgba(255,255,255,.97);border-bottom:1px solid #e8eeea;backdrop-filter:blur(10px)}
+.ciCartScreen .ciCartBack{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:0;border-radius:50%;background:#eef6f1;color:#174d39;padding:5px}
+.ciCartScreen .ciCartBack .icon{width:21px;height:21px}
+.ciCartScreen .ciCartHeading{min-width:0;flex:1}
+.ciCartScreen .ciCartHeading h1{margin:0;font-size:20px;font-weight:800;line-height:1.2;letter-spacing:-.35px;color:#17241e}
+.ciCartScreen .ciCartHeading p{margin:4px 0 0;font-size:11.5px;line-height:1.4;color:#6d7b71}
+.ciCartScreen .ciCartBag{position:relative;display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#eef6f1;color:#075538}
+.ciCartScreen .ciCartBag .icon{width:18px;height:18px}
+.ciCartScreen .ciCartBag em{position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 3px;background:#075538;color:#fff;font-size:10px;font-weight:750;font-style:normal;border-radius:20px}
+.ciCartScreen .ciCartList{display:grid;gap:11px;padding:15px 14px 18px}
+.ciCartScreen .ciCartItem{display:grid;grid-template-columns:74px minmax(0,1fr) 101px;align-items:center;gap:10px;min-width:0;min-height:104px;margin:0;padding:12px 11px;border:1px solid #e8eee9;border-radius:17px;background:#fff;box-shadow:0 5px 17px rgba(34,70,51,.06)}
+.ciCartScreen .ciCartItemPhoto{display:block;width:74px;height:79px;max-width:100%;border-radius:11px;object-fit:cover!important;background:#f7f7f4!important}
+.ciCartScreen .ciCartItemInfo{align-self:center;min-width:0}
+.ciCartScreen .ciCartItemInfo h2{margin:0 0 4px;font-size:14px;font-weight:750;line-height:1.28;letter-spacing:-.2px;color:#1c2b22;overflow-wrap:break-word}
+.ciCartScreen .ciCartVariant{display:block;font-size:11.5px;line-height:1.35;color:#788078;overflow-wrap:anywhere}
+.ciCartScreen .ciCartLinePrice{margin-top:9px;font-size:15px;line-height:1.2;font-weight:800;letter-spacing:-.2px;color:#075538;white-space:nowrap}
+.ciCartScreen .ciCartItemActions{height:79px;min-width:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}
+.ciCartScreen .ciCartRemove{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:#89938d;padding:4px}
+.ciCartScreen .ciCartRemove .icon{width:17px;height:17px}
+.ciCartScreen .ciCartQty{display:flex;align-items:center;justify-content:space-between;gap:4px;width:101px;height:36px;padding:3px 4px;border-radius:99px;background:#edf5f0}
+.ciCartScreen .ciCartQty button{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;min-width:29px;padding:6px;border:1px solid #c7ded0;border-radius:50%;background:#fff;color:#075538;box-shadow:0 1px 3px rgba(15,52,33,.07);touch-action:manipulation}
+.ciCartScreen .ciCartQty button.plus{border-color:#075538;background:#075538;color:#fff}
+.ciCartScreen .ciCartQty .icon{width:16px;height:16px}
+.ciCartScreen .ciCartQty output{display:block;min-width:16px;flex:1;text-align:center;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;color:#1e2c23}
+.ciCartScreen .ciCartEmpty{margin:35px auto;padding:22px 12px;max-width:290px;text-align:center;color:#6d7b71;font-size:14px;line-height:1.5}
+#root>.ciCartFooter{position:fixed;z-index:95;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);display:flex;align-items:center;gap:12px;min-height:75px;padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));border-top:1px solid #e3eae5;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -6px 25px rgba(22,57,39,.075)}
+.ciCartFooter .ciCartSummary{flex:1;min-width:0}
+.ciCartFooter .ciCartSummary small{display:block;margin-bottom:4px;color:#6d776f;font-size:11px}
+.ciCartFooter .ciCartSummary strong{display:block;font-size:19px;font-weight:850;line-height:1.15;letter-spacing:-.5px;color:#075538;white-space:nowrap}
+.ciCartFooter .ciCartCheckout{flex:0 0 auto;min-width:0;width:clamp(144px,44%,191px);height:43px;padding:0 12px;display:flex;justify-content:center;align-items:center;gap:7px;border:0;border-radius:13px;background:#075538;color:white;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 3px 9px rgba(7,85,56,.14);touch-action:manipulation}
+.ciCartFooter .ciCartCheckout .icon{width:16px;height:16px}
+.ciCartScreen button:focus-visible,.ciCartFooter button:focus-visible{outline:2px solid #075538;outline-offset:2px}
+@media(max-width:375px){
+ .ciCartScreen .ciCartList{padding-inline:11px;gap:10px}
+ .ciCartScreen .ciCartItem{grid-template-columns:65px minmax(0,1fr) 92px;gap:8px;padding:10px 9px}
+ .ciCartScreen .ciCartItemPhoto{width:65px;height:73px}
+ .ciCartScreen .ciCartItemActions{height:73px}
+ .ciCartScreen .ciCartQty{width:92px}
+ .ciCartScreen .ciCartQty button{flex-basis:27px;width:27px;height:27px;min-width:27px}
+ .ciCartScreen .ciCartItemInfo h2{font-size:13px}
+ .ciCartScreen .ciCartLinePrice{font-size:14px}
+ .ciCartFooter .ciCartSummary strong{font-size:17px}
+ .ciCartFooter .ciCartCheckout{width:147px;font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -392,6 +440,7 @@ html:has(#root > .app),body:has(#root > .app){
 <symbol id="i-location" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></symbol>
 <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/></symbol>
 <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1.7-1L14.5 3h-5L9 6a8 8 0 0 0-1.7 1L5 6 3 9.5 5 11a7 7 0 0 0 0 2l-2 1.5L5 18l2.3-1a8 8 0 0 0 1.7 1l.5 3h5l.5-3a8 8 0 0 0 1.7-1l2.3 1 2-3.5L19 13a7 7 0 0 0 .1-1Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 10v7m4-7v7"/></symbol>
 </defs></svg>
 <div id="launchBrand" role="status" aria-label="Membuka Cireng Indi"><div class="brandPanel"><img src="assets/logo_cireng_indi.png" alt="Logo asli Cireng Indi" decoding="sync"><strong>Cireng Indi</strong><span>Frozen Homemade · Tanah Grogot</span></div></div><div id="root"></div><div id="toast" class="toast"></div>
 <script>
@@ -861,18 +910,99 @@ async function addresses(){
 
 function addAddressForm(){root.innerHTML=`<div class="app">${uiTop('Tambah Alamat','addresses')}<div class="section"><div class="form"><label>Label</label><input id="alabel" placeholder="Rumah / Kantor"><label>Nama penerima</label><input id="aname"><label>No. HP</label><input id="aphone" inputmode="tel"><label>Alamat lengkap</label><textarea id="aline" rows="3"></textarea><label>Kota/Kabupaten</label><input id="acity"><label>Provinsi</label><input id="aprov"><label>Kode pos</label><input id="apost"><button class="fullbtn" onclick="saveAddress()">Simpan Alamat</button></div></div></div>`}
 async function saveAddress(){loading(true);try{const d=await api('address_create',{label:alabel.value.trim(),recipient_name:aname.value.trim(),phone:aphone.value.trim(),address_line:aline.value.trim(),city:acity.value.trim(),province:aprov.value.trim(),postal_code:apost.value.trim()});await api('address_default',{id:d.address.id});await addresses()}catch(e){fail(e)}finally{loading(false)}}async function defaultAddr(id){loading(true);try{await api('address_default',{id});toast('Alamat utama diperbarui.')}catch(e){fail(e)}finally{loading(false)}}
-function renderCart(c){const items=c.items||[];if(state.route!=='cart')return;root.innerHTML=`<div class="app cartScreen" style="padding-bottom:92px">${uiTop('Keranjang','store')}<div class="section">${items.length?items.map(i=>{const v=i.variant||{},p=v.product||{},price=Number(v.price??p.base_price??0);return `<div class="orderCard"><div class="orderProduct" style="margin:0;border-top:0"><img ${photoAttrs(p)}><div style="flex:1"><b>${esc(p.name)}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')}</div><div class="price">${rp(price*i.quantity)}</div></div><div class="qty"><button onclick="cartQty('${i.variant_id}',${i.quantity-1})">${icon('i-minus')}</button><b>${i.quantity}</b><button class="plus" onclick="cartQty('${i.variant_id}',${i.quantity+1})">${icon('i-plus')}</button></div></div></div>`}).join(''):`<p style="text-align:center;color:var(--muted);padding:40px 0">Keranjang masih kosong.</p>`}</div>${items.length?`<div class="stickyAction"><div style="flex:1"><small>Subtotal</small><div class="price">${rp(c.subtotal)}</div></div><button class="cta" onclick="go('checkout')">Lanjut Checkout</button></div>`:''}</div>`}
+
+const cartPendingById=new Map();
+function renderCart(c){
+ if(state.route!=='cart')return;
+ const previousScroll=root.querySelector('.ciCartScreen')?.scrollTop||0;
+ const items=Array.isArray(c?.items)?c.items:[];
+ const itemCount=items.length;
+ const rows=items.map(i=>{
+  const v=i.variant||{},p=v.product||{},id=esc(i.variant_id),qty=Number(i.quantity||0);
+  const unit=Number(v.price??p.base_price??0);
+  return '<article class="ciCartItem">'+
+   '<img class="ciCartItemPhoto" '+photoAttrs(p)+'>'+
+   '<div class="ciCartItemInfo"><h2>'+esc(p.name||'Produk Cireng Indi')+'</h2>'+
+   '<span class="ciCartVariant">'+esc(v.name||'')+'</span>'+
+   '<div class="ciCartLinePrice">'+rp(unit*qty)+'</div></div>'+
+   '<div class="ciCartItemActions">'+
+    '<button class="ciCartRemove" type="button" aria-label="Hapus '+esc(p.name||'produk')+'" onclick="cartQty(\''+id+'\',0)">'+icon('i-trash','sm')+'</button>'+
+    '<div class="ciCartQty" role="group" aria-label="Jumlah '+esc(p.name||'produk')+'">'+
+     '<button type="button" aria-label="Kurangi jumlah '+esc(p.name||'produk')+'" onclick="cartQty(\''+id+'\','+(qty-1)+')">'+icon('i-minus')+'</button>'+
+     '<output aria-live="polite">'+qty+'</output>'+
+     '<button class="plus" type="button" aria-label="Tambah jumlah '+esc(p.name||'produk')+'" onclick="cartQty(\''+id+'\','+(qty+1)+')">'+icon('i-plus')+'</button>'+
+    '</div></div></article>';
+ }).join('');
+ root.innerHTML='<div class="app cartScreen ciCartScreen">'+
+  '<header class="ciCartHeader">'+
+   '<button type="button" class="ciCartBack" onclick="go(\'store\')" aria-label="Kembali ke menu">'+icon('i-left')+'</button>'+
+   '<div class="ciCartHeading"><h1>Keranjang</h1><p>'+itemCount+' produk di keranjang Anda</p></div>'+
+   '<span class="ciCartBag" aria-hidden="true">'+icon('i-bag')+'<em>'+itemCount+'</em></span>'+
+  '</header>'+
+  '<main class="ciCartList">'+(itemCount?rows:'<div class="ciCartEmpty">Keranjang masih kosong. Pilih menu favorit untuk mulai berbelanja.</div>')+'</main></div>'+
+  (itemCount?'<footer class="ciCartFooter" aria-label="Ringkasan keranjang">'+
+    '<div class="ciCartSummary"><small>Subtotal</small><strong>'+rp(c.subtotal)+'</strong></div>'+
+    '<button type="button" class="ciCartCheckout" onclick="go(\'checkout\')">Lanjut Checkout '+icon('i-right')+'</button>'+
+   '</footer>':'');
+ const scroller=root.querySelector('.ciCartScreen');
+ if(scroller)scroller.scrollTop=previousScroll;
+}
 async function cart(){
  renderCart(state.cartSnapshot||{items:[],subtotal:0});
  try{
-  const c=await api('cart');state.cartSnapshot=c;
-  if(state.route==='cart')renderCart(c);
+  const c=await api('cart');
+  if(cartPendingById.size===0){
+   state.cartSnapshot=c;
+   if(state.route==='cart')renderCart(c);
+  }
  }catch(e){if(state.route==='cart')fail(e)}
 }
-async function cartQty(id,q){if(pendingCartActions.has(id))return;pendingCartActions.add(id);try{state.cartSnapshot=await api('cart_set',{variant_id:id,quantity:q});await cart()}catch(e){fail(e)}finally{pendingCartActions.delete(id)}}
+function cartQty(id,q){
+ const old=state.cartSnapshot;
+ if(!Array.isArray(old?.items))return;
+ const current=old.items.find(x=>x.variant_id===id);
+ if(!current)return;
+ const quantity=Math.max(0,Math.min(99,Math.trunc(Number(q)||0)));
+ const items=old.items.map(i=>i.variant_id===id?{...i,quantity}:i).filter(i=>Number(i.quantity)>0);
+ const subtotal=items.reduce((sum,i)=>{
+  const v=i.variant||{};
+  return sum+Number(v.price??v.product?.base_price??0)*Number(i.quantity||0);
+ },0);
+ state.cartSnapshot={...old,items,subtotal};
+ renderCart(state.cartSnapshot);
+ let request=cartPendingById.get(id);
+ if(!request){request={desired:quantity,revision:0,task:null};cartPendingById.set(id,request)}
+ request.desired=quantity;
+ request.revision++;
+ if(!request.task)request.task=flushCartQty(id,request);
+}
+async function flushCartQty(id,request){
+ let failed=false;
+ try{
+  while(true){
+   const revision=request.revision,quantity=request.desired;
+   try{await api('cart_set',{variant_id:id,quantity})}
+   catch(e){failed=true;if(request.revision===revision){toast('Perubahan jumlah gagal disimpan. Memuat ulang keranjang.');break}}
+   if(request.revision===revision)break;
+  }
+ }finally{
+  cartPendingById.delete(id);
+  if(cartPendingById.size===0){
+   try{
+    const latest=await api('cart');
+    if(cartPendingById.size===0){
+     state.cartSnapshot=latest;
+     if(state.route==='cart')renderCart(latest);
+    }
+   }catch(e){if(failed&&state.route==='cart')fail(e)}
+  }
+ }
+}
+
 async function checkout(){
  loading(true);try{
-  const [c,b]=await Promise.all([state.cartSnapshot||api('cart'),state.catalogFetched?boot():freshCatalog()]);state.cartSnapshot=c;
+  const confirmedCart=(async()=>{if(cartPendingById.size)await Promise.all([...cartPendingById.values()].map(x=>x.task));return api('cart')})();
+   const [c,b]=await Promise.all([confirmedCart,state.catalogFetched?boot():freshCatalog()]);state.cartSnapshot=c;
   if(!(c.items||[]).length)return go('cart');
   let as=[];const delivery=state.fulfillment==='delivery';
   if(delivery){as=state.addressesSnapshot.length?state.addressesSnapshot:(await api('addresses')).addresses||[];state.addressesSnapshot=as;if(!as.length)return go('addresses');}
