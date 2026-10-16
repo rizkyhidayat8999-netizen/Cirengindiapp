@@ -182,149 +182,98 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .cartScreen .stickyAction{padding-bottom:max(14px,env(safe-area-inset-bottom,0px));background:#fffdfa}
 @media(max-width:375px){.cartScreen .orderProduct img{width:61px!important;height:61px!important}.cartScreen .orderProduct{gap:8px}.cartScreen .qty{gap:4px}.cartScreen .qty button{width:31px!important;height:31px!important;min-width:31px}}
 
-/* Cireng Indi Member Home: Fore-inspired full-width editorial promo, not a split dark/photo panel. */
+
+/* Cireng Indi Member: consolidated landscape carousel, replacing conflicting portrait rules. */
+.app:has(.heroFore){padding-top:12px!important;overflow-x:clip!important}
 .hero.heroFore{
- height:clamp(340px,107vw,455px)!important;
- aspect-ratio:auto!important;margin:0!important;width:100%;
- border-radius:0 0 26px 26px!important;overflow:hidden;
- background:#f8f0e5!important;isolation:isolate;
+ position:relative!important;display:block!important;box-sizing:border-box!important;
+ width:calc(100% - 32px)!important;height:auto!important;
+ min-height:0!important;max-height:360px!important;aspect-ratio:16/9!important;
+ margin:8px 16px 16px!important;padding:0!important;
+ border-radius:20px!important;overflow:hidden!important;
+ isolation:isolate;background:#f9f0e7!important
 }
-.hero.heroFore:after{display:none!important;content:none!important}
-.heroFore .heroSlides{position:absolute;inset:0}
+.hero.heroFore::after{display:none!important;content:none!important}
+.heroFore .heroSlides{position:absolute!important;inset:0!important;overflow:hidden!important;border-radius:inherit!important}
 .heroFore .heroSlides>.forePromo{
- position:absolute;inset:0;display:block;box-sizing:border-box;width:100%;height:100%;
- background:radial-gradient(circle at 50% 82%,var(--slide-tone) 0%,transparent 52%),var(--slide-bg)!important;
- color:#4c3025!important;opacity:0;pointer-events:none;
- transition:opacity .3s ease;overflow:hidden;text-align:center;
+ position:absolute!important;inset:0!important;box-sizing:border-box!important;
+ width:100%!important;height:100%!important;
+ display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+ column-gap:8px!important;align-items:center!important;
+ padding:18px clamp(12px,3.4vw,26px) 20px!important;
+ border:0!important;overflow:hidden!important;text-align:left!important;
+ background:linear-gradient(120deg,#fff9f0 0%,var(--slide-bg) 58%,var(--slide-tone) 100%)!important;
+ opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important
 }
-.heroFore .heroSlides>.forePromo.is-active{opacity:1;pointer-events:auto}
-.heroFore .forePromo:before,.heroFore .forePromo:after{
- content:"";position:absolute;z-index:0;pointer-events:none;
- border:1px solid rgba(145,85,49,.1);border-radius:50%;
- width:235px;height:235px;left:-175px;top:36%;
-}
-.heroFore .forePromo:after{width:188px;height:188px;left:auto;right:-130px;top:23%}
+.heroFore .heroSlides>.forePromo.is-active{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+.heroFore .forePromo::before,.heroFore .forePromo::after{content:none!important;display:none!important}
 .heroFore .forePromoLogo{
- position:absolute;z-index:2;left:50%;top:11px;transform:translateX(-50%);
- display:block;width:48px;height:48px;object-fit:contain;
- filter:drop-shadow(0 2px 4px rgba(65,35,25,.1));
+ position:absolute!important;z-index:3!important;
+ left:clamp(12px,3.4vw,26px)!important;top:clamp(8px,1.9vw,14px)!important;
+ width:clamp(28px,7vw,43px)!important;height:clamp(28px,7vw,43px)!important;
+ transform:none!important;object-fit:contain!important;
+ filter:drop-shadow(0 2px 4px rgba(70,35,18,.13))!important
 }
 .heroFore .forePromoCopy{
- position:absolute;z-index:2;top:67px;left:20px;right:20px;
- display:flex;flex-direction:column;align-items:center;gap:6px;
- text-shadow:none!important;color:#4c3025!important;
+ position:relative!important;z-index:2!important;grid-column:1!important;
+ top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;transform:none!important;
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ width:100%!important;max-width:100%!important;gap:4px!important;
+ margin:clamp(12px,3vw,22px) 0 0!important;
+ overflow-wrap:anywhere!important;text-align:left!important;
+ color:#4b3025!important;text-shadow:none!important
 }
-.heroFore .forePromoEyebrow{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#8b644f}
+.heroFore .forePromoEyebrow{font-size:clamp(9px,1.8vw,12px)!important;line-height:1.15!important;letter-spacing:1px!important;font-weight:800!important;color:#895f4c!important}
 .heroFore .forePromoCopy h2{
- margin:0;max-width:355px;font-size:clamp(20px,5.1vw,27px);font-weight:800;
- line-height:1.16;letter-spacing:-.4px;color:#4c3025;
+ margin:0!important;max-width:100%!important;
+ font-size:clamp(14px,3.7vw,27px)!important;line-height:1.13!important;
+ font-weight:800!important;letter-spacing:-.25px!important;color:#4b3025!important;
+ overflow-wrap:break-word!important
 }
-.heroFore .forePromoCopy p{margin:0;font-size:clamp(11px,2.9vw,13px);line-height:1.35;color:#806a5e}
+.heroFore .forePromoCopy p{
+ margin:0!important;max-width:100%!important;
+ font-size:clamp(10px,1.9vw,14px)!important;line-height:1.3!important;color:#80695c!important
+}
 .heroFore .forePromoImage{
- position:absolute;z-index:1;left:50%;bottom:54px;transform:translateX(-50%);
- width:min(65%,285px);height:43%;display:flex;align-items:center;justify-content:center;
+ position:relative!important;z-index:1!important;grid-column:2!important;
+ left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+ transform:none!important;justify-self:stretch!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100%!important;max-width:100%!important;height:100%!important;
+ min-width:0!important;min-height:0!important;overflow:hidden!important;
+ border-radius:12px!important;background:rgba(255,255,255,.23)!important
 }
-.heroFore .forePromoImage:before{
- content:"";position:absolute;inset:-12px 3px;border-radius:50%;
- background:rgba(255,255,255,.26);filter:blur(16px);
-}
+.heroFore .forePromoImage::before{content:none!important;display:none!important}
 .heroFore .forePromoImage img{
- position:relative;width:100%;height:100%;object-fit:contain!important;
- border-radius:14px;background:transparent!important;
- filter:drop-shadow(0 6px 12px rgba(75,47,33,.16))!important;
+ position:relative!important;display:block!important;width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;
+ object-fit:contain!important;object-position:center!important;
+ border-radius:10px!important;background:transparent!important;
+ filter:drop-shadow(0 3px 8px rgba(75,40,20,.10))!important
 }
 .heroFore .heroDots{
- left:50%;right:auto;bottom:47px;transform:translateX(-50%);
- z-index:4;display:flex;justify-content:center;gap:7px;
+ position:absolute!important;z-index:5!important;bottom:7px!important;
+ left:50%!important;right:auto!important;top:auto!important;
+ transform:translateX(-50%)!important;display:flex!important;
+ gap:7px!important;align-items:center!important;justify-content:center!important
 }
 .heroFore .heroDots button{
- width:7px;height:7px;min-width:7px;min-height:7px;
- padding:0;border:0;box-sizing:border-box;border-radius:99px;
- background:#c7b6a9;transition:width .2s ease,background-color .2s ease;
+ display:block!important;box-sizing:border-box!important;
+ min-width:7px!important;min-height:7px!important;width:7px!important;height:7px!important;
+ padding:0!important;border:0!important;border-radius:99px!important;
+ background:#c5b3a8!important;transition:width .2s ease!important
 }
-.heroFore .heroDots button.active{width:22px;background:#8e5137}
-.heroFore+.member{
- margin:-30px 20px 0;position:relative;z-index:6;
- border-radius:22px;background:#fffdfb;
+.heroFore .heroDots button.active{width:23px!important;background:#97533b!important}
+.heroFore+.member{margin-top:0!important;position:relative!important;z-index:2!important}
+@media(max-width:360px){
+ .hero.heroFore{width:calc(100% - 24px)!important;margin:8px 12px 14px!important;border-radius:17px!important}
+ .heroFore .heroSlides>.forePromo{column-gap:5px!important;padding:13px 10px 18px!important}
+ .heroFore .forePromoLogo{left:10px!important;top:8px!important;width:28px!important;height:28px!important}
+ .heroFore .forePromoCopy{gap:3px!important;margin-top:12px!important}
+ .heroFore .forePromoCopy h2{font-size:14px!important}
+ .heroFore .forePromoCopy p{font-size:9px!important}
 }
-@media(max-width:375px){
- .heroFore .forePromoCopy{top:66px}
- .heroFore .forePromoImage{width:min(69%,245px);bottom:51px;height:40%}
- .heroFore+.member{margin-left:15px;margin-right:15px}
-}
-@media(prefers-reduced-motion:reduce){
- .heroFore .heroSlides>.forePromo,.heroFore .heroDots button{transition:none!important}
-}
-
-/* Fore-style first-screen proportion: promotional art stays ABOVE the greeting card.
-   Keeps all artwork visible, no half-panel, and prevents overlap with system status bar. */
-.app:has(.heroFore){padding-top:max(24px,env(safe-area-inset-top,0px))!important}
-.hero.heroFore{
- height:clamp(255px,68vw,300px)!important;
- margin:0!important;
- border-radius:0 0 23px 23px!important;
-}
-.heroFore .forePromoLogo{width:36px!important;height:36px!important;top:7px!important}
-.heroFore .forePromoCopy{top:45px!important;left:17px!important;right:17px!important;gap:4px!important}
-.heroFore .forePromoEyebrow{font-size:9px!important;letter-spacing:1.3px!important}
-.heroFore .forePromoCopy h2{
- font-size:clamp(19px,5vw,23px)!important;
- line-height:1.11!important;max-width:325px!important;
-}
-.heroFore .forePromoCopy p{font-size:11px!important;line-height:1.27!important;max-width:330px}
-.heroFore .forePromoImage{
- width:min(73%,270px)!important;height:39%!important;
- bottom:44px!important;
-}
-.heroFore .forePromoImage:before{filter:blur(12px)}
-.heroFore .forePromoImage img{border-radius:13px!important;object-fit:contain!important}
-.heroFore .heroDots{bottom:38px!important}
-.heroFore+.member{margin-top:-24px!important}
-@media(max-width:375px){
- .hero.heroFore{height:255px!important}
- .heroFore .forePromoCopy{top:44px!important;gap:3px!important}
- .heroFore .forePromoCopy h2{font-size:18px!important}
- .heroFore .forePromoCopy p{font-size:10px!important}
- .heroFore .forePromoImage{width:71%!important;height:37%!important;bottom:43px!important}
- .heroFore .heroDots{bottom:38px!important}
-}
-
-
-/* Member home: landscape promotional banner, responsive and edge-safe. */
-.hero.heroFore{height:auto!important;aspect-ratio:16/9!important;min-height:185px!important;max-height:360px!important;margin:12px 16px 12px!important;border-radius:20px!important;isolation:isolate}
-.heroFore .heroSlides>.forePromo{background:linear-gradient(110deg,#fff2df 0%,var(--slide-bg) 52%,var(--slide-tone) 100%)!important;text-align:left}
-.heroFore .forePromoLogo{left:20px!important;top:14px!important;transform:none!important;width:39px!important;height:39px!important}
-.heroFore .forePromoCopy{top:31%!important;left:6%!important;right:auto!important;width:49%!important;align-items:flex-start!important;text-align:left!important;gap:6px!important}
-.heroFore .forePromoEyebrow{font-size:clamp(9px,1.7vw,12px)!important}
-.heroFore .forePromoCopy h2{font-size:clamp(17px,4vw,29px)!important;line-height:1.12!important;max-width:100%!important}
-.heroFore .forePromoCopy p{font-size:clamp(10px,2vw,14px)!important;max-width:100%!important}
-.heroFore .forePromoImage{left:auto!important;right:2%!important;top:12%!important;bottom:auto!important;transform:none!important;width:45%!important;height:78%!important}
-.heroFore .forePromoImage img{width:100%!important;height:100%!important;object-fit:contain!important;border-radius:12px!important}
-.heroFore .heroDots{bottom:11px!important;left:50%!important;right:auto!important}
-.heroFore+.member{margin-top:0!important}
-@media(max-width:375px){.hero.heroFore{min-height:175px!important;margin:10px 12px!important}.heroFore .forePromoCopy{top:30%!important}.heroFore .forePromoCopy h2{font-size:17px!important}.heroFore .forePromoCopy p{font-size:10px!important}.heroFore .forePromoLogo{top:9px!important;left:14px!important;width:31px!important;height:31px!important}}
-
-
-/* Stable slide compositing: no overlapping promotional copy during autoplay. */
-.heroFore .heroSlides>.forePromo{visibility:hidden!important;opacity:0!important;transition:none!important;pointer-events:none!important}
-.heroFore .heroSlides>.forePromo.is-active{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
-.heroFore .heroSlides>.forePromo:not(.is-active) *{visibility:hidden!important}
-
-
-/* Final clipping guard for member landscape banner and bottom navigation. */
-.app:has(.heroFore){overflow-x:clip!important}
-.hero.heroFore{width:calc(100% - 32px)!important;max-width:calc(100% - 32px)!important;box-sizing:border-box!important;overflow:hidden!important;margin:12px 16px!important;border-radius:20px!important;aspect-ratio:16/9!important;min-height:0!important;max-height:none!important}
-.heroFore .heroSlides{inset:0!important;overflow:hidden!important;border-radius:inherit!important}
-.heroFore .heroSlides>.forePromo{inset:0!important;width:100%!important;height:100%!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important}
-.heroFore .forePromo:before,.heroFore .forePromo:after{display:none!important}
-.heroFore .forePromoImage{right:3%!important;width:43%!important;max-width:43%!important;height:76%!important;top:12%!important;overflow:hidden!important}
-.heroFore .forePromoImage img{max-width:100%!important;max-height:100%!important;object-fit:contain!important}
-.heroFore .forePromoCopy{left:5%!important;width:48%!important;right:auto!important;overflow-wrap:break-word!important}
-.heroFore .forePromoCopy h2{font-size:clamp(15px,3.6vw,25px)!important;overflow-wrap:break-word!important}
-.heroFore .forePromoCopy p{font-size:clamp(10px,2vw,13px)!important}
-.heroFore .forePromoLogo{left:5%!important}
-.heroFore .heroDots{bottom:8px!important}
-@media(max-width:375px){.hero.heroFore{width:calc(100% - 24px)!important;max-width:calc(100% - 24px)!important;margin:10px 12px!important}.heroFore .forePromoCopy h2{font-size:15px!important}}
+@media(prefers-reduced-motion:reduce){.heroFore .heroDots button{transition:none!important}}
 
 </style>
 </head>
@@ -453,7 +402,7 @@ async function doRegister(){
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
 async function doForgot(){const email=document.getElementById('femail')?.value.trim()||'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');loading(true);try{await auth({action:'forgot_password',email});renderAuth('login');toast('Jika email terdaftar, tautan pemulihan telah dikirim.')}catch(e){fail(e)}finally{loading(false)}}
-let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
+let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},4800)}
 let heroTouchStartX=null,heroTouchStartY=null;
 root.addEventListener('touchstart',event=>{
  const hero=event.target.closest?.('.hero');
