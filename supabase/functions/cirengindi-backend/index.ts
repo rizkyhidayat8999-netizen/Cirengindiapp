@@ -66,7 +66,7 @@ async function authApi(b){const a=b.action;if(a==='register'){
  if(password.length<8||!/[a-z]/i.test(password)||!/[0-9]/.test(password))return err('WEAK_PASSWORD');
  if((await list('member_profiles','user_id',{eq:{username}})).length)return err('USERNAME_TAKEN');
  if((await list('member_profiles','user_id',{eq:{email}})).length)return err('EMAIL_TAKEN');
- const referral=String(b.referral||'').trim().toUpperCase();
+ const referral=String(b.referral||b.referralCode||'').trim().toUpperCase();
  const inviter=referral?check(await admin.from('member_profiles').select('user_id').eq('referral_code',referral).maybeSingle()):null;
  if(referral&&!inviter)return err('INVALID_REFERRAL_CODE');
  const created=await client.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:'https://cirengindi.com/reset-password'}});
