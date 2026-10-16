@@ -367,52 +367,128 @@ html:has(#root > .app),body:has(#root > .app){
 .ciSheetSecondary{background:#fff;color:#934d36;border:2px solid #934d36}
 @media(max-width:365px){.ciQtyControl{gap:7px}.ciQtyControl button{width:37px;height:37px}.ciProductBottom{gap:8px;padding-inline:11px}.ciAddToCart{font-size:12px}.ciOptionTitle h2{font-size:18px}}
 
-/* Member cart v3: compact Fore-inspired layout, isolated from store and checkout styles. */
-#root>.ciCartScreen{background:linear-gradient(165deg,#f7fbf8 0%,#f3f8f5 60%,#ffffff 100%)!important;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
-.ciCartScreen .ciCartHeader{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:11px;min-height:78px;padding:11px 15px;background:rgba(255,255,255,.97);border-bottom:1px solid #e8eeea;backdrop-filter:blur(10px)}
-.ciCartScreen .ciCartBack{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:0;border-radius:50%;background:#eef6f1;color:#174d39;padding:5px}
-.ciCartScreen .ciCartBack .icon{width:21px;height:21px}
+
+/* Cireng Indi cart — warm native brand, compact and responsive */
+#root>.ciCartScreen{background:linear-gradient(160deg,#fffbf6 0%,#fcf3e9 52%,#fff 100%)!important;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+.ciCartScreen .ciCartHeader{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:11px;min-height:75px;padding:11px 15px;background:rgba(255,251,246,.98);border-bottom:1px solid #eadcd0}
+.ciCartScreen .ciCartBack{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:0;border-radius:50%;background:#f9e9dc;color:#763c29;padding:5px}
+.ciCartScreen .ciCartBack .icon{width:20px;height:20px}
 .ciCartScreen .ciCartHeading{min-width:0;flex:1}
-.ciCartScreen .ciCartHeading h1{margin:0;font-size:20px;font-weight:800;line-height:1.2;letter-spacing:-.35px;color:#17241e}
-.ciCartScreen .ciCartHeading p{margin:4px 0 0;font-size:11.5px;line-height:1.4;color:#6d7b71}
-.ciCartScreen .ciCartBag{position:relative;display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#eef6f1;color:#075538}
+.ciCartScreen .ciCartHeading h1{margin:0;font-size:19px;font-weight:800;line-height:1.2;color:#2d1e19}
+.ciCartScreen .ciCartHeading p{margin:4px 0 0;font-size:11.5px;line-height:1.4;color:#857269}
+.ciCartScreen .ciCartBag{position:relative;display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#f9e9dc;color:#943819}
 .ciCartScreen .ciCartBag .icon{width:18px;height:18px}
-.ciCartScreen .ciCartBag em{position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 3px;background:#075538;color:#fff;font-size:10px;font-weight:750;font-style:normal;border-radius:20px}
-.ciCartScreen .ciCartList{display:grid;gap:11px;padding:15px 14px 18px}
-.ciCartScreen .ciCartItem{display:grid;grid-template-columns:74px minmax(0,1fr) 101px;align-items:center;gap:10px;min-width:0;min-height:104px;margin:0;padding:12px 11px;border:1px solid #e8eee9;border-radius:17px;background:#fff;box-shadow:0 5px 17px rgba(34,70,51,.06)}
-.ciCartScreen .ciCartItemPhoto{display:block;width:74px;height:79px;max-width:100%;border-radius:11px;object-fit:cover!important;background:#f7f7f4!important}
-.ciCartScreen .ciCartItemInfo{align-self:center;min-width:0}
-.ciCartScreen .ciCartItemInfo h2{margin:0 0 4px;font-size:14px;font-weight:750;line-height:1.28;letter-spacing:-.2px;color:#1c2b22;overflow-wrap:break-word}
-.ciCartScreen .ciCartVariant{display:block;font-size:11.5px;line-height:1.35;color:#788078;overflow-wrap:anywhere}
-.ciCartScreen .ciCartLinePrice{margin-top:9px;font-size:15px;line-height:1.2;font-weight:800;letter-spacing:-.2px;color:#075538;white-space:nowrap}
-.ciCartScreen .ciCartItemActions{height:79px;min-width:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}
-.ciCartScreen .ciCartRemove{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:#89938d;padding:4px}
+.ciCartScreen .ciCartBag em{position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 3px;background:#a44d2d;color:#fff;font-size:10px;font-weight:750;font-style:normal;border-radius:20px}
+.ciCartScreen .ciCartList{display:grid;gap:10px;padding:15px 13px 17px}
+.ciCartScreen .ciCartItem{display:grid;grid-template-columns:72px minmax(0,1fr) 99px;align-items:center;gap:9px;min-width:0;min-height:99px;padding:10px;border:1px solid #efdfd1;border-radius:16px;background:#fff;box-shadow:0 5px 16px rgba(107,59,33,.055)}
+.ciCartScreen .ciCartItemPhoto{display:block;width:72px;height:76px;max-width:100%;border-radius:11px;object-fit:cover!important;background:#fff5eb!important}
+.ciCartScreen .ciCartItemInfo{min-width:0}
+.ciCartScreen .ciCartItemInfo h2{margin:0 0 4px;font-size:13.5px;font-weight:750;line-height:1.28;color:#35251d;overflow-wrap:anywhere}
+.ciCartScreen .ciCartVariant{display:block;font-size:11px;color:#8b786e;overflow-wrap:anywhere}
+.ciCartScreen .ciCartLinePrice{margin-top:8px;font-size:14px;line-height:1.2;font-weight:800;color:#91452e;white-space:nowrap}
+.ciCartScreen .ciCartItemActions{height:76px;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}
+.ciCartScreen .ciCartRemove{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:#a59891;padding:4px}
 .ciCartScreen .ciCartRemove .icon{width:17px;height:17px}
-.ciCartScreen .ciCartQty{display:flex;align-items:center;justify-content:space-between;gap:4px;width:101px;height:36px;padding:3px 4px;border-radius:99px;background:#edf5f0}
-.ciCartScreen .ciCartQty button{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;min-width:29px;padding:6px;border:1px solid #c7ded0;border-radius:50%;background:#fff;color:#075538;box-shadow:0 1px 3px rgba(15,52,33,.07);touch-action:manipulation}
-.ciCartScreen .ciCartQty button.plus{border-color:#075538;background:#075538;color:#fff}
-.ciCartScreen .ciCartQty .icon{width:16px;height:16px}
-.ciCartScreen .ciCartQty output{display:block;min-width:16px;flex:1;text-align:center;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;color:#1e2c23}
-.ciCartScreen .ciCartEmpty{margin:35px auto;padding:22px 12px;max-width:290px;text-align:center;color:#6d7b71;font-size:14px;line-height:1.5}
-#root>.ciCartFooter{position:fixed;z-index:95;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);display:flex;align-items:center;gap:12px;min-height:75px;padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));border-top:1px solid #e3eae5;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -6px 25px rgba(22,57,39,.075)}
+.ciCartScreen .ciCartQty{display:flex;align-items:center;justify-content:space-between;gap:3px;width:99px;height:35px;padding:3px;border-radius:99px;background:#f7ede3}
+.ciCartScreen .ciCartQty button{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;min-width:28px;padding:6px;border:1px solid #d9c4b4;border-radius:50%;background:#fff;color:#93472d;touch-action:manipulation}
+.ciCartScreen .ciCartQty button.plus{border-color:#985039;background:#985039;color:#fff}
+.ciCartScreen .ciCartQty .icon{width:15px;height:15px}
+.ciCartScreen .ciCartQty output{min-width:15px;flex:1;text-align:center;font-size:12.5px;font-weight:750;color:#37251c;font-variant-numeric:tabular-nums}
+.ciCartScreen .ciCartEmpty{margin:35px auto;padding:22px 12px;max-width:290px;text-align:center;color:#867569;font-size:14px;line-height:1.5}
+#root>.ciCartFooter{position:fixed;z-index:95;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);display:flex;align-items:center;gap:10px;min-height:72px;padding:10px 15px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #efe0d5;border-radius:20px 20px 0 0;background:#fffdfa;box-shadow:0 -6px 23px rgba(99,56,32,.08)}
 .ciCartFooter .ciCartSummary{flex:1;min-width:0}
-.ciCartFooter .ciCartSummary small{display:block;margin-bottom:4px;color:#6d776f;font-size:11px}
-.ciCartFooter .ciCartSummary strong{display:block;font-size:19px;font-weight:850;line-height:1.15;letter-spacing:-.5px;color:#075538;white-space:nowrap}
-.ciCartFooter .ciCartCheckout{flex:0 0 auto;min-width:0;width:clamp(144px,44%,191px);height:43px;padding:0 12px;display:flex;justify-content:center;align-items:center;gap:7px;border:0;border-radius:13px;background:#075538;color:white;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 3px 9px rgba(7,85,56,.14);touch-action:manipulation}
-.ciCartFooter .ciCartCheckout .icon{width:16px;height:16px}
-.ciCartScreen button:focus-visible,.ciCartFooter button:focus-visible{outline:2px solid #075538;outline-offset:2px}
+.ciCartFooter .ciCartSummary small{display:block;margin-bottom:4px;color:#827269;font-size:11px}
+.ciCartFooter .ciCartSummary strong{display:block;font-size:18px;font-weight:850;line-height:1.15;color:#91452e;white-space:nowrap}
+.ciCartFooter .ciCartCheckout{flex:0 0 auto;width:clamp(143px,45%,190px);height:42px;padding:0 11px;display:flex;justify-content:center;align-items:center;gap:6px;border:0;border-radius:12px;background:#985039;color:#fff;font-size:12.5px;font-weight:800;white-space:nowrap;box-shadow:0 4px 11px rgba(136,66,39,.13);touch-action:manipulation}
+.ciCartFooter .ciCartCheckout .icon{width:15px;height:15px}
+.ciCartScreen button:focus-visible,.ciCartFooter button:focus-visible{outline:2px solid #985039;outline-offset:2px}
 @media(max-width:375px){
- .ciCartScreen .ciCartList{padding-inline:11px;gap:10px}
- .ciCartScreen .ciCartItem{grid-template-columns:65px minmax(0,1fr) 92px;gap:8px;padding:10px 9px}
- .ciCartScreen .ciCartItemPhoto{width:65px;height:73px}
- .ciCartScreen .ciCartItemActions{height:73px}
- .ciCartScreen .ciCartQty{width:92px}
- .ciCartScreen .ciCartQty button{flex-basis:27px;width:27px;height:27px;min-width:27px}
- .ciCartScreen .ciCartItemInfo h2{font-size:13px}
- .ciCartScreen .ciCartLinePrice{font-size:14px}
- .ciCartFooter .ciCartSummary strong{font-size:17px}
- .ciCartFooter .ciCartCheckout{width:147px;font-size:12px}
+ .ciCartScreen .ciCartList{padding-inline:10px;gap:9px}
+ .ciCartScreen .ciCartItem{grid-template-columns:63px minmax(0,1fr) 89px;gap:7px;padding:9px}
+ .ciCartScreen .ciCartItemPhoto{width:63px;height:70px}
+ .ciCartScreen .ciCartItemActions{height:70px}
+ .ciCartScreen .ciCartQty{width:89px}
+ .ciCartScreen .ciCartQty button{flex-basis:26px;width:26px;height:26px;min-width:26px}
+ .ciCartScreen .ciCartItemInfo h2{font-size:12.5px}
+ .ciCartScreen .ciCartLinePrice{font-size:13px}
+ .ciCartFooter .ciCartSummary strong{font-size:16px}
+ .ciCartFooter .ciCartCheckout{width:140px;font-size:11.5px}
 }
+/* Checkout – structure inspired by modern F&B ordering, Cireng Indi brand */
+#root>.ciCheckoutScreen{background:#faf6f1;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}
+.ciCheckoutTop{position:sticky;top:0;z-index:35;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;min-height:62px;padding:8px 17px;background:#fffbf6;border-bottom:1px solid #f0e4d9}
+.ciCheckoutTop h1{font-size:19px;margin:0;text-align:center;color:#37231c}
+.ciCheckoutTop button{width:36px;height:36px;border:0;border-radius:50%;background:#f9eddf;color:#8d472d;display:grid;place-items:center}
+.ciCheckoutTop button .icon{width:20px;height:20px}
+.ciCheckoutTop img{width:37px;height:37px;object-fit:contain}
+.ciCheckoutMode{padding:12px 16px;background:linear-gradient(145deg,#fff7e9,#f6e6d4)}
+.ciCheckoutModeCard{display:flex;gap:12px;align-items:center;padding:12px 13px;border:1px solid #ecdccc;border-radius:18px;background:#fffdfa}
+.ciCheckoutIcon{width:40px;height:40px;flex:none;border-radius:14px;background:#f8e8d7;color:#a2532e;display:grid;place-items:center}
+.ciCheckoutIcon .icon{width:21px;height:21px}
+.ciCheckoutGrow{flex:1;min-width:0}
+.ciCheckoutGrow b{display:block;font-size:14px;color:#38251b}
+.ciCheckoutGrow small{display:block;margin-top:3px;color:#86736a;font-size:11px;line-height:1.4}
+.ciCheckoutOutline{border:1.5px solid #985039;border-radius:999px;background:white;color:#985039;padding:7px 14px;min-height:32px;font-size:12px;font-weight:800;white-space:nowrap}
+.ciCheckoutSection{padding:18px 16px;background:#fff;margin-bottom:9px;border-top:1px solid #f3eae0;border-bottom:1px solid #f3eae0}
+.ciCheckoutSection h2{font-size:17px;font-weight:800;margin:0 0 14px;color:#36241d}
+.ciCheckoutStore{display:flex;align-items:center;gap:12px}
+.ciCheckoutStore .ciCheckoutGrow b{font-size:15px}
+.ciCheckoutNotice{display:flex;align-items:flex-start;gap:9px;background:#fbf4e8;border-radius:12px;color:#72523d;padding:11px 12px;margin-top:13px;font-size:12px;line-height:1.45}
+.ciCheckoutNotice .icon{color:#bd853d;width:18px;height:18px;flex:none}
+.ciCheckoutSelect{width:100%;min-width:0;padding:11px;border:1px solid #e5d5c7;border-radius:12px;background:#fff;color:#38271e;font-size:13px}
+.ciCheckoutItem{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 74px;gap:11px;padding:0 0 14px;margin-bottom:15px;border-bottom:1px dashed #e7d8c9}
+.ciCheckoutItem:last-child{margin-bottom:0;border-bottom:0;padding-bottom:0}
+.ciCheckoutItemInfo{min-width:0}
+.ciCheckoutItemInfo b{font-size:14px;line-height:1.35;display:block;color:#32231e}
+.ciCheckoutItemInfo small{font-size:12px;color:#8e7d73;display:block;margin-top:5px}
+.ciCheckoutItemPrice{font-size:15px;font-weight:850;color:#9b4b30;margin-top:10px}
+.ciCheckoutItem img{width:74px;height:74px;object-fit:cover;border-radius:13px;background:#fff5ea}
+.ciCheckoutItemBottom{grid-column:1/-1;display:flex;justify-content:flex-end;align-items:center;gap:10px}
+.ciCheckoutTextAction{border:0;background:transparent;color:#985039;font-size:12px;font-weight:750;padding:5px}
+.ciCheckoutStepper{border:1.5px solid #bc8f79;border-radius:99px;height:35px;display:flex;align-items:center;gap:3px;padding:2px 3px;color:#7a3b28}
+.ciCheckoutStepper button{border:0;background:transparent;color:#91462d;width:29px;height:29px;display:grid;place-items:center;border-radius:50%;padding:6px}
+.ciCheckoutStepper button:active{background:#f5e9df}
+.ciCheckoutStepper .icon{width:15px;height:15px}
+.ciCheckoutStepper output{font-size:12px;font-weight:800;min-width:22px;text-align:center;color:#30211b}
+.ciCheckoutSuggestions{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;padding:1px 1px 7px}
+.ciCheckoutSuggestions::-webkit-scrollbar{display:none}
+.ciCheckoutSuggestion{flex:0 0 205px;display:flex;gap:9px;align-items:center;padding:9px;border-radius:14px;border:1px solid #eadfd4;background:#fffdf9}
+.ciCheckoutSuggestion img{width:55px;height:55px;border-radius:10px;object-fit:cover;background:#fbf2e8}
+.ciCheckoutSuggestion .ciCheckoutGrow b{font-size:12px;line-height:1.27;max-height:32px;overflow:hidden}
+.ciCheckoutSuggestion .ciCheckoutGrow small{color:#955036;font-size:12px;font-weight:800}
+.ciCheckoutSuggestion button{display:grid;place-items:center;flex:none;width:29px;height:29px;border:0;border-radius:50%;background:#985039;color:white;padding:6px}
+.ciCheckoutSuggestion button .icon{width:16px;height:16px}
+.ciCheckoutAddRow{display:flex;gap:10px;align-items:center}
+.ciCheckoutBagRow{display:flex;align-items:center;gap:10px;cursor:pointer}
+.ciCheckoutSwitch{appearance:none;flex:none;width:43px;height:25px;border-radius:999px;background:#d9cbc0;border:0;position:relative;margin:0;transition:background .12s}
+.ciCheckoutSwitch:after{content:"";position:absolute;width:19px;height:19px;top:3px;left:3px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:transform .12s}
+.ciCheckoutSwitch:checked{background:#985039}
+.ciCheckoutSwitch:checked:after{transform:translateX(18px)}
+.ciCheckoutVoucherCard{display:flex;gap:11px;align-items:center;padding:13px 12px;border:1px solid #e9bc86;border-radius:15px;background:linear-gradient(110deg,#fffdf7,#ffefce);min-width:0}
+.ciCheckoutVoucherCard .ciCheckoutGrow b{font-size:13px}
+.ciCheckoutVoucherCard .ciCheckoutGrow small{color:#a65d2e}
+.ciCheckoutVoucherDetails{margin:10px 0 0}
+.ciCheckoutVoucherDetails summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;border:1px dashed #e5d4c3;border-radius:11px;padding:12px;color:#655046;font-size:13px}
+.ciCheckoutVoucherDetails summary::-webkit-details-marker{display:none}
+.ciCheckoutVoucherDetails .ciCheckoutSelect{margin-top:9px}
+.ciCheckoutPaymentChoice{display:flex;gap:11px;align-items:center;padding:13px 12px;border:1px solid #e9ded5;border-radius:14px;background:#fff;margin:0 0 9px;cursor:pointer}
+.ciCheckoutPaymentChoice:has(input:checked){border-color:#b97858;background:#fffaf5}
+.ciCheckoutPaymentChoice input[type=radio]{accent-color:#985039;width:17px;height:17px;margin:0}
+.ciCheckoutPaymentChoice .ciCheckoutGrow b{font-size:13px}
+.ciCheckoutPaymentChoice .ciCheckoutGrow small{font-size:11px}
+.ciCheckoutBank{padding:10px 11px 12px;margin:-4px 0 10px;border-radius:0 0 13px 13px;background:#fffaf4}
+.ciCheckoutBill{border:1px solid #ede2d8;border-radius:15px;padding:12px 14px;background:#fffdfb}
+.ciCheckoutBillRow{display:flex;justify-content:space-between;gap:14px;align-items:baseline;margin:8px 0;font-size:13px}
+.ciCheckoutBillRow span{color:#796a61}
+.ciCheckoutBillRow b{font-weight:700;text-align:right;white-space:nowrap}
+.ciCheckoutBillRow.discount b{color:#ae5d35}
+.ciCheckoutBillTotal{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-top:1px dashed #e0d3c7;padding-top:13px;margin-top:13px;font-size:15px;font-weight:850}
+.ciCheckoutBillTotal strong{color:#985039;font-size:19px;white-space:nowrap}
+.ciCheckoutFooter{position:fixed;z-index:75;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);background:#fffdfa;border-top:1px solid #eaded3;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 18px rgba(90,52,27,.09)}
+.ciCheckoutFooter button{display:block;width:100%;height:45px;border:0;border-radius:99px;background:#985039;color:white;font-size:14px;font-weight:850}
+.ciCheckoutFooter small{display:block;text-align:center;font-size:10px;color:#8b7b70;margin:7px 0 0}
+.ciCheckoutSection button:focus-visible,.ciCheckoutFooter button:focus-visible{outline:2px solid #985039;outline-offset:2px}
+@media(max-width:350px){.ciCheckoutSection{padding-inline:12px}.ciCheckoutMode{padding-inline:12px}.ciCheckoutSuggestion{flex-basis:185px}.ciCheckoutItem{grid-template-columns:minmax(0,1fr) 65px}.ciCheckoutItem img{height:65px;width:65px}.ciCheckoutOutline{padding-inline:10px}}
 
 </style>
 </head>
@@ -1000,44 +1076,143 @@ async function flushCartQty(id,request){
 }
 
 async function checkout(){
- loading(true);try{
-  const confirmedCart=(async()=>{if(cartPendingById.size)await Promise.all([...cartPendingById.values()].map(x=>x.task));return api('cart')})();
-   const [c,b]=await Promise.all([confirmedCart,state.catalogFetched?boot():freshCatalog()]);state.cartSnapshot=c;
-  if(!(c.items||[]).length)return go('cart');
-  let as=[];const delivery=state.fulfillment==='delivery';
-  if(delivery){as=state.addressesSnapshot.length?state.addressesSnapshot:(await api('addresses')).addresses||[];state.addressesSnapshot=as;if(!as.length)return go('addresses');}
-  const bank=b.bank_transfer||{};
-  const availableBanks=Array.isArray(bank.accounts)&&bank.accounts.length?bank.accounts:[bank].filter(a=>a.bank_name&&a.account_number);
-  const eligible=availableVouchers(Number(c.subtotal||0),state.fulfillment);
-  if(state.selectedVoucherId&&!eligible.some(v=>v.id===state.selectedVoucherId))state.selectedVoucherId=null;
-  const selected=eligible.find(v=>v.id===state.selectedVoucherId);
-  if(state.route!=='checkout')return;root.innerHTML=`<div class="app" style="padding-bottom:104px">
-   <div class="checkoutHead">${uiTop('Checkout','cart')}<div class="fulfillment">${icon(delivery?'i-truck':'i-bag','lg')}<div class="grow"><b>${delivery?'Delivery':'Pick Up'}</b><div style="color:var(--muted);font-size:12px">${delivery?'Diantar oleh kurir yang ditentukan Owner':'Ambil langsung di outlet'}</div></div><button class="outline" onclick="state.fulfillment='${delivery?'pickup':'delivery'}';checkout()">Ubah</button></div></div>
-   <div class="checkoutSec"><h2>Outlet</h2><div class="route"><div class="circle">${icon('i-store')}</div><div><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div></div>
-   ${delivery?`<div class="route"><div class="circle">${icon('i-pin')}</div><div class="grow"><b>Alamat tujuan</b><select id="coaddr">${as.map(x=>`<option value="${x.id}" ${x.is_default?'selected':''}>${esc(x.label||'Alamat')} — ${esc(x.city)}</option>`).join('')}</select></div></div><div class="eta">Kurir dan kontak WhatsApp akan muncul di riwayat pesanan setelah dipilih Owner. Ongkir final dikonfirmasi Owner sebelum pembayaran COD.</div>`:`<div class="eta">Waktu pengambilan dikonfirmasi Owner.</div>`}</div>
-   <div class="checkoutSec"><h2>Detail Pesanan</h2>${(c.items||[]).map(i=>{const v=i.variant||{},prd=v.product||{};return `<div class="checkoutItem"><div class="grow"><b>${esc(prd.name||'Produk')}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')} × ${i.quantity}</div><div class="price">${rp(Number(v.price||0)*i.quantity)}</div></div><img ${photoAttrs(prd)}></div>`}).join('')}</div>
-   <div class="checkoutSec"><h2>Voucher Cireng Indi</h2><p class="muted" style="font-size:12px;margin:0 0 9px">Voucher aktif dari Owner dapat digunakan pada pesanan ini.</p>
-   <select id="checkoutVoucher" aria-label="Pilih voucher" style="width:100%;border:1px solid var(--line);padding:12px" onchange="updateCheckoutVoucher()">
-   <option value="">Tanpa voucher</option>${eligible.map(v=>`<option value="${esc(v.id)}" ${v.id===state.selectedVoucherId?'selected':''}>${esc(v.title)} — ${esc(voucherLabel(v))}</option>`).join('')}</select>
-   <p id="checkoutVoucherMessage" style="font-size:12px;color:var(--muted)">${selected?'Estimasi potongan '+rp(previewDiscount(selected,c.subtotal)):'Pilih voucher untuk melihat estimasi diskon.'}</p></div>
-   <div class="checkoutSec"><h2>Metode Pembayaran</h2><label class="payrow" style="cursor:pointer"><input type="radio" name="copay" value="cod" checked><div class="grow"><b>COD / Bayar di Tempat</b><div style="font-size:12px;color:var(--muted)">${delivery?'Bayar ke kurir':'Bayar saat pickup'}</div></div></label>
-   ${bank.enabled&&availableBanks.length?`<div class="payrow" style="margin-top:10px;align-items:flex-start"><input type="radio" name="copay" id="transferRadio" value="transfer" aria-label="Transfer bank"><div class="grow"><label for="transferRadio" style="font-weight:750">Transfer BSI / BRI</label><div style="font-size:12px;color:var(--muted)">Pilih rekening penerima sebelum membuat pesanan.</div><select id="cobank" aria-label="Pilih bank tujuan" style="width:100%;margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:12px" onchange="document.getElementById('transferRadio').checked=true">${availableBanks.map(a=>`<option value="${esc(a.code||a.bank_name)}">${esc(a.bank_name)} • ${esc(a.account_number)} • a.n. ${esc(a.account_holder)}</option>`).join('')}</select><div style="font-size:12px;color:var(--muted)">Nomor rekening terpilih juga tercantum di Riwayat Pesanan. Unggah bukti transfer setelah checkout.</div></div></div>`:`<div class="eta">Transfer bank tersedia setelah rekening dikonfigurasi Owner.</div>`}</div>
-   <div class="stickyAction"><div style="flex:1"><small>Estimasi total (belum termasuk ongkir)</small><div id="checkoutEstimate" data-subtotal="${Number(c.subtotal||0)}" class="price">${rp(Number(c.subtotal||0)-previewDiscount(selected,Number(c.subtotal||0)))}</div></div><button class="cta" onclick="placeOrder()">Pesan Sekarang</button></div>
-  </div>`;
- }catch(e){fail(e)}finally{loading(false)}
+  const oldScroll=state.route==='checkout'&&document.querySelector('.ciCheckoutScreen')?window.scrollY:0;
+  const before=document.querySelector('.ciCheckoutScreen');
+  if(before){
+    const savedPay=document.querySelector('input[name="copay"]:checked')?.value;
+    if(savedPay)state.checkoutPayment=savedPay;
+    const savedBank=document.getElementById('cobank')?.value;
+    if(savedBank)state.checkoutBank=savedBank;
+    const savedAddress=document.getElementById('coaddr')?.value;
+    if(savedAddress)state.checkoutAddress=savedAddress;
+  }
+  try{
+    if(cartPendingById.size)await Promise.all([...cartPendingById.values()].map(x=>x.task));
+    const [c,b]=await Promise.all([api('cart'),state.catalogFetched?boot():freshCatalog()]);
+    state.cartSnapshot=c;
+    if(state.route!=='checkout')return;
+    if(!(c.items||[]).length)return go('cart');
+    const delivery=state.fulfillment==='delivery';
+    let as=state.addressesSnapshot||[];
+    if(delivery&&!as.length){try{as=(await api('addresses')).addresses||[];state.addressesSnapshot=as;}catch(e){as=[];}}
+    const bank=b.bank_transfer||{};
+    const banks=Array.isArray(bank.accounts)&&bank.accounts.length?bank.accounts:[bank].filter(a=>a.bank_name&&a.account_number);
+    const canTransfer=!!bank.enabled&&banks.length>0;
+    const payment=state.checkoutPayment==='transfer'&&canTransfer?'transfer':'cod';
+    const eligible=availableVouchers(Number(c.subtotal||0),state.fulfillment).sort((a,d)=>previewDiscount(d,c.subtotal)-previewDiscount(a,c.subtotal));
+    if(state.selectedVoucherId&&!eligible.some(v=>v.id===state.selectedVoucherId))state.selectedVoucherId=null;
+    const selected=eligible.find(v=>v.id===state.selectedVoucherId);
+    const discount=previewDiscount(selected,Number(c.subtotal||0));
+    const subtotal=Number(c.subtotal||0);
+    const ids=new Set((c.items||[]).map(i=>i.variant?.product?.id||i.variant?.product_id));
+    const suggestions=(b.products||[]).filter(p=>p.active!==false&&!ids.has(p.id)).map(p=>{
+      const options=(b.variants||[]).filter(v=>v.product_id===p.id&&v.active!==false&&Number(v.stock||0)>0);
+      return {p,options,first:options[0]};
+    }).filter(x=>x.first).sort((a,d)=>Number(!!d.p.best_seller)-Number(!!a.p.best_seller)||Number(a.p.sort_order||0)-Number(d.p.sort_order||0)).slice(0,6);
+    const selectedBank=banks.find(a=>(a.code||a.bank_name)===state.checkoutBank)||banks[0];
+    const selectedAddress=as.find(a=>a.id===state.checkoutAddress)||as.find(a=>a.is_default)||as[0];
+    const itemsHtml=(c.items||[]).map(i=>{
+      const v=i.variant||{},p=v.product||{};
+      const id=esc(i.variant_id),qty=Number(i.quantity||0);
+      const unit=Number(v.price??p.base_price??0);
+      return `<article class="ciCheckoutItem"><div class="ciCheckoutItemInfo"><b>${esc(p.name||'Produk Cireng Indi')}</b><small>${esc(v.name||'')} · ${qty} item</small><div class="ciCheckoutItemPrice">${rp(unit*qty)}</div></div><img ${photoAttrs(p)}><div class="ciCheckoutItemBottom"><button type="button" class="ciCheckoutTextAction" onclick="openCheckoutProduct('${esc(p.id)}')">Ubah</button><div class="ciCheckoutStepper"><button type="button" aria-label="Kurangi ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty-1})">${icon('i-minus')}</button><output>${qty}</output><button type="button" aria-label="Tambah ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty+1})">${icon('i-plus')}</button></div></div></article>`;
+    }).join('');
+    const suggestedHtml=suggestions.map(x=>`<div class="ciCheckoutSuggestion"><img ${photoAttrs(x.p)}><div class="ciCheckoutGrow"><b>${esc(x.p.name)}</b><small>${rp(x.first.price)}</small></div><button type="button" onclick="checkoutAddSuggested('${esc(x.p.id)}')" aria-label="Tambah ${esc(x.p.name)}">${icon('i-plus')}</button></div>`).join('');
+    root.innerHTML=`<div class="app ciCheckoutScreen">
+      <header class="ciCheckoutTop"><button type="button" onclick="go('cart')" aria-label="Kembali ke keranjang">${icon('i-left')}</button><h1>Checkout</h1><img src="assets/logo_cireng_indi.png" alt="Cireng Indi"></header>
+      <div class="ciCheckoutMode"><div class="ciCheckoutModeCard"><span class="ciCheckoutIcon">${icon(delivery?'i-truck':'i-bag')}</span><div class="ciCheckoutGrow"><b>${delivery?'Delivery':'Pick Up'}</b><small>${delivery?'Diantar kurir pilihan Owner':'Ambil langsung di outlet'}</small></div><button class="ciCheckoutOutline" type="button" onclick="checkoutSwitchMode()">Ubah</button></div></div>
+      <section class="ciCheckoutSection"><h2>${delivery?'Pesananmu dikirim dari':'Ambil pesananmu di'}</h2><div class="ciCheckoutStore"><span class="ciCheckoutIcon">${icon('i-store')}</span><div class="ciCheckoutGrow"><b>Cireng Indi · Tanah Grogot</b><small>Outlet utama, Kabupaten Paser, Kalimantan Timur</small></div>${icon('i-right','sm')}</div>
+      ${delivery?`<div style="margin-top:14px"><label for="coaddr" style="font-size:12px;font-weight:750;display:block;margin-bottom:7px">Alamat Pengiriman</label>${as.length?`<select id="coaddr" class="ciCheckoutSelect" onchange="state.checkoutAddress=this.value">${as.map(a=>`<option value="${esc(a.id)}" ${a.id===selectedAddress?.id?'selected':''}>${esc(a.label||'Alamat')} — ${esc(a.address_line||a.city||'')}</option>`).join('')}</select>`:`<button type="button" class="ciCheckoutOutline" onclick="go('addresses')">Tambah Alamat Pengiriman</button>`}</div><div class="ciCheckoutNotice">${icon('i-truck')}<span>Kurir, kontak WhatsApp, dan ongkir final dikonfirmasi oleh Owner sebelum pengiriman.</span></div>`:`<div class="ciCheckoutNotice">${icon('i-clock')}<span>Pesanan siap diambil setelah mendapat konfirmasi dari outlet. Tidak ada estimasi waktu yang dibuat-buat.</span></div>`}
+      </section>
+      <section class="ciCheckoutSection"><h2>Detail Pesanan</h2>${itemsHtml}</section>
+      ${suggestions.length?`<section class="ciCheckoutSection"><h2>Lebih cocok dinikmati bareng ini</h2><div class="ciCheckoutSuggestions">${suggestedHtml}</div></section>`:''}
+      <section class="ciCheckoutSection"><div class="ciCheckoutAddRow"><div class="ciCheckoutGrow"><b>Ada tambahan lagi?</b><small>Kamu masih bisa tambah menu lain, ya.</small></div><button type="button" class="ciCheckoutOutline" onclick="go('store')">Tambah</button></div></section>
+      <section class="ciCheckoutSection"><label class="ciCheckoutBagRow"><span class="ciCheckoutIcon">${icon('i-bag')}</span><div class="ciCheckoutGrow"><b>Perlu tas belanja?</b><small>Permintaan ke outlet, biaya jika ada dikonfirmasi Owner</small></div><input id="checkoutBag" class="ciCheckoutSwitch" type="checkbox" ${state.checkoutBag?'checked':''} onchange="state.checkoutBag=this.checked"></label></section>
+      <section class="ciCheckoutSection"><h2>Voucher Diskon</h2>${eligible.length?`<div class="ciCheckoutVoucherCard"><span class="ciCheckoutIcon">${icon('i-gift')}</span><div class="ciCheckoutGrow"><b>${selected?'Voucher berhasil dipilih':'Ada voucher untuk pesananmu'}</b><small id="checkoutVoucherHighlight">${selected?esc(selected.title)+' · Potongan '+rp(discount):esc(eligible[0].title)+' · Hemat '+rp(previewDiscount(eligible[0],subtotal))}</small></div><button type="button" class="ciCheckoutOutline" onclick="checkoutApplyBestVoucher()">${selected?'Ganti':'Pakai'}</button></div><details class="ciCheckoutVoucherDetails"><summary>Lihat voucher lainnya ${icon('i-right','sm')}</summary><select id="checkoutVoucher" class="ciCheckoutSelect" aria-label="Pilih voucher" onchange="updateCheckoutVoucher()"><option value="">Tanpa voucher</option>${eligible.map(v=>`<option value="${esc(v.id)}" ${v.id===state.selectedVoucherId?'selected':''}>${esc(v.title)} — ${esc(voucherLabel(v))}</option>`).join('')}</select></details>`:`<div class="ciCheckoutNotice">${icon('i-gift')}<span>Belum ada voucher yang memenuhi syarat pesanan ini.</span></div>`}<p id="checkoutVoucherMessage" style="font-size:11px;color:#8a796d;margin:10px 0 0">${selected?'Estimasi diskon '+rp(discount)+'. Final diverifikasi sistem.':'Diskon hanya berlaku untuk voucher aktif dari Owner.'}</p></section>
+      <section class="ciCheckoutSection"><h2>Metode Pembayaran</h2><label class="ciCheckoutPaymentChoice"><span class="ciCheckoutIcon">${icon('i-cash')}</span><div class="ciCheckoutGrow"><b>COD / Bayar di Tempat</b><small>${delivery?'Bayar saat menerima pesanan':'Bayar saat mengambil pesanan'}</small></div><input type="radio" name="copay" value="cod" ${payment==='cod'?'checked':''} onchange="checkoutPaymentChanged('cod')"></label>
+      ${canTransfer?`<label class="ciCheckoutPaymentChoice"><span class="ciCheckoutIcon">${icon('i-receipt')}</span><div class="ciCheckoutGrow"><b>Transfer Bank</b><small>Transfer ke rekening resmi Cireng Indi</small></div><input type="radio" name="copay" id="transferRadio" value="transfer" ${payment==='transfer'?'checked':''} onchange="checkoutPaymentChanged('transfer')"></label><div class="ciCheckoutBank" id="checkoutBankArea" style="display:${payment==='transfer'?'block':'none'}"><label style="display:block;font-size:12px;margin-bottom:6px;font-weight:750" for="cobank">Pilih rekening penerima</label><select id="cobank" class="ciCheckoutSelect" onchange="state.checkoutBank=this.value;checkoutPaymentChanged('transfer')">${banks.map(a=>`<option value="${esc(a.code||a.bank_name)}" ${(a.code||a.bank_name)===(selectedBank.code||selectedBank.bank_name)?'selected':''}>${esc(a.bank_name)} · ${esc(a.account_number)} · a.n. ${esc(a.account_holder)}</option>`).join('')}</select><div class="ciCheckoutNotice">${icon('i-clock')}<span>Setelah memesan, unggah bukti transfer di Riwayat Pesanan agar Owner dapat memverifikasi pembayaran.</span></div></div>`:`<div class="ciCheckoutNotice">${icon('i-clock')}<span>Transfer tersedia setelah rekening bank diaktifkan oleh Owner.</span></div>`}
+      </section>
+      <section class="ciCheckoutSection"><h2>Rincian Pembayaran</h2><div class="ciCheckoutBill"><div class="ciCheckoutBillRow"><span>Harga produk</span><b>${rp(subtotal)}</b></div><div class="ciCheckoutBillRow discount"><span>Diskon voucher</span><b id="checkoutDiscount">${discount?'-'+rp(discount):rp(0)}</b></div><div class="ciCheckoutBillTotal"><span>Total Pembayaran</span><strong id="checkoutBillTotal">${rp(subtotal-discount)}</strong></div></div>${delivery?'<p style="font-size:11px;color:#806f63;margin-bottom:0">Ongkir belum termasuk dan akan dikonfirmasi Owner.</p>':''}</section>
+      </div><footer class="ciCheckoutFooter"><button type="button" onclick="placeOrder()">Pesan Sekarang</button><small id="checkoutEstimate" data-subtotal="${subtotal}">Estimasi ${rp(subtotal-discount)}${delivery?' · belum termasuk ongkir':''}</small></footer>`;
+    if(oldScroll)window.scrollTo(0,oldScroll);
+  }catch(e){fail(e)}
+}
+
+function checkoutSwitchMode(){
+  state.fulfillment=state.fulfillment==='pickup'?'delivery':'pickup';
+  state.selectedVoucherId=null;
+  checkout();
+}
+
+function checkoutPaymentChanged(method){
+  state.checkoutPayment=method==='transfer'?'transfer':'cod';
+  const radio=document.querySelector('input[name="copay"][value="'+state.checkoutPayment+'"]');
+  if(radio)radio.checked=true;
+  const area=document.getElementById('checkoutBankArea');
+  if(area)area.style.display=state.checkoutPayment==='transfer'?'block':'none';
 }
 
 function updateCheckoutVoucher(){
- const id=document.getElementById('checkoutVoucher')?.value||null;
- const v=state.vouchers.find(x=>x.id===id);
- state.selectedVoucherId=id;
- const el=document.getElementById('checkoutEstimate');
- const subtotal=Number(el?.dataset.subtotal||0);
- const discount=previewDiscount(v,subtotal);
- if(el)el.textContent=rp(subtotal-discount);
- const message=document.getElementById('checkoutVoucherMessage');
- if(message)message.textContent=v?'Estimasi diskon '+rp(discount)+' · Server akan memvalidasi voucher sebelum pesanan dibuat.':'Tanpa voucher';
+  const id=document.getElementById('checkoutVoucher')?.value||null;
+  state.selectedVoucherId=id;
+  const v=(state.vouchers||[]).find(x=>x.id===id);
+  const amount=Number(document.getElementById('checkoutEstimate')?.dataset.subtotal||0);
+  const saving=previewDiscount(v,amount);
+  const final=Math.max(0,amount-saving);
+  const discount=document.getElementById('checkoutDiscount');
+  if(discount)discount.textContent=saving?'-'+rp(saving):rp(0);
+  const total=document.getElementById('checkoutBillTotal');
+  if(total)total.textContent=rp(final);
+  const estimate=document.getElementById('checkoutEstimate');
+  if(estimate)estimate.textContent='Estimasi '+rp(final)+(state.fulfillment==='delivery'?' · belum termasuk ongkir':'');
+  const hint=document.getElementById('checkoutVoucherMessage');
+  if(hint)hint.textContent=v?'Estimasi diskon '+rp(saving)+' · Sistem memvalidasi voucher ketika pesanan dibuat.':'Tanpa voucher.';
+  const label=document.getElementById('checkoutVoucherHighlight');
+  if(label)label.textContent=v?v.title+' · Potongan '+rp(saving):'Tanpa voucher';
 }
+
+function checkoutApplyBestVoucher(){
+  const subtotal=Number(document.getElementById('checkoutEstimate')?.dataset.subtotal||0);
+  const available=availableVouchers(subtotal,state.fulfillment).sort((a,b)=>previewDiscount(b,subtotal)-previewDiscount(a,subtotal));
+  if(!available.length)return toast('Belum ada voucher yang tersedia.');
+  const target=available.find(x=>x.id!==state.selectedVoucherId)||available[0];
+  const select=document.getElementById('checkoutVoucher');
+  if(select){select.value=target.id;updateCheckoutVoucher();}
+}
+
+async function checkoutQty(id,q){
+  const c=state.cartSnapshot;
+  const current=(c?.items||[]).find(x=>x.variant_id===id);
+  if(!current)return;
+  if(q>Number(current.variant?.stock??99))return toast('Jumlah melebihi stok yang tersedia.');
+  cartQty(id,q);
+  const request=cartPendingById.get(id);
+  if(request?.task)await request.task;
+  if(state.route==='checkout')await checkout();
+}
+
+async function checkoutAddSuggested(id){
+  const p=state.boot?.products?.find(x=>x.id===id);
+  if(!p)return;
+  const variants=(state.boot?.variants||[]).filter(v=>v.product_id===id&&v.active!==false&&Number(v.stock||0)>0);
+  if(variants.length!==1){await openP(id);return;}
+  const v=variants[0];
+  if(pendingCartActions.has(v.id))return;
+  pendingCartActions.add(v.id);
+  try{
+    const c=await api('cart'),existing=(c.items||[]).find(i=>i.variant_id===v.id);
+    const desired=Number(existing?.quantity||0)+1;
+    if(desired>Number(v.stock||0))return toast('Stok produk tidak mencukupi.');
+    await api('cart_set',{variant_id:v.id,quantity:desired});
+    state.cartSnapshot=null;
+    toast('Produk ditambahkan.');
+    if(state.route==='checkout')await checkout();
+  }catch(e){fail(e)}finally{pendingCartActions.delete(v.id)}
+}
+
+async function openCheckoutProduct(id){await openP(id)}
+
+function checkoutBagToggle(){state.checkoutBag=!!document.getElementById('checkoutBag')?.checked}
 
 async function placeOrder(){
  if(state.placingOrder)return;
@@ -1048,7 +1223,7 @@ async function placeOrder(){
   const voucher_id=document.getElementById('checkoutVoucher')?.value||null;
   const bank_code=payment_method==='transfer'?(document.getElementById('cobank')?.value||null):null;
   if(payment_method==='transfer'&&!bank_code)throw new Error('PILIH_BANK');
-  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,voucher_id,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:null});
+  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,voucher_id,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:state.checkoutBag?'Mohon sertakan tas belanja bila tersedia. Konfirmasikan biaya tas terlebih dahulu.':null});
   state.cartSnapshot=null;state.ordersSnapshot=[];state.selectedVoucherId=null;toast('Pesanan '+d.order.order_number+' berhasil dibuat.');await go('orders');
  }catch(e){fail(e)}finally{state.placingOrder=false;loading(false)}
 }
