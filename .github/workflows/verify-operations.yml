@@ -28,7 +28,7 @@ jobs:
             const js=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
             if(!js)throw Error(label+' script missing');
             new Function(js);
-            if(label==='Member' && /function\\s+top\\s*\\(/.test(js)) throw Error('Browser reserved top function causes blank Member WebView');
+            if(label==='Member' && js.includes('function top(')) throw Error('Reserved top() causes blank Member WebView');
           }
           for(const needle of ['payment_proof_upload','payment_review','ci_assign_courier_safe','ci_checkout','set_bank_transfer'])if(!backend.includes(needle))throw Error('Missing backend operation '+needle);
           if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
