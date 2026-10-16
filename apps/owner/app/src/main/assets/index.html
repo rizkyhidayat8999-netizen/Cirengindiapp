@@ -123,14 +123,14 @@ function shell(body,active){
  return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@email.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div><button class="btn secondary" style="width:100%;margin-top:12px" onclick="registerOwner()">Aktivasi Akun Owner Baru</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div><button class="btn secondary" style="width:100%;margin-top:12px" onclick="registerOwner()">Aktivasi Akun Owner Baru</button></div></section>`
 }
 function registerOwner(){
- const email='rizkyhidayat8999@gmail.com';
+ const email='indicireng@gmail.com';
  root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Aktivasi Owner</h1><p>Akun khusus pemilik Cireng Indi</p><div class="notice">Email: ${email}. Pastikan email verifikasi dibuka sebelum login.</div><label>Password baru</label><input type="password" id="ownerpass" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter"><label>Ulangi password</label><input type="password" id="ownerpass2" autocomplete="new-password" minlength="8"><button class="full" onclick="activateOwnerSubmit()">Kirim Aktivasi</button><button class="btn secondary" style="width:100%;margin-top:10px" onclick="renderLogin()">Kembali ke Login</button></div></section>`;
 }
 async function activateOwnerSubmit(){
- const email='rizkyhidayat8999@gmail.com';
+ const email='indicireng@gmail.com';
  const pass=document.getElementById('ownerpass')?.value||'',again=document.getElementById('ownerpass2')?.value||'';
  if(pass.length<8)return toast('Password minimal 8 karakter.');
  if(pass!==again)return toast('Konfirmasi password tidak sama.');
