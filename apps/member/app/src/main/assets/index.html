@@ -1141,7 +1141,7 @@ function cacheMemberIdentity(profile){
  if(username!==state.session.username||fullName!==state.session.fullName){
   sessionSave({...state.session,username,fullName});
  }
-}function sessionClear(){state.session=null;state.me=null;state.boot=BUILTIN_PUBLIC_CATALOG;state.catalogFetched=false;state.cartSnapshot=null;state.ordersSnapshot=[];state.addressesSnapshot=[];state.deliveryGpsDraft=null;state.vouchers=[];state.selectedVoucherId=null;bootstrapRequest=null;prefetchRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
+}function sessionClear(){state.session=null;state.me=null;state.boot=BUILTIN_PUBLIC_CATALOG;state.catalogFetched=false;state.cartSnapshot=null;state.ordersSnapshot=[];state.addressesSnapshot=[];state.deliveryGpsDraft=null;state.rewardsSnapshot=null;state.vouchers=[];state.selectedVoucherId=null;bootstrapRequest=null;prefetchRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
 async function parse(r){let d={};try{d=await r.json()}catch(e){}if(!r.ok){const m=d.error_code||d.error||d.message||('HTTP_'+r.status);const error=new Error(String(m));error.status=r.status;throw error;}return d}
 async function auth(payload){return parse(await fetch(SB+'/functions/v1/member-auth',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify(payload)}))}
 async function refresh(){const s=state.session||sessionRead();if(!s?.refreshToken)throw new Error('AUTH_REQUIRED');const d=await parse(await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify({refresh_token:s.refreshToken})}));sessionSave({accessToken:d.access_token,refreshToken:d.refresh_token,memberId:s.memberId||d.user?.id||''});return state.session}
@@ -2289,7 +2289,43 @@ function partner(){
   '</main>','home');
 }
 
-async function rewards(){loading(true);try{const d=await api('rewards');if(state.route!=='rewards')return;root.innerHTML=`<div class="app">${uiTop('Member & Point','home')}<div class="member" style="margin:14px 18px 0"><h2>${Number(d.points||0)} Point</h2><div style="height:8px;background:#eee;border-radius:99px"><div style="height:8px;width:35%;background:var(--brand);border-radius:99px"></div></div><p style="font-size:12px;color:var(--muted)">Gunakan point untuk menukar reward Cireng Indi.</p></div><div class="section"><h2>Tukar Point</h2><div class="grid2">${(d.rewards||[]).map(r=>`<div class="feature" style="min-height:160px"><div class="circle">${icon('i-gift')}</div><b>${esc(r.product_name)}</b><span>${esc(r.variant_name||'')}</span><div class="price">${r.points_cost} Point</div><button class="outline" style="margin-top:10px" onclick="redeem('${r.id}')">Tukar</button></div>`).join('')}</div></div></div>`}finally{loading(false)}}async function redeem(id){loading(true);try{await api('reward_redeem',{id});toast('Reward berhasil diajukan.');await rewards()}catch(e){fail(e)}finally{loading(false)}}
+
+function renderRewards(d){
+ if(state.route!=='rewards')return;
+ const list=Array.isArray(d?.rewards)?d.rewards:[];
+ const points=Number(d?.points||0);
+ const signature=JSON.stringify([points,...list.map(x=>[x.id,x.product_name,x.variant_name,x.points_cost])]);
+ if(root.querySelector('.ciRewardsView')?.dataset.renderSignature===signature)return;
+ root.innerHTML=shell(uiTop('Member & Point','home')+
+ '<main class="ciRewardsView"><div class="member" style="margin:14px 18px 0">'+
+ '<h2>'+points+' Point</h2><div style="height:8px;background:#eee;border-radius:99px">'+
+ '<div style="height:8px;width:35%;background:var(--brand);border-radius:99px"></div></div>'+
+ '<p style="font-size:12px;color:var(--muted)">Gunakan point untuk menukar reward Cireng Indi.</p></div>'+
+ '<div class="section"><h2>Tukar Point</h2><div class="grid2">'+list.map(r=>
+ '<div class="feature" style="min-height:160px"><div class="circle">'+icon('i-gift')+'</div>'+
+ '<b>'+esc(r.product_name)+'</b><span>'+esc(r.variant_name||'')+'</span>'+
+ '<div class="price">'+Number(r.points_cost||0)+' Point</div>'+
+ '<button type="button" class="outline" style="margin-top:10px" onclick="redeem(\''+esc(r.id)+'\')">Tukar</button></div>').join('')+
+ '</div></div></main>','home');
+ const view=root.querySelector('.ciRewardsView');
+ if(view)view.dataset.renderSignature=signature;
+}
+async function rewards(){
+ renderRewards(state.rewardsSnapshot||{points:state.me?.points||0,rewards:[]});
+ try{
+  const d=await api('rewards');
+  state.rewardsSnapshot=d;
+  if(state.route==='rewards')renderRewards(d);
+ }catch(e){if(state.route==='rewards'&&!state.rewardsSnapshot)toast('Reward belum dapat diperbarui.');}
+}
+async function redeem(id){
+ try{
+  await api('reward_redeem',{id});
+  state.rewardsSnapshot=null;
+  toast('Reward berhasil diajukan.');
+  await rewards();
+ }catch(e){fail(e)}
+}
 
 function memberSettings(){
  const profile=state.me?.profile||{};
@@ -2302,7 +2338,26 @@ function memberSettings(){
  '<button class="menurow" style="width:100%;border:0;text-align:left;background:transparent" onclick="Native.openUrl(\'https://cirengindi.com\')">'+icon('i-store')+'<div class="grow">Website Cireng Indi</div>'+icon('i-right')+'</button>'+
  '</div><p class="muted" style="font-size:12px;text-align:center">Cireng Indi Member • v'+esc(Native.appVersion())+'</p></div>','profile');
 }
-async function profile(){loading(true);try{const d=await api('me');state.me=d;const p=d.profile||{};if(state.route!=='profile')return;root.innerHTML=shell(`${uiTop('Akun','home')}<div class="profile"><div class="avatar">${icon('i-user','lg')}</div><div class="grow"><h2>${esc(p.full_name||p.username)}</h2><p>@${esc(p.username)}</p></div>${icon('i-right')}</div><div class="menuGroup"><div class="menurow" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><div class="grow"><b>Ajak Teman / Referral</b><div style="font-size:12px;color:var(--muted)">${esc(p.referral_code||'Bagikan kode referral')}</div></div>${icon('i-right')}</div><div class="menurow" onclick="go('addresses')">${icon('i-pin')}<div class="grow">Alamat Tersimpan</div>${icon('i-right')}</div><div class="menurow" onclick="go('rewards')">${icon('i-star')}<div class="grow">Point & Reward</div>${icon('i-right')}</div><div class="menurow" onclick="go('vouchers')">${icon('i-gift')}<div class="grow">Voucher Saya</div>${icon('i-right')}</div><div class="menurow" onclick="go('settings')">${icon('i-settings')}<div class="grow">Pengaturan</div>${icon('i-right')}</div><div class="menurow" onclick="logout()">${icon('i-logout')}<div class="grow">Keluar</div>${icon('i-right')}</div></div><div class="section"><p style="text-align:center;font-size:12px;color:var(--muted)">Cireng Indi v${esc(Native.appVersion())}</p></div>`, 'profile')}finally{loading(false)}}
+
+function renderProfile(d){
+ if(state.route!=='profile')return;
+ const p=d?.profile||{};
+ const signature=JSON.stringify([p.username,p.full_name,p.email,p.phone,p.referral_code]);
+ if(root.querySelector('.profile')?.dataset.renderSignature===signature)return;
+ root.innerHTML=shell(`${uiTop('Akun','home')}<div class="profile"><div class="avatar">${icon('i-user','lg')}</div><div class="grow"><h2>${esc(p.full_name||p.username)}</h2><p>@${esc(p.username)}</p></div>${icon('i-right')}</div><div class="menuGroup"><div class="menurow" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><div class="grow"><b>Ajak Teman / Referral</b><div style="font-size:12px;color:var(--muted)">${esc(p.referral_code||'Bagikan kode referral')}</div></div>${icon('i-right')}</div><div class="menurow" onclick="go('addresses')">${icon('i-pin')}<div class="grow">Alamat Tersimpan</div>${icon('i-right')}</div><div class="menurow" onclick="go('rewards')">${icon('i-star')}<div class="grow">Point & Reward</div>${icon('i-right')}</div><div class="menurow" onclick="go('vouchers')">${icon('i-gift')}<div class="grow">Voucher Saya</div>${icon('i-right')}</div><div class="menurow" onclick="go('settings')">${icon('i-settings')}<div class="grow">Pengaturan</div>${icon('i-right')}</div><div class="menurow" onclick="logout()">${icon('i-logout')}<div class="grow">Keluar</div>${icon('i-right')}</div></div><div class="section"><p style="text-align:center;font-size:12px;color:var(--muted)">Cireng Indi v${esc(Native.appVersion())}</p></div>`, 'profile');
+ const card=root.querySelector('.profile');
+ if(card)card.dataset.renderSignature=signature;
+}
+async function profile(){
+ // The cached identity draws instantly; server updates only repaint if changed.
+ renderProfile(state.me||{profile:{username:state.session?.username||'',full_name:state.session?.fullName||''}});
+ try{
+  const d=await api('me');
+  state.me=d;cacheMemberIdentity(d?.profile);
+  if(state.route==='profile')renderProfile(d);
+ }catch(e){if(state.route==='profile'&&!state.me)toast('Data akun belum dapat diperbarui.');}
+}
+
 function shareReferral(){const c=state.me?.profile?.referral_code;if(c)Native.shareText('Kode referral Cireng Indi saya: '+c);else toast('Kode referral belum tersedia.')}async function logout(){loading(true);try{try{await api('logout')}catch(e){}sessionClear();state.boot=null;renderAuth('login')}finally{loading(false)}}
 window.onNativeDeepLink=function(url){try{const u=new URL(url);const p=new URLSearchParams((u.hash||'').replace(/^#/,''));const a=p.get('access_token'),r=p.get('refresh_token');if(a){sessionSave({accessToken:a,refreshToken:r||'',memberId:''});root.innerHTML=`<section class="auth"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Reset Password</h1><div class="form"><label>Password baru</label><input id="npw" type="password"><button class="fullbtn" onclick="changeRecovery()">Simpan Password</button></div></div></section>`}}catch(e){}};async function changeRecovery(){loading(true);try{await api('change_password',{password:npw.value});toast('Password berhasil diubah.');await logout()}catch(e){fail(e)}finally{loading(false)}}
 (async()=>{state.session=sessionRead();readPublicCatalog();if(state.session?.accessToken){try{await go('home');updateCatalogQuietly()}catch(e){fail(e)}}else{renderAuth('login');void freshCatalog().catch(()=>{})}})();
