@@ -34,6 +34,11 @@ jobs:
           if(!member.includes('Lupa password?</button>')||member.includes('>Lupa PW</button>'))throw Error('Member reset link should be below password, not a third login tab');
           if(!member.includes("repeat(2,1fr)"))throw Error('Member auth layout should have two tabs');
           if(!owner.includes('resendOwnerVerification(this)')||!owner.includes('email_not_confirmed'))throw Error('Owner must support secure verification recovery');
+          if(!backend.includes('EMAIL_SERVICE_RATE_LIMIT'))throw Error('Backend must map email provider throttle into a stable error');
+          if(!member.includes('authStatus')||!member.includes('email_service_rate_limit'))throw Error('Member must explain rate-limited signup inline');
+          if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
+          if(owner.includes('/auth/v1/signup'))throw Error('Do not duplicate Owner account creation when account already exists');
+          if(!owner.includes('Verifikasi Owner'))throw Error('Missing secure owner activation guidance');
           if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
           if(!member.includes('id="cobank"')||!member.includes('bank_code'))throw Error('Member bank selection missing');
           const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
