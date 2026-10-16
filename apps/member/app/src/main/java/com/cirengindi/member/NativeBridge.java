@@ -20,7 +20,13 @@ public final class NativeBridge {
         sessionStore.save(json);
     }
     @JavascriptInterface public void clearSession() { sessionStore.clear(); }
-    @JavascriptInterface public String appVersion() { return "1.1.0-test"; }
+    @JavascriptInterface public String appVersion() { return "2.1.0"; }
+    @JavascriptInterface public boolean supportsCustomerLocation() { return activity instanceof MainActivity; }
+    @JavascriptInterface public void requestCustomerLocation() {
+        activity.runOnUiThread(() -> {
+            if (activity instanceof MainActivity) ((MainActivity) activity).requestCustomerLocation();
+        });
+    }
     @JavascriptInterface public void shareText(String text) {
         if (text == null || text.trim().isEmpty()) return;
         activity.runOnUiThread(() -> {
