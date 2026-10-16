@@ -1248,6 +1248,7 @@ const OFFICIAL_IMAGE_SLUGS=[
 ];
 const PHOTO_BASE='https://cirengindi.com/assets/images/products/';
 const BRANDED_BASE='https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/member/app/src/main/assets/assets/';
+const AI_CIRENG_PHOTO_URL=BRANDED_BASE+'ai_cireng_styled.webp';
 function officialImageId(p){
  const key=String(p?.source_key||'');
  const number=Number(key.replace('app-product-',''));
@@ -1287,7 +1288,7 @@ function upgradeImageWhenReady(img){
  img.dataset.upgradeRequested='1';
  if(!upgradedImages.has(id)){
   upgradedImages.set(id,new Promise(resolve=>{
-   const remote=BRANDED_BASE+'official_'+String(id).padStart(2,'0')+'.webp';
+   const remote=id===1?AI_CIRENG_PHOTO_URL:BRANDED_BASE+'official_'+String(id).padStart(2,'0')+'.webp';
    const test=new Image();
    test.onload=()=>resolve(remote);test.onerror=()=>resolve(null);test.src=remote;
   }));
