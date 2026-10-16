@@ -812,7 +812,7 @@ function cacheMemberIdentity(profile){
  if(username!==state.session.username||fullName!==state.session.fullName){
   sessionSave({...state.session,username,fullName});
  }
-}function sessionClear(){state.session=null;state.me=null;state.boot=BUILTIN_PUBLIC_CATALOG;state.catalogFetched=false;state.cartSnapshot=null;state.ordersSnapshot=[];state.addressesSnapshot=[];state.vouchers=[];state.selectedVoucherId=null;bootstrapRequest=null;prefetchRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
+}function sessionClear(){state.session=null;state.me=null;state.boot=BUILTIN_PUBLIC_CATALOG;state.catalogFetched=false;state.cartSnapshot=null;state.ordersSnapshot=[];state.addressesSnapshot=[];state.deliveryGpsDraft=null;state.vouchers=[];state.selectedVoucherId=null;bootstrapRequest=null;prefetchRequest=null;instantViews.clear();pendingCartActions.clear();Native.clearSession()}
 async function parse(r){let d={};try{d=await r.json()}catch(e){}if(!r.ok){const m=d.error_code||d.error||d.message||('HTTP_'+r.status);const error=new Error(String(m));error.status=r.status;throw error;}return d}
 async function auth(payload){return parse(await fetch(SB+'/functions/v1/member-auth',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify(payload)}))}
 async function refresh(){const s=state.session||sessionRead();if(!s?.refreshToken)throw new Error('AUTH_REQUIRED');const d=await parse(await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify({refresh_token:s.refreshToken})}));sessionSave({accessToken:d.access_token,refreshToken:d.refresh_token,memberId:s.memberId||d.user?.id||''});return state.session}
@@ -1278,6 +1278,7 @@ function useCurrentLocation(){
  }
 }
 window.cirengIndiOnLocationResult=function(result){
+ if(state.route!=='addresses')return; // Ignore delayed GPS responses after leaving delivery screen.
  const btn=document.getElementById('ciUseGps');
  if(btn){btn.disabled=false;btn.innerHTML=icon('i-location','sm')+' Gunakan Lokasi Saya'}
  if(!result||result.status!=='ok'){
@@ -1298,7 +1299,7 @@ window.cirengIndiOnLocationResult=function(result){
   province:String(result.province||'').slice(0,100),
   postal_code:String(result.postal_code||'').slice(0,16)
  };
- if(state.route==='addresses'||state.route==='store')addAddressForm();
+ addAddressForm();
  toast('Pin lokasi ditemukan. Periksa alamat, lalu simpan.');
 };
 function addAddressForm(){
