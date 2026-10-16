@@ -42,7 +42,7 @@ async function orderRows(rows){
  return rows.map(o=>{
   const pay=payments.find(x=>x.order_id===o.id), courier=couriers.find(x=>x.id===o.courier_id);
   return {...o,items:items.filter(i=>i.order_id===o.id),
-   payment:pay?{id:pay.id,method:pay.method,status:pay.status,amount:pay.amount,review_note:pay.review_note,proof_submitted_at:pay.proof_submitted_at,proof_url:proofUrls.get(o.id)||null}:null,
+   payment:pay?{id:pay.id,method:pay.method,status:pay.status,amount:pay.amount,review_note:pay.review_note,bank_snapshot:pay.bank_snapshot,proof_submitted_at:pay.proof_submitted_at,proof_url:proofUrls.get(o.id)||null}:null,
    courier:courier?{id:courier.id,name:courier.name,whatsapp:contacts.find(x=>x.courier_id===courier.id)?.whatsapp||null}:null};
  });
 }
