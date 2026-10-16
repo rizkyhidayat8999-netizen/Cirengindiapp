@@ -1112,10 +1112,10 @@ async function checkout(){
     const selectedBank=banks.find(a=>(a.code||a.bank_name)===state.checkoutBank)||banks[0];
     const selectedAddress=as.find(a=>a.id===state.checkoutAddress)||as.find(a=>a.is_default)||as[0];
     const itemsHtml=(c.items||[]).map(i=>{
-      const v=i.variant||{},p=v.product||{};
+      const v=i.variant||{},p=v.product||{},prd=p;
       const id=esc(i.variant_id),qty=Number(i.quantity||0);
       const unit=Number(v.price??p.base_price??0);
-      return `<article class="ciCheckoutItem"><div class="ciCheckoutItemInfo"><b>${esc(p.name||'Produk Cireng Indi')}</b><small>${esc(v.name||'')} · ${qty} item</small><div class="ciCheckoutItemPrice">${rp(unit*qty)}</div></div><img ${photoAttrs(p)}><div class="ciCheckoutItemBottom"><button type="button" class="ciCheckoutTextAction" onclick="openCheckoutProduct('${esc(p.id)}')">Ubah</button><div class="ciCheckoutStepper"><button type="button" aria-label="Kurangi ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty-1})">${icon('i-minus')}</button><output>${qty}</output><button type="button" aria-label="Tambah ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty+1})">${icon('i-plus')}</button></div></div></article>`;
+      return `<article class="ciCheckoutItem"><div class="ciCheckoutItemInfo"><b>${esc(p.name||'Produk Cireng Indi')}</b><small>${esc(v.name||'')} · ${qty} item</small><div class="ciCheckoutItemPrice">${rp(unit*qty)}</div></div><img ${photoAttrs(prd)}><div class="ciCheckoutItemBottom"><button type="button" class="ciCheckoutTextAction" onclick="openCheckoutProduct('${esc(p.id)}')">Ubah</button><div class="ciCheckoutStepper"><button type="button" aria-label="Kurangi ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty-1})">${icon('i-minus')}</button><output>${qty}</output><button type="button" aria-label="Tambah ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty+1})">${icon('i-plus')}</button></div></div></article>`;
     }).join('');
     const suggestedHtml=suggestions.map(x=>`<div class="ciCheckoutSuggestion"><img ${photoAttrs(x.p)}><div class="ciCheckoutGrow"><b>${esc(x.p.name)}</b><small>${rp(x.first.price)}</small></div><button type="button" onclick="checkoutAddSuggested('${esc(x.p.id)}')" aria-label="Tambah ${esc(x.p.name)}">${icon('i-plus')}</button></div>`).join('');
     root.innerHTML=`<div class="app ciCheckoutScreen">
