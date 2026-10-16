@@ -44,19 +44,35 @@ public final class MainActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                android.net.Uri uri = request.getUrl();
+                String path = uri.getPath();
+                if ("app.cirengindi.owner.local".equalsIgnoreCase(uri.getHost())
+                        && path != null && path.startsWith("/assets/") && !path.contains("..")) {
+                    try {
+                        java.io.InputStream asset = getAssets().open(path.substring(1));
+                        String mime = path.endsWith(".png") ? "image/png" : "image/webp";
+                        return new android.webkit.WebResourceResponse(mime, null, asset);
+                    } catch (Exception ignored) { }
+                }
+                return super.shouldInterceptRequest(view, request);
+            }
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return !"app.cirengindi.owner.local".equalsIgnoreCase(request.getUrl().getHost());
             }
         });
 
         setContentView(webView);
+        String bundled;
         try (BufferedReader r = new BufferedReader(new InputStreamReader(
                 getAssets().open("index.html"), StandardCharsets.UTF_8))) {
-            String html = r.lines().collect(Collectors.joining("\n"));
-            webView.loadDataWithBaseURL("https://app.cirengindi.owner.local/", html, "text/html", "UTF-8", null);
+            bundled = r.lines().collect(Collectors.joining("\n"));
         } catch (Exception e) {
-            webView.loadData("<h2>Cireng Indi Owner</h2><p>Gagal memuat aplikasi.</p>", "text/html", "UTF-8");
+            bundled = "<html><body><h2>Cireng Indi Owner</h2><p>Gagal memuat aplikasi.</p></body></html>";
         }
+        RemoteHtmlUpdater.start(this, bundled, html ->
+            webView.loadDataWithBaseURL("https://app.cirengindi.owner.local/", html, "text/html", "UTF-8", null));
     }
 
     @Override
