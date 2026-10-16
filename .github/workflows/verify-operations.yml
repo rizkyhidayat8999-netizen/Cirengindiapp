@@ -83,7 +83,7 @@ jobs:
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
             const websiteCategories=['Cireng','Frozen','Jamu','Lainnya'];
-            const actualCategories=[...boot.data.categories].sort((a,b)=>a.sort_order-b.sort_order).map(c=>c.name);
+            const actualCategories=boot.data.categories.map(c=>c.name);
             if(JSON.stringify(actualCategories)!==JSON.stringify(websiteCategories))
               throw Error('Website category order mismatch '+JSON.stringify(actualCategories));
             const websiteOrder=[
@@ -93,9 +93,14 @@ jobs:
               'Ebi Furai','Baceman Frozen','Dimsum Crispy','Rollade Ayam','Kebab Pisang','Kebab Daging',
               'Corndog','Churros','Kentang Goreng','Frozen Mix Platter','Puding Mix','Salad Jelly','Rengginang'
             ];
-            const actualOrder=[...boot.data.products].sort((a,b)=>a.sort_order-b.sort_order).map(p=>p.name);
+            const actualOrder=boot.data.products.map(p=>p.name);
             if(JSON.stringify(websiteOrder)!==JSON.stringify(actualOrder))
               throw Error('Website product order mismatch '+JSON.stringify(actualOrder));
+            if(boot.data.products[0].name!=='Cireng'||boot.data.products[0].best_seller!==true)
+              throw Error('Cireng must be the top best-seller in public catalogue');
+            if(!member.includes("function websiteCatalogueOrder(")||!member.includes("setCat('bestseller')")||
+               !member.includes('ciBestSellerBadge'))
+              throw Error('Member must sort website products and expose Best Seller filter/labels');
             for(let i=1;i<=31;i++){
               const photo='apps/member/app/src/main/assets/assets/official_'+String(i).padStart(2,'0')+'.webp';
               if(!fs.existsSync(photo)||fs.statSync(photo).size<1500)
