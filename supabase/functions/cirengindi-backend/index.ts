@@ -48,7 +48,14 @@ async function orderRows(rows){
 }
 async function paymentSettings(){
  const x=check(await admin.from('ci_app_settings').select('value').eq('key','bank_transfer').maybeSingle())?.value||{};
- return {enabled:!!(x.enabled&&x.bank_name&&x.account_number&&x.account_holder),bank_name:String(x.bank_name||''),account_number:String(x.account_number||''),account_holder:String(x.account_holder||'')};
+ const source=Array.isArray(x.accounts)&&x.accounts.length?x.accounts:(x.bank_name?[{code:String(x.bank_name).toUpperCase(),bank_name:x.bank_name,account_number:x.account_number,account_holder:x.account_holder,enabled:true}]:[]);
+ const accounts=source.filter(a=>a && a.enabled!==false && a.bank_name && a.account_number && a.account_holder).map(a=>({
+   code:String(a.code||a.bank_name).toUpperCase(),bank_name:String(a.bank_name),account_number:String(a.account_number),
+   account_holder:String(a.account_holder)
+ }));
+ const current=accounts[0]||{};
+ return {enabled:!!x.enabled && accounts.length>0,accounts: x.enabled?accounts:[],
+   bank_name:current.bank_name||'',account_number:current.account_number||'',account_holder:current.account_holder||''};
 }
 
 async function authApi(b){const a=b.action;if(a==='register'){
@@ -109,7 +116,9 @@ async function mobile(req,b){
  if(a==='checkout_cod'||a==='checkout'){
   const method=a==='checkout_cod'?'cod':String(b.payment_method||'cod');
   // The SQL procedure performs stock validation, deductions, and order/payment creation atomically.
-  const d=check(await admin.rpc('ci_checkout',{p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_payment_method:method,p_address_id:b.address_id||null,p_notes:b.notes||null}));
+  const payload={p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_payment_method:method,p_address_id:b.address_id||null,p_notes:b.notes||null,p_bank_code:method==='transfer'?String(b.bank_code||'').toUpperCase():null};
+  // One database transaction validates the chosen bank, stock and payment snapshot.
+  const d=check(await admin.rpc('ci_checkout_with_bank',payload));
   return reply({order:d});
  }
  if(a==='payment_proof_upload'){
@@ -177,12 +186,18 @@ async function owner(req,b){
  }
  if(a==='set_bank_transfer'){
   if(s.role!=='owner')return err('OWNER_REQUIRED',403);
-  const bank_name=String(b.bank_name||'').trim().slice(0,70);
+  const bank_name=String(b.bank_name||'').trim().toUpperCase().slice(0,70);
   const account_number=String(b.account_number||'').replace(/\s/g,'').slice(0,40);
   const account_holder=String(b.account_holder||'').trim().slice(0,100);
   const enabled=!!b.enabled;
-  if(enabled&&(!bank_name||!account_holder||!/^[-0-9]{5,40}$/.test(account_number)))return err('INVALID_BANK_DETAILS');
-  check(await admin.from('ci_app_settings').upsert({key:'bank_transfer',value:{enabled,bank_name,account_number,account_holder}},{onConflict:'key'}));
+  if(!/^[A-Z0-9 -]{2,30}$/.test(bank_name)||!/^[-0-9]{5,40}$/.test(account_number)||!account_holder)return err('INVALID_BANK_DETAILS');
+  const existing=check(await admin.from('ci_app_settings').select('value').eq('key','bank_transfer').maybeSingle())?.value||{};
+  const accounts=(Array.isArray(existing.accounts)?existing.accounts:[]).filter(x=>x.code!==bank_name);
+  accounts.push({code:bank_name,bank_name,account_number,account_holder,enabled:true,sort_order:bank_name==='BSI'?1:bank_name==='BRI'?2:accounts.length+1});
+  if(accounts.length>8)return err('TOO_MANY_BANK_ACCOUNTS');
+  accounts.sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const primary=accounts[0];
+  check(await admin.from('ci_app_settings').upsert({key:'bank_transfer',value:{enabled,accounts,bank_name:primary.bank_name,account_number:primary.account_number,account_holder:primary.account_holder}},{onConflict:'key'}));
   return reply({ok:true,bank_transfer:await paymentSettings()});
  }
  if(a==='assign_courier'){
