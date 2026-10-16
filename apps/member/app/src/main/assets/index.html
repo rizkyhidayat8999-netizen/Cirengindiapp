@@ -1010,6 +1010,11 @@ html,body{background:#fff9f2!important}
  #root > .ciCartDock, #root > .app:has(.storeHead) .ciCatalogProduct{transition:none!important}
 }
 
+
+/* Only the scroll pane needs bottom breathing space; do not stack oversized
+   padding on the entire catalogue plus its parent viewport. */
+#root > .app:has(.storeHead) .ciWebsiteProductList{padding-bottom:20px!important}
+
 </style>
 </head>
 <body>
@@ -1479,7 +1484,7 @@ function photoAttrs(p){
  (id?' data-photo-id="'+id+'" data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
 function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
-function prow(p,b){const v=variantFor(p,b);return `<article class="prow ciCatalogProduct" tabindex="0" role="button" aria-label="Detail ${esc(p.name)}" onclick="openP('${p.id}')" onkeydown="if(event.key==='Enter'){openP('${p.id}')}" ><img ${photoAttrs(p)}><div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></article>`}
+function prow(p,b){const v=variantFor(p,b);return `<article class="prow ciCatalogProduct" tabindex="0" role="button" aria-label="Detail ${esc(p.name)}" onclick="openP('${p.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openP('${p.id}')}" ><img ${photoAttrs(p)}><div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></article>`}
 async function setCat(id){
  if(state.category===id)return;
  state.category=id;
