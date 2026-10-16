@@ -114,7 +114,16 @@ async function mobile(req,b){
  if(a==='addresses')return reply({addresses:await list('ci_addresses','*',{eq:{member_id:uid},order:'created_at'})});
  if(a==='address_create'){
   for(const field of ['recipient_name','phone','address_line','city','province'])if(!String(b[field]||'').trim())return err('ADDRESS_INCOMPLETE');
-  const attrs={member_id:uid,label:String(b.label||'Rumah').slice(0,50),recipient_name:String(b.recipient_name).slice(0,100),phone:String(b.phone).slice(0,30),address_line:String(b.address_line).slice(0,500),city:String(b.city).slice(0,100),province:String(b.province).slice(0,100),postal_code:String(b.postal_code||'').slice(0,16)};
+  // Opt-in GPS coordinates from the Member app; existing manual addresses remain valid.
+  // Coordinates are persisted only when the customer explicitly saves an address.
+  const hasLocation=b.latitude!==undefined||b.longitude!==undefined;
+  const latitude=Number(b.latitude), longitude=Number(b.longitude);
+  if(hasLocation&&(b.latitude===undefined||b.longitude===undefined||
+     !Number.isFinite(latitude)||!Number.isFinite(longitude)||
+     latitude < -90||latitude > 90||longitude < -180||longitude > 180))
+    return err('INVALID_LOCATION_COORDINATES');
+  const attrs={member_id:uid,label:String(b.label||'Rumah').slice(0,50),recipient_name:String(b.recipient_name).slice(0,100),phone:String(b.phone).slice(0,30),address_line:String(b.address_line).slice(0,500),city:String(b.city).slice(0,100),province:String(b.province).slice(0,100),postal_code:String(b.postal_code||'').slice(0,16),
+   ...(hasLocation?{latitude:Math.round(latitude*1e7)/1e7,longitude:Math.round(longitude*1e7)/1e7}:{})};
   const d=check(await admin.from('ci_addresses').insert(attrs).select('*').single());return reply({address:d});
  }
  if(a==='address_default'){
