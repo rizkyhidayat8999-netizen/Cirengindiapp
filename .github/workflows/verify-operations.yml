@@ -46,8 +46,20 @@ jobs:
             if(!source.includes('instantViews.clear()'))throw Error(name+' must discard cached private content on logout');
             if(!source.includes('navId'))throw Error(name+' navigation race guard missing');
           }
-          for(const p of ['home','store','addresses','cart','checkout','orders','rewards','profile']){
+          // Home is now rendered synchronously; subsequent API responses only refresh while Home is active.
+          if(!member.includes("function renderHome()")||!member.includes("if(state.route==='home')"))
+            throw Error('Instant Home render or response guard missing');
+          for(const p of ['store','addresses','cart','checkout','orders','rewards','profile']){
             if(!member.includes("state.route!=='"+p+"'"))throw Error('Member stale-response guard missing for '+p);
+          }
+          if(member.includes('m.profile.level||"Classic"')||!member.includes('Voucher <span data-voucher-count>'))
+            throw Error('Home must show owner-issued Voucher instead of Classic');
+          if(!member.includes("async function vouchers()")||!member.includes("id=\"checkoutVoucher\"")||!member.includes("voucher_id,address_id"))
+            throw Error('Member voucher screen/checkout is not wired');
+          if(!member.includes('orderTimeline(o)')||!owner.includes("ready_for_pickup"))
+            throw Error('Pick Up/Delivery order steps missing');
+          for(const operation of ["voucher_create","voucher_issue","ci_checkout_with_voucher","ci_order_status_events"]){
+            if(!backend.includes(operation))throw Error('Backend voucher or timeline missing '+operation);
           }
           for(const p of ['dashboard','orders','products','members','rewards','operations','settings']){
             if(!owner.includes("state.page!=='"+p+"'"))throw Error('Owner stale-response guard missing for '+p);
