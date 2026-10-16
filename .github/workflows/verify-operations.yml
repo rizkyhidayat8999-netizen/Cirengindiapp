@@ -56,7 +56,7 @@ jobs:
           if(!member.includes('id="cobank"')||!member.includes('bank_code'))throw Error('Member bank selection missing');
           const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
           for(const s of ['ci_checkout_with_bank','bank_snapshot','7306336217','457901008978533'])if(!bankSQL.includes(s))throw Error('Two-bank migration missing '+s);
-          if(!member.includes('raw.githubusercontent.com')||!owner.includes('raw.githubusercontent.com'))throw Error('Remote theme link missing');
+          if(!owner.includes('raw.githubusercontent.com'))throw Error('Owner remote theme configuration missing');
           if(!owner.includes("onclick=\"registerOwner()\""))throw Error('Missing owner activation');
           const m=member.match(/const SB='([^']+)', KEY='([^']+)'/);
           if(!m)throw Error('Missing mobile backend config');
@@ -85,10 +85,14 @@ jobs:
             'apps/owner/app/src/main/res/drawable-nodpi/logo_cireng_indi.png'
           ])if(!fs.readFileSync(path).equals(logo))throw Error('Brand logo differs: '+path);
           if(!member.includes('Tanah Grogot')||member.includes('Surabaya'))throw Error('Incorrect outlet location');
-          for(const [label,html] of [['Member',member],['Owner',owner]]){
-            const theme='premium-overrides.css';
-            if(html.lastIndexOf(theme)<html.lastIndexOf('</style>'))throw Error(label+' remote styles incorrectly ordered');
-          }
+          // Old APK visual restoration is intentional: use the historical local CSS layout.
+          if(member.includes('premium-overrides.css'))throw Error('Member historic layout must not be overridden remotely');
+          if(!member.includes('linear-gradient(122deg,#5d3027')||!member.includes('.storeHead h1 .storeLogo'))
+            throw Error('Historic premium Member header layout missing');
+          if(member.includes('/* Studio26:')||member.includes('studioObserver'))
+            throw Error('Experimental studio UI/remote image hydration must stay removed');
+          if(owner.lastIndexOf('premium-overrides.css')<owner.lastIndexOf('</style>'))
+            throw Error('Owner theme stylesheet incorrectly ordered');
             const secret=[['cirengindi-mobile-api','orders'],['cirengindi-mobile-api','checkout'],['cirengindi-mobile-api','payment_proof_upload'],['cirengindi-owner-api','orders'],['cirengindi-owner-api','assign_courier'],['cirengindi-owner-api','payment_review'],['cirengindi-owner-api','set_bank_transfer']];
             for(const [ep,action] of secret){const r=await call(ep,action);if(r.status!==401)throw Error('Unauthorized action '+ep+'/'+action+' returned '+r.status)}
             console.log('PASS: scripts parse, catalogue 31/42/3, BSI/BRI live, matching official logo, OTA style and 7 protected operations');
