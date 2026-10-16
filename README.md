@@ -39,7 +39,7 @@ Owner/staff functions:
 
 ## Backend
 
-Dedicated Supabase ref: `kzvlelcngcxgjsvtvsnj`
+Dedicated Supabase ref: `tbviryuimoxgapubdjio`
 
 Starpoint Garage is not used by these apps.
 
@@ -49,7 +49,7 @@ Starpoint Garage is not used by these apps.
 
 ## Payments
 
-Current policy: COD only. QRIS and bank transfer are disabled.
+COD works in the existing backend. BSI/BRI transfer is implemented in source, but requires database migration plus Edge Function deployment before production activation. QRIS is disabled.
 
 ## Build/UI version and no-reinstall updates
 
@@ -58,3 +58,11 @@ Android apps package their core HTML/JavaScript in a local WebView. Installed co
 The bank checkout migration `supabase/migrations/20261016_two_bank_checkout.sql` and matching `supabase/functions/cirengindi-backend/index.ts` must both be deployed to production before transfer checkout is enabled. Deploy all three active Edge Function routes with the same backend source, preserving current role authorization, then run end-to-end COD and BSI/BRI tests. Do not claim banking features live until DB and function deployments are verified.
 
 Official location: Tanah Grogot, East Kalimantan. The bundled brand logo is used for Member and Owner header and Android launcher icons.
+
+## Signed update distribution
+
+- Member release package: `com.cirengindi.member`, version 1.2.0 (3).
+- Owner release package: `com.cirengindi.owner`, version 1.1.0 (2).
+- Workflow `.github/workflows/release-signed.yml` requires secrets `CI_ANDROID_KEYSTORE_BASE64`, `CI_STORE_PASSWORD`, `CI_KEY_ALIAS`, and `CI_KEY_PASSWORD`.
+- Reuse the same securely stored keystore for every release. Existing `.internal` debug APKs use a different Android application ID and cannot update production packages in place.
+- Theme changes are fetched from the remote CSS source after initial supported release installation; core code and native icons still require a signed APK/store update.
