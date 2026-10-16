@@ -22,7 +22,7 @@ body{min-height:100vh}button,input,select{font:inherit}.app{max-width:760px;marg
 .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:var(--shadow);margin-bottom:12px}
 .row{display:flex;gap:12px;align-items:center}.grow{flex:1}.muted{color:var(--muted);font-size:12px}.money{font-weight:900;color:var(--brand);font-size:17px}
 .badge{display:inline-flex;padding:6px 9px;border-radius:99px;font-size:11px;font-weight:800;background:#f3efe9;color:#6c625c}
-.badge.pending{background:#fff1c8;color:#765700}.badge.processing{background:#e8efff;color:#3f5d91}.badge.shipped{background:#eee8ff;color:#6350a1}.badge.completed{background:#dff5e8;color:#247049}.badge.cancelled{background:#fbe2df;color:#94362f}
+.badge.pending{background:#fff1c8;color:#765700}.badge.processing{background:#e8efff;color:#3f5d91}.badge.ready_for_pickup{background:#e8f2e7;color:#347744}.badge.shipped{background:#eee8ff;color:#6350a1}.badge.completed{background:#dff5e8;color:#247049}.badge.cancelled{background:#fbe2df;color:#94362f}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:800;background:var(--brand);color:#fff}.btn.secondary{background:#fff;color:var(--brand);border:1px solid #ddb39f}.btn.danger{background:#fff0ee;color:var(--red);border:1px solid #f0c1bb}
 .nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);height:76px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
 .nav button{border:0;background:transparent;color:#79716d;font-size:10px;padding:7px 3px}.nav .icon{display:block;margin:0 auto 4px}.nav button.active{color:var(--brand);font-weight:800}
@@ -111,7 +111,7 @@ function releaseAction(key){pendingOwnerActions.delete(key)}
 function previewPage(page){
  const old=instantViews.get(page);
  if(old){root.innerHTML=old;return;}
- const titles={dashboard:'Dashboard',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',operations:'Pengaturan Operasional',settings:'Lainnya'};
+ const titles={dashboard:'Dashboard',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',vouchers:'Voucher Member',operations:'Pengaturan Operasional',settings:'Lainnya'};
  root.innerHTML=shell(`<div class="section instantPreview"><h2>${esc(titles[page]||'Cireng Indi Owner')}</h2></div>`,['rewards','operations'].includes(page)?'settings':page);
 }
 const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
@@ -219,7 +219,7 @@ async function go(p){
  state.page=p;const key=++navId;
  previewPage(p);
  try{
-  if(p==='dashboard')await dashboard();else if(p==='orders')await orders();else if(p==='products')await products();else if(p==='members')await members();else if(p==='rewards')await rewards();else if(p==='operations')await operations();else if(p==='settings')await settings();
+  if(p==='dashboard')await dashboard();else if(p==='orders')await orders();else if(p==='products')await products();else if(p==='members')await members();else if(p==='rewards')await rewards();else if(p==='vouchers')await vouchers();else if(p==='operations')await operations();else if(p==='settings')await settings();
   if(key===navId&&state.page===p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(p,root.innerHTML);
  }catch(e){if(key===navId)fail(e)}
 }
@@ -245,11 +245,11 @@ async function orders(){
  busy(true);try{
   const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
   const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
-  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
+  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
- const p=o.payment||{},next=o.status==='pending'?'processing':o.status==='processing'?(o.fulfillment_type==='pickup'?'completed':'shipped'):o.status==='shipped'?'completed':null;
+ const p=o.payment||{},next=o.status==='pending'?'processing':o.status==='processing'?(o.fulfillment_type==='pickup'?'ready_for_pickup':'shipped'):o.status==='ready_for_pickup'||o.status==='shipped'?'completed':null;
  const first=o.items?.[0],c=o.courier||{},cs=state.cache.couriers||[];
  const canContinue=p.method==='cod'||p.status==='paid';
  return `<div class="card order-item" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||'')+' '+o.status+' '+(first?.product_name||'')).toLowerCase())}">
@@ -261,7 +261,7 @@ function orderManageCard(o){
   ${p.method==='transfer'&&p.status==='submitted'&&o.status!=='cancelled'?`<div class="actions"><button class="btn" onclick="reviewPayment('${o.id}','approve')">Konfirmasi Transfer</button><button class="btn danger" onclick="reviewPayment('${o.id}','reject')">Tolak Bukti</button></div>`:''}
   ${p.method==='cod'&&p.status==='pending'&&o.status!=='cancelled'?`<div class="actions"><button class="btn secondary" onclick="confirmCod('${o.id}')">Konfirmasi COD Diterima</button></div>`:''}
   ${o.fulfillment_type==='delivery'&&o.status!=='cancelled'&&o.status!=='completed'?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><b>Pilih Kurir Delivery</b><div class="muted">${c.name?'Ditugaskan: '+esc(c.name):'Belum ditugaskan'}${c.whatsapp?' • WA '+esc(c.whatsapp):''}</div><div class="row" style="margin-top:6px"><select id="courier-${o.id}" class="grow" style="min-width:0;padding:10px;border-radius:10px"><option value="">Pilih kurir</option>${cs.filter(x=>x.active).map(x=>`<option value="${x.id}" ${o.courier_id===x.id?'selected':''}>${esc(x.name)} • ${rp(x.flat_fee)}</option>`).join('')}</select><button class="btn" onclick="assignCourier('${o.id}')">Tugaskan</button></div>${p.method==='transfer'?`<div class="muted">Untuk transfer, kurir harus memiliki ongkir Rp0 agar total tidak berubah setelah pembayaran.</div>`:''}</div>`:''}
-  <div class="actions">${next&&canContinue?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==='processing'?'Proses':next==='shipped'?'Kirim':'Selesaikan'}</button>`:''}${next&&!canContinue?'<div class="muted">Menunggu bukti dan konfirmasi transfer.</div>':''}${['pending','processing'].includes(o.status)&&p.status!=='paid'&&p.status!=='submitted'?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:''}</div>
+  <div class="actions">${next&&canContinue?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==='processing'?'Proses':next==='ready_for_pickup'?'Siap Diambil':next==='shipped'?'Kirim':'Selesaikan'}</button>`:''}${next&&!canContinue?'<div class="muted">Menunggu bukti dan konfirmasi transfer.</div>':''}${['pending','processing'].includes(o.status)&&p.status!=='paid'&&p.status!=='submitted'?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:''}</div>
  </div>`;
 }
 function filterOrders(q){q=q.toLowerCase();document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!x.dataset.q.includes(q)))}
@@ -357,10 +357,73 @@ async function editCourier(id){
  busy(true);try{await ownerApi('update_courier',{id:c.id,name:name.trim(),flat_fee:Number(fee),active:!!c.active,sort_order:c.sort_order,whatsapp:whatsapp.trim()});toast('Kurir diperbarui.');await operations()}catch(e){fail(e)}finally{busy(false)}
 }
 
+
+function ownerVoucherCard(v,data){
+ const list=data.assignments||[];
+ const usage=list.filter(a=>a.voucher_id===v.id&&a.status==='used').length;
+ const claimed=list.filter(a=>a.voucher_id===v.id).length;
+ const users=(data.members||[]).map(m=>'<option value="'+esc(m.user_id)+'">'+esc(m.username)+' · '+esc(m.full_name)+'</option>').join('');
+ const discount=v.discount_type==='percent'?v.discount_value+'%':rp(v.discount_value);
+ return '<div class="card"><div class="row"><div class="grow"><b>'+esc(v.title)+'</b><div class="muted">'+esc(v.code)+' • '+discount+' • Min. '+rp(v.min_spend)+'</div><div class="muted">Diterbitkan untuk '+(v.all_members?'semua member':'member pilihan')+' · '+claimed+' pemilik · '+usage+' terpakai</div><div class="muted">Berlaku sampai '+new Date(v.ends_at).toLocaleDateString('id-ID')+'</div></div><span class="badge '+(v.active?'completed':'cancelled')+'">'+(v.active?'Aktif':'Nonaktif')+'</span></div>'
+  +(v.active?'<div class="row" style="margin-top:12px"><select class="grow" id="voucher-person-'+esc(v.id)+'" aria-label="Pilih member untuk voucher"><option value="">Pilih member</option>'+users+'</select><button class="btn" onclick="issueVoucher(\''+esc(v.id)+'\')">Beri</button></div>':'')
+  +'<button class="btn secondary" style="margin-top:12px" onclick="toggleVoucher(\''+esc(v.id)+'\','+(!v.active)+')">'+(v.active?'Nonaktifkan':'Aktifkan')+'</button></div>';
+}
+async function vouchers(){
+ const current=state.cache.vouchers;
+ if(current&&state.page==='vouchers')renderOwnerVouchers(current);
+ try{
+  const data=await ownerApi('vouchers');state.cache.vouchers=data;
+  if(state.page==='vouchers')renderOwnerVouchers(data);
+ }catch(e){if(state.page==='vouchers')fail(e)}
+}
+function renderOwnerVouchers(data){
+ root.innerHTML=shell('<div class="section"><div class="row"><h2 class="grow">Voucher Member</h2><button class="btn secondary" onclick="go(\'settings\')">Kembali</button></div>'
+ +'<div class="card"><h3>Buat Voucher</h3><label>Judul voucher</label><input id="vTitle" placeholder="Contoh: Promo Cireng Indi" maxlength="100">'
+ +'<label>Kode unik</label><input id="vCode" placeholder="CIRENG10" maxlength="30" autocomplete="off">'
+ +'<div class="row"><div class="grow"><label>Tipe diskon</label><select id="vType"><option value="fixed">Nominal Rupiah</option><option value="percent">Persentase</option></select></div><div class="grow"><label>Nilai diskon</label><input id="vValue" type="number" min="1" placeholder="10000"></div></div>'
+ +'<label>Minimal belanja (Rp)</label><input id="vMin" type="number" min="0" value="0">'
+ +'<label>Berlaku untuk</label><select id="vScope"><option value="all">Pick Up & Delivery</option><option value="pickup">Pick Up</option><option value="delivery">Delivery</option></select>'
+ +'<label>Masa berlaku sampai</label><input id="vExpiry" type="datetime-local">'
+ +'<label class="row" style="gap:8px"><input id="vAll" type="checkbox" style="width:20px" ><span>Voucher tersedia untuk semua member</span></label>'
+ +'<button class="full" onclick="createVoucher()">Terbitkan Voucher</button></div>'
+ +'<h3>Voucher Diterbitkan</h3>'+(data.vouchers||[]).map(v=>ownerVoucherCard(v,data)).join('')
+ +'</div>','settings');
+}
+async function createVoucher(){
+ if(!reserveAction('create-voucher'))return;
+ try{
+  const expiry=document.getElementById('vExpiry').value;
+  if(!expiry)throw new Error('Isi tanggal kedaluwarsa voucher.');
+  await ownerApi('voucher_create',{
+   title:document.getElementById('vTitle').value.trim(),
+   code:document.getElementById('vCode').value.trim().toUpperCase(),
+   discount_type:document.getElementById('vType').value,
+   discount_value:Number(document.getElementById('vValue').value),
+   min_spend:Number(document.getElementById('vMin').value||0),
+   fulfillment_scope:document.getElementById('vScope').value,
+   all_members:document.getElementById('vAll').checked,
+   ends_at:new Date(expiry).toISOString()
+  });
+  toast('Voucher berhasil diterbitkan.');await vouchers();
+ }catch(e){fail(e)}finally{releaseAction('create-voucher')}
+}
+async function issueVoucher(id){
+ const member_id=document.getElementById('voucher-person-'+id)?.value;
+ if(!member_id)return toast('Pilih member tujuan.');
+ if(!reserveAction('voucher:'+id))return;
+ try{await ownerApi('voucher_issue',{id,member_id});toast('Voucher berhasil diberikan.');await vouchers()}
+ catch(e){fail(e)}finally{releaseAction('voucher:'+id)}
+}
+async function toggleVoucher(id,active){
+ if(!reserveAction('voucher:'+id))return;
+ try{await ownerApi('voucher_toggle',{id,active});toast('Status voucher diperbarui.');await vouchers()}
+ catch(e){fail(e)}finally{releaseAction('voucher:'+id)}
+}
+
 async function settings(){
  busy(true);try{
   const me=await ownerApi("me");
-  if(state.page!=='settings')return;root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
+  if(state.page!=='settings')return;root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('vouchers')"><div class="row">${icon("i-cash")}<div class="grow"><b>Voucher Member</b><div class="muted">Buat diskon dan berikan voucher kepada member</div></div><b>›</b></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
