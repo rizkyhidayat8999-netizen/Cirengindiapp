@@ -70,6 +70,28 @@ jobs:
             const boot=await call('cirengindi-mobile-api','bootstrap');
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
+            const websiteCategories=['Cireng','Frozen','Jamu','Lainnya'];
+            const actualCategories=[...boot.data.categories].sort((a,b)=>a.sort_order-b.sort_order).map(c=>c.name);
+            if(JSON.stringify(actualCategories)!==JSON.stringify(websiteCategories))
+              throw Error('Website category order mismatch '+JSON.stringify(actualCategories));
+            const websiteOrder=[
+              'Cireng','Cireng Isi','Cilok','Sempol Ayam','Tahu Bakso','Pempek Ikan Tenggiri',
+              'Nugget Ayam','Chicken Katsu','Bakso Ayam','Bola Ayam Keju','Bitterballen','Ayam Ungkep',
+              'Jamu Manjakani','Jamu Komplit','Kunyit Asam','Jahe Latte','Jahe Original','Sari Kacang Hijau',
+              'Ebi Furai','Baceman Frozen','Dimsum Crispy','Rollade Ayam','Kebab Pisang','Kebab Daging',
+              'Corndog','Churros','Kentang Goreng','Frozen Mix Platter','Puding Mix','Salad Jelly','Rengginang'
+            ];
+            const actualOrder=[...boot.data.products].sort((a,b)=>a.sort_order-b.sort_order).map(p=>p.name);
+            if(JSON.stringify(websiteOrder)!==JSON.stringify(actualOrder))
+              throw Error('Website product order mismatch '+JSON.stringify(actualOrder));
+            for(let i=1;i<=31;i++){
+              const photo='apps/member/app/src/main/assets/assets/official_'+String(i).padStart(2,'0')+'.webp';
+              if(!fs.existsSync(photo)||fs.statSync(photo).size<1500)
+                throw Error('Official website photo not packaged: '+photo);
+            }
+            if(!member.includes('OFFICIAL_IMAGE_SLUGS')||!member.includes('photoFallback'))
+              throw Error('Official website photo selection/fallback absent from Member');
+
             if(boot.data.bank_transfer?.enabled!==true)throw Error('Live bank transfer not enabled');
           const banks=boot.data.bank_transfer?.accounts||[];
           for(const [code,number] of [['BSI','7306336217'],['BRI','457901008978533']]){
