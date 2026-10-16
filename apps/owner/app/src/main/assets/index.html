@@ -110,7 +110,7 @@ function previewPage(page){
  const old=instantViews.get(page);
  if(old){root.innerHTML=old;return;}
  const titles={dashboard:'Dashboard',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',operations:'Pengaturan Operasional',settings:'Lainnya'};
- root.innerHTML=shell(`<div class="section"><h2>${esc(titles[page]||'Cireng Indi Owner')}</h2></div>`,['rewards','operations'].includes(page)?'settings':page);
+ root.innerHTML=shell(`<div class="section instantPreview"><h2>${esc(titles[page]||'Cireng Indi Owner')}</h2></div>`,['rewards','operations'].includes(page)?'settings':page);
 }
 const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -212,12 +212,12 @@ function errorText(m){
 function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
 async function go(p){
  const previous=state.page;
- if(previous!==p&&root.querySelector('.app'))instantViews.set(previous,root.innerHTML);
+ if(previous!==p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(previous,root.innerHTML);
  state.page=p;const key=++navId;
  previewPage(p);
  try{
   if(p==='dashboard')await dashboard();else if(p==='orders')await orders();else if(p==='products')await products();else if(p==='members')await members();else if(p==='rewards')await rewards();else if(p==='operations')await operations();else if(p==='settings')await settings();
-  if(key===navId&&state.page===p&&root.querySelector('.app'))instantViews.set(p,root.innerHTML);
+  if(key===navId&&state.page===p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(p,root.innerHTML);
  }catch(e){if(key===navId)fail(e)}
 }
 
@@ -358,7 +358,7 @@ async function settings(){
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
 
-(async()=>{state.session=getSession();if(state.session?.access_token){busy(true);try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}finally{busy(false)}}else renderLogin()})();
+(async()=>{state.session=getSession();if(state.session?.access_token){previewPage('dashboard');try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}catch(e){clearSession();renderLogin(errorText(e.message))}}else renderLogin()})();
 </script>
 </body>
 </html>
