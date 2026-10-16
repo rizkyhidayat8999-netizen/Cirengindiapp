@@ -144,31 +144,27 @@ function shell(body,active){
  return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Aktivasi Akun Owner</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Panduan Verifikasi Owner</button></div></section>`
 }
 function registerOwner(){
  const email='indicireng@gmail.com';
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Aktivasi Owner</h1><p>Akun khusus pemilik Cireng Indi</p><div class="notice">Akun Owner menggunakan <b>${esc(email)}</b>. Setelah aktivasi, buka tautan verifikasi yang dikirim ke inbox atau folder spam.</div><label for="ownerpass">Buat password Owner</label><input type="password" id="ownerpass" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter, huruf dan angka"><div class="auth-password-info">Gunakan password unik yang tidak digunakan pada layanan lain.</div><label>Ulangi password</label><input type="password" id="ownerpass2" autocomplete="new-password" minlength="8"><button class="full" onclick="activateOwnerSubmit()">Daftar &amp; Kirim Verifikasi</button><div class="auth-help"><span class="muted">Sudah mendaftar, tetapi belum mendapat email?</span><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button class="btn secondary" style="width:100%;margin-top:10px" onclick="renderLogin()">Kembali ke Login</button></div></section>`;
-}
-async function activateOwnerSubmit(){
- const email='indicireng@gmail.com';
- const pass=document.getElementById('ownerpass')?.value||'',again=document.getElementById('ownerpass2')?.value||'';
- if(pass.length<8||!/[A-Za-z]/.test(pass)||!/[0-9]/.test(pass))return toast('Gunakan minimal 8 karakter berisi huruf dan angka.');
- if(pass!==again)return toast('Konfirmasi password tidak sama.');
- busy(true);try{
-  await parse(await fetch(SUPABASE_URL+'/auth/v1/signup',{
-   method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},
-   body:JSON.stringify({email,password:pass})
-  }));
-  renderLogin('Permintaan aktivasi diterima. Periksa inbox atau spam '+email+' dan klik tautan verifikasi sebelum masuk.');
- }catch(e){fail(e)}finally{busy(false)}
+ root.innerHTML=`<section class="login"><div class="loginbox">
+ <div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div>
+ <h1>Verifikasi Owner</h1>
+ <p>Aktivasi akun pengelola Cireng Indi</p>
+ <div class="notice auth-message">Akun <b>${esc(email)}</b> sudah terdaftar. Buka email verifikasi yang dikirim oleh Supabase, lalu klik tautannya satu kali. Periksa juga folder Spam atau Semua Email.</div>
+ <div id="ownerAuthStatus" class="auth-message" role="alert" aria-live="polite"></div>
+ <div class="auth-help"><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang tautan verifikasi</button></div>
+ <p class="auth-password-info">Pengiriman email dibatasi oleh penyedia. Jika diminta menunggu, jangan mendaftar atau mengirim berulang kali.</p>
+ <button type="button" class="btn secondary" style="width:100%;margin-top:12px" onclick="renderLogin()">Kembali ke Login</button>
+ </div></section>`;
 }
 
 async function resendOwnerVerification(button){
  const email='indicireng@gmail.com';
  if(button){button.disabled=true;button.textContent='Mengirim…';}
  try{
-  await parse(await fetch(SUPABASE_URL+'/auth/v1/resend',{
+  await parse(await fetch(SUPABASE_URL+'/auth/v1/resend?redirect_to='+encodeURIComponent('https://cirengindi.com/'),{
     method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},
     body:JSON.stringify({type:'signup',email})
   }));
