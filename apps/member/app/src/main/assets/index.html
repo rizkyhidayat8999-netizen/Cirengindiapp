@@ -289,6 +289,21 @@ input,select,textarea{min-height:48px;border-radius:12px}
  .heroFore .heroDots{bottom:38px!important}
 }
 
+
+/* Member home: landscape promotional banner, responsive and edge-safe. */
+.hero.heroFore{height:auto!important;aspect-ratio:16/9!important;min-height:185px!important;max-height:360px!important;margin:12px 16px 12px!important;border-radius:20px!important;isolation:isolate}
+.heroFore .heroSlides>.forePromo{background:linear-gradient(110deg,#fff2df 0%,var(--slide-bg) 52%,var(--slide-tone) 100%)!important;text-align:left}
+.heroFore .forePromoLogo{left:20px!important;top:14px!important;transform:none!important;width:39px!important;height:39px!important}
+.heroFore .forePromoCopy{top:31%!important;left:6%!important;right:auto!important;width:49%!important;align-items:flex-start!important;text-align:left!important;gap:6px!important}
+.heroFore .forePromoEyebrow{font-size:clamp(9px,1.7vw,12px)!important}
+.heroFore .forePromoCopy h2{font-size:clamp(17px,4vw,29px)!important;line-height:1.12!important;max-width:100%!important}
+.heroFore .forePromoCopy p{font-size:clamp(10px,2vw,14px)!important;max-width:100%!important}
+.heroFore .forePromoImage{left:auto!important;right:2%!important;top:12%!important;bottom:auto!important;transform:none!important;width:45%!important;height:78%!important}
+.heroFore .forePromoImage img{width:100%!important;height:100%!important;object-fit:contain!important;border-radius:12px!important}
+.heroFore .heroDots{bottom:11px!important;left:50%!important;right:auto!important}
+.heroFore+.member{margin-top:0!important}
+@media(max-width:375px){.hero.heroFore{min-height:175px!important;margin:10px 12px!important}.heroFore .forePromoCopy{top:30%!important}.heroFore .forePromoCopy h2{font-size:17px!important}.heroFore .forePromoCopy p{font-size:10px!important}.heroFore .forePromoLogo{top:9px!important;left:14px!important;width:31px!important;height:31px!important}}
+
 </style>
 </head>
 <body>
