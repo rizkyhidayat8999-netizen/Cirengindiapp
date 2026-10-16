@@ -1178,7 +1178,8 @@ async function doRegister(){
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
 async function doForgot(){const email=document.getElementById('femail')?.value.trim()||'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');loading(true);try{await auth({action:'forgot_password',email});renderAuth('login');toast('Jika email terdaftar, tautan pemulihan telah dikirim.')}catch(e){fail(e)}finally{loading(false)}}
-let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},4800)}
+let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}/* Fixed hero: changing banners requires deliberate customer interaction. */
+function startHero(){clearInterval(heroTimer);heroTimer=null;heroIndex=0}
 let heroTouchStartX=null,heroTouchStartY=null;
 root.addEventListener('touchstart',event=>{
  const hero=event.target.closest?.('.hero');
@@ -1700,7 +1701,10 @@ function renderCartDock(cart){
  if(state.route!=='store')return;
  const items=Array.isArray(cart?.items)?cart.items:[];
  const amount=items.reduce((total,item)=>total+Math.max(0,Number(item.quantity)||0),0);
- root.querySelector(':scope > .ciCartDock')?.remove();
+ const signature=amount+'|'+Number(cart?.subtotal||0);
+ const existing=root.querySelector(':scope > .ciCartDock');
+ if(existing?.dataset.renderSignature===signature)return;
+ existing?.remove();
  if(!amount)return;
  const nav=root.querySelector(':scope > .bottomnav');
  if(!nav)return;
@@ -1709,6 +1713,8 @@ function renderCartDock(cart){
    '<span class="ciCartDockLeft">'+icon('i-bag','sm')+'<span class="ciCartDockText">Cek Keranjang</span><span class="ciCartDockCount">'+amount+'</span></span>'+
    '<strong class="ciCartDockTotal">'+rp(cart.subtotal||0)+'</strong>'+icon('i-right','sm')+
   '</button>');
+ const dock=root.querySelector(':scope > .ciCartDock');
+ if(dock)dock.dataset.renderSignature=signature;
 }
 async function cartBar(){
  const request=++ciCartDockSequence;
