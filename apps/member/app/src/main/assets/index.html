@@ -181,6 +181,80 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .cartScreen .qty b{font-size:14px}
 .cartScreen .stickyAction{padding-bottom:max(14px,env(safe-area-inset-bottom,0px));background:#fffdfa}
 @media(max-width:375px){.cartScreen .orderProduct img{width:61px!important;height:61px!important}.cartScreen .orderProduct{gap:8px}.cartScreen .qty{gap:4px}.cartScreen .qty button{width:31px!important;height:31px!important;min-width:31px}}
+
+/* Cireng Indi Member Home: Fore-inspired full-width editorial promo, not a split dark/photo panel. */
+.hero.heroFore{
+ height:clamp(340px,107vw,455px)!important;
+ aspect-ratio:auto!important;margin:0!important;width:100%;
+ border-radius:0 0 26px 26px!important;overflow:hidden;
+ background:#f8f0e5!important;isolation:isolate;
+}
+.hero.heroFore:after{display:none!important;content:none!important}
+.heroFore .heroSlides{position:absolute;inset:0}
+.heroFore .heroSlides>.forePromo{
+ position:absolute;inset:0;display:block;box-sizing:border-box;width:100%;height:100%;
+ background:radial-gradient(circle at 50% 82%,var(--slide-tone) 0%,transparent 52%),var(--slide-bg)!important;
+ color:#4c3025!important;opacity:0;pointer-events:none;
+ transition:opacity .3s ease;overflow:hidden;text-align:center;
+}
+.heroFore .heroSlides>.forePromo.is-active{opacity:1;pointer-events:auto}
+.heroFore .forePromo:before,.heroFore .forePromo:after{
+ content:"";position:absolute;z-index:0;pointer-events:none;
+ border:1px solid rgba(145,85,49,.1);border-radius:50%;
+ width:235px;height:235px;left:-175px;top:36%;
+}
+.heroFore .forePromo:after{width:188px;height:188px;left:auto;right:-130px;top:23%}
+.heroFore .forePromoLogo{
+ position:absolute;z-index:2;left:50%;top:11px;transform:translateX(-50%);
+ display:block;width:48px;height:48px;object-fit:contain;
+ filter:drop-shadow(0 2px 4px rgba(65,35,25,.1));
+}
+.heroFore .forePromoCopy{
+ position:absolute;z-index:2;top:67px;left:20px;right:20px;
+ display:flex;flex-direction:column;align-items:center;gap:6px;
+ text-shadow:none!important;color:#4c3025!important;
+}
+.heroFore .forePromoEyebrow{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#8b644f}
+.heroFore .forePromoCopy h2{
+ margin:0;max-width:355px;font-size:clamp(20px,5.1vw,27px);font-weight:800;
+ line-height:1.16;letter-spacing:-.4px;color:#4c3025;
+}
+.heroFore .forePromoCopy p{margin:0;font-size:clamp(11px,2.9vw,13px);line-height:1.35;color:#806a5e}
+.heroFore .forePromoImage{
+ position:absolute;z-index:1;left:50%;bottom:54px;transform:translateX(-50%);
+ width:min(65%,285px);height:43%;display:flex;align-items:center;justify-content:center;
+}
+.heroFore .forePromoImage:before{
+ content:"";position:absolute;inset:-12px 3px;border-radius:50%;
+ background:rgba(255,255,255,.26);filter:blur(16px);
+}
+.heroFore .forePromoImage img{
+ position:relative;width:100%;height:100%;object-fit:contain!important;
+ border-radius:14px;background:transparent!important;
+ filter:drop-shadow(0 6px 12px rgba(75,47,33,.16))!important;
+}
+.heroFore .heroDots{
+ left:50%;right:auto;bottom:47px;transform:translateX(-50%);
+ z-index:4;display:flex;justify-content:center;gap:7px;
+}
+.heroFore .heroDots button{
+ width:7px;height:7px;min-width:7px;min-height:7px;
+ padding:0;border:0;box-sizing:border-box;border-radius:99px;
+ background:#c7b6a9;transition:width .2s ease,background-color .2s ease;
+}
+.heroFore .heroDots button.active{width:22px;background:#8e5137}
+.heroFore+.member{
+ margin:-30px 20px 0;position:relative;z-index:6;
+ border-radius:22px;background:#fffdfb;
+}
+@media(max-width:375px){
+ .heroFore .forePromoCopy{top:66px}
+ .heroFore .forePromoImage{width:min(69%,245px);bottom:51px;height:40%}
+ .heroFore+.member{margin-left:15px;margin-right:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ .heroFore .heroSlides>.forePromo,.heroFore .heroDots button{transition:none!important}
+}
 </style>
 </head>
 <body>
@@ -308,7 +382,7 @@ async function doRegister(){
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
 async function doForgot(){const email=document.getElementById('femail')?.value.trim()||'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');loading(true);try{await auth({action:'forgot_password',email});renderAuth('login');toast('Jika email terdaftar, tautan pemulihan telah dikirim.')}catch(e){fail(e)}finally{loading(false)}}
-let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>el.classList.toggle('is-active',i===heroIndex));document.querySelectorAll('.heroDots button').forEach((el,i)=>el.classList.toggle('active',i===heroIndex));}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
+let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
 let heroTouchStartX=null,heroTouchStartY=null;
 root.addEventListener('touchstart',event=>{
  const hero=event.target.closest?.('.hero');
@@ -353,7 +427,27 @@ async function go(r){
   if(navId===key&&state.route===r&&r!=='checkout'&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(r,root.innerHTML);
  }catch(e){if(navId===key)fail(e)}
 }
-function renderHome(){const m=state.me||{profile:{},points:0};const firstName=memberFirstName();const b=state.boot||{products:[],variants:[],categories:[]};const fav=(b.products||[]).filter(p=>p.best_seller).sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,4);root.innerHTML=shell(`<section class="hero" aria-label="Promo Cireng Indi"><div class="heroSlides"><img class="banner is-active" src="assets/banner_reseller.webp" data-banner-id="1" alt="Cireng Indi homemade" onerror="bannerFallback(this)" fetchpriority="high"><img class="banner" src="assets/banner_churros.webp" data-banner-id="2" alt="Ebi Furai Cireng Indi" onerror="bannerFallback(this)"><img class="banner" src="assets/banner_cafe.webp" data-banner-id="3" alt="Jamu Indi’s Kitchen" onerror="bannerFallback(this)"><img class="banner" src="assets/banner_puding.webp" data-banner-id="4" alt="Puding Cireng Indi" onerror="bannerFallback(this)"></div><div class="heroCopy"><b>Renyah di luar, lembut di dalam</b><span>Camilan Cireng pilihan keluarga</span></div><div class="heroDots"><button class="active" onclick="heroSlide(0)" aria-label="Banner 1"></button><button onclick="heroSlide(1)" aria-label="Banner 2"></button><button onclick="heroSlide(2)" aria-label="Banner 3"></button><button onclick="heroSlide(3)" aria-label="Banner 4"></button></div></section><div class="member"><h2 id="memberGreeting">Hai${firstName?', '+esc(firstName):''}!</h2><div class="pills"><span class="pill">${icon('i-star','sm')} <span id="memberPoints">${Number(m.points||0)} Point</span></span><button class="pill level voucherLink" onclick="go('vouchers')">${icon('i-gift','sm')} Voucher <span data-voucher-count>${state.vouchers.filter(v=>v.status==='available').length}</span></button><span class="pill ok">Aktif</span></div></div><div class="section"><h2>Populer di Cireng Indi</h2><div class="hscroll" id="homePopularList">${fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>'}</div></div><div class="section"><h2>Mau Pesan Apa Hari Ini?</h2><div class="grid2"><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_02.webp" data-photo-id="2" data-local-photo="product_cireng_isi.webp" onerror="photoFallback(this)" alt="Cireng Isi" decoding="async"></div><div class="body"><b>Siap Makan</b><span>Langsung nikmati camilan favoritmu</span></div></button><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_22.webp" data-photo-id="22" data-local-photo="product_mix.webp" onerror="photoFallback(this)" alt="Frozen Mix Platter" decoding="async"></div><div class="body"><b>Frozen</b><span>Stok camilan praktis di rumah</span></div></button></div></div><div class="section" style="padding-top:2px"><h2>Spesial Untukmu di Cireng Indi</h2><div class="featureGrid"><button class="feature" onclick="go('rewards')"><div class="circle">${icon('i-gift')}</div><b>Reward</b><span>Tukar point dengan hadiah</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-store')}</div><b>Paket Reseller</b><span>Dapatkan harga khusus</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-coffee')}</div><b>Paket Cafe & Usaha</b><span>Untuk partner bisnis kuliner</span></button><button class="feature" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><b>Ajak Teman</b><span>Bagikan kode referral Cireng Indi</span></button></div></div>`, 'home');
+
+const MEMBER_HERO_PROMOS=[
+ {eyebrow:'CIRENG INDI • HOMEMADE',title:'Renyah di luar, lembut di dalam',sub:'Camilan keluarga, dibuat dengan sepenuh hati',photo:'product_cireng.webp',id:1,bg:'#f8f0e5',tone:'#f4dfca'},
+ {eyebrow:'MENU FROZEN',title:'Praktis untuk stok di rumah',sub:'Pilihan frozen food siap diolah',photo:'product_chicken_katsu.webp',id:7,bg:'#fff5e9',tone:'#f6dcbf'},
+ {eyebrow:'JAMU & MINUMAN',title:'Segarnya pilihan hari ini',sub:'Pilihan jamu khas Cireng Indi',photo:'product_jamu.webp',id:23,bg:'#f3f5eb',tone:'#dceacb'},
+ {eyebrow:'MENU LAINNYA',title:'Manis untuk dinikmati bersama',sub:'Puding dan camilan pelengkap',photo:'product_puding.webp',id:29,bg:'#fbf0f1',tone:'#efcfda'}
+];
+function renderPromoCarousel(){
+ const panels=MEMBER_HERO_PROMOS.map((p,i)=>
+  '<article class="banner forePromo '+(i===0?'is-active':'')+'" style="--slide-bg:'+p.bg+';--slide-tone:'+p.tone+'" role="group" aria-roledescription="slide" aria-label="'+(i+1)+' dari 4: '+esc(p.title)+'" aria-hidden="'+(i!==0)+'">'+
+  '<img class="forePromoLogo" src="assets/logo_cireng_indi.png" alt="" aria-hidden="true">'+
+  '<div class="forePromoCopy"><span class="forePromoEyebrow">'+esc(p.eyebrow)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.sub)+'</p></div>'+
+  '<div class="forePromoImage"><img src="assets/'+p.photo+'" data-photo-id="'+p.id+'" data-local-photo="'+p.photo+'" onerror="photoFallback(this)" alt="'+esc(p.eyebrow)+'" loading="'+(i===0?'eager':'lazy')+'" decoding="async"></div>'+
+  '</article>').join('');
+ const dots=MEMBER_HERO_PROMOS.map((p,i)=>
+  '<button type="button" class="'+(i===0?'active':'')+'" onclick="heroSlide('+i+')" aria-label="Banner '+(i+1)+'" aria-pressed="'+(i===0)+'"></button>').join('');
+ return '<section class="hero heroFore" aria-label="Promo Cireng Indi"><div class="heroSlides">'+panels+
+ '</div><div class="heroDots" role="group" aria-label="Pilih banner">'+dots+'</div></section>';
+}
+
+function renderHome(){const m=state.me||{profile:{},points:0};const firstName=memberFirstName();const b=state.boot||{products:[],variants:[],categories:[]};const fav=(b.products||[]).filter(p=>p.best_seller).sort((x,y)=>Number(x.sort_order||0)-Number(y.sort_order||0)).slice(0,4);root.innerHTML=shell(`${renderPromoCarousel()}<div class="member"><h2 id="memberGreeting">Hai${firstName?', '+esc(firstName):''}!</h2><div class="pills"><span class="pill">${icon('i-star','sm')} <span id="memberPoints">${Number(m.points||0)} Point</span></span><button class="pill level voucherLink" onclick="go('vouchers')">${icon('i-gift','sm')} Voucher <span data-voucher-count>${state.vouchers.filter(v=>v.status==='available').length}</span></button><span class="pill ok">Aktif</span></div></div><div class="section"><h2>Populer di Cireng Indi</h2><div class="hscroll" id="homePopularList">${fav.map(p=>pcard(p,b)).join('')||'<button class="outline" onclick="go(\'store\')">Lihat Menu Populer</button>'}</div></div><div class="section"><h2>Mau Pesan Apa Hari Ini?</h2><div class="grid2"><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_02.webp" data-photo-id="2" data-local-photo="product_cireng_isi.webp" onerror="photoFallback(this)" alt="Cireng Isi" decoding="async"></div><div class="body"><b>Siap Makan</b><span>Langsung nikmati camilan favoritmu</span></div></button><button class="orderMode" onclick="go('store')"><div class="pic"><img src="assets/official_22.webp" data-photo-id="22" data-local-photo="product_mix.webp" onerror="photoFallback(this)" alt="Frozen Mix Platter" decoding="async"></div><div class="body"><b>Frozen</b><span>Stok camilan praktis di rumah</span></div></button></div></div><div class="section" style="padding-top:2px"><h2>Spesial Untukmu di Cireng Indi</h2><div class="featureGrid"><button class="feature" onclick="go('rewards')"><div class="circle">${icon('i-gift')}</div><b>Reward</b><span>Tukar point dengan hadiah</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-store')}</div><b>Paket Reseller</b><span>Dapatkan harga khusus</span></button><button class="feature" onclick="go('partner')"><div class="circle">${icon('i-coffee')}</div><b>Paket Cafe & Usaha</b><span>Untuk partner bisnis kuliner</span></button><button class="feature" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><b>Ajak Teman</b><span>Bagikan kode referral Cireng Indi</span></button></div></div>`, 'home');
  if(state.route==='home'){startHero();refreshVoucherCount()}
 }
 function refreshHomeData(){
