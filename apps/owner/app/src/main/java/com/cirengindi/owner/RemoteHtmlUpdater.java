@@ -29,15 +29,17 @@ final class RemoteHtmlUpdater {
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     static void start(Activity activity, String bundledHtml, Consumer<String> loadOnce) {
+        // Never block first paint behind DNS, GitHub, or network timeouts.
+        // Start the bundled (or last validated) UI immediately, then refresh
+        // the offline OTA cache in the background for the NEXT cold start.
+        final String cached = readCache(activity);
+        final String firstPaint = cached != null ? cached : bundledHtml;
+        if (!activity.isFinishing() && !activity.isDestroyed()) {
+            loadOnce.accept(firstPaint);
+        }
         EXECUTOR.execute(() -> {
-            String cached = readCache(activity);
             String fetched = fetchTrusted();
             if (fetched != null && !fetched.equals(cached)) writeCache(activity, fetched);
-            final String html = fetched != null ? fetched :
-                cached != null ? cached : bundledHtml;
-            activity.runOnUiThread(() -> {
-                if (!activity.isFinishing() && !activity.isDestroyed()) loadOnce.accept(html);
-            });
         });
     }
 
