@@ -385,32 +385,53 @@ async function saveAddress(){loading(true);try{const d=await api('address_create
 async function cart(){loading(true);try{const c=await api('cart');const items=c.items||[];if(state.route!=='cart')return;root.innerHTML=`<div class="app" style="padding-bottom:92px">${uiTop('Keranjang','store')}<div class="section">${items.length?items.map(i=>{const v=i.variant||{},p=v.product||{},price=Number(v.price??p.base_price??0);return `<div class="orderCard"><div class="orderProduct" style="margin:0;border-top:0"><img src="assets/${localPic(p.name)}"><div style="flex:1"><b>${esc(p.name)}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')}</div><div class="price">${rp(price*i.quantity)}</div></div><div class="qty"><button onclick="cartQty('${i.variant_id}',${i.quantity-1})">${icon('i-minus')}</button><b>${i.quantity}</b><button class="plus" onclick="cartQty('${i.variant_id}',${i.quantity+1})">${icon('i-plus')}</button></div></div></div>`}).join(''):`<p style="text-align:center;color:var(--muted);padding:40px 0">Keranjang masih kosong.</p>`}</div>${items.length?`<div class="stickyAction"><div style="flex:1"><small>Subtotal</small><div class="price">${rp(c.subtotal)}</div></div><button class="cta" onclick="go('checkout')">Lanjut Checkout</button></div>`:''}</div>`}finally{loading(false)}}async function cartQty(id,q){if(pendingCartActions.has(id))return;pendingCartActions.add(id);try{await api('cart_set',{variant_id:id,quantity:q});state.cartSnapshot=null;await cart()}catch(e){fail(e)}finally{pendingCartActions.delete(id)}}
 async function checkout(){
  loading(true);try{
-  const [c,b]=await Promise.all([api('cart'),boot()]);
+  const [c,b]=await Promise.all([state.cartSnapshot||api('cart'),boot()]);state.cartSnapshot=c;
   if(!(c.items||[]).length)return go('cart');
   let as=[];const delivery=state.fulfillment==='delivery';
-  if(delivery){as=(await api('addresses')).addresses||[];if(!as.length)return go('addresses');}
+  if(delivery){as=state.addressesSnapshot.length?state.addressesSnapshot:(await api('addresses')).addresses||[];state.addressesSnapshot=as;if(!as.length)return go('addresses');}
   const bank=b.bank_transfer||{};
   const availableBanks=Array.isArray(bank.accounts)&&bank.accounts.length?bank.accounts:[bank].filter(a=>a.bank_name&&a.account_number);
+  const eligible=availableVouchers(Number(c.subtotal||0),state.fulfillment);
+  if(state.selectedVoucherId&&!eligible.some(v=>v.id===state.selectedVoucherId))state.selectedVoucherId=null;
+  const selected=eligible.find(v=>v.id===state.selectedVoucherId);
   if(state.route!=='checkout')return;root.innerHTML=`<div class="app" style="padding-bottom:104px">
    <div class="checkoutHead">${uiTop('Checkout','cart')}<div class="fulfillment">${icon(delivery?'i-truck':'i-bag','lg')}<div class="grow"><b>${delivery?'Delivery':'Pick Up'}</b><div style="color:var(--muted);font-size:12px">${delivery?'Diantar oleh kurir yang ditentukan Owner':'Ambil langsung di outlet'}</div></div><button class="outline" onclick="state.fulfillment='${delivery?'pickup':'delivery'}';checkout()">Ubah</button></div></div>
    <div class="checkoutSec"><h2>Outlet</h2><div class="route"><div class="circle">${icon('i-store')}</div><div><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div></div>
    ${delivery?`<div class="route"><div class="circle">${icon('i-pin')}</div><div class="grow"><b>Alamat tujuan</b><select id="coaddr">${as.map(x=>`<option value="${x.id}" ${x.is_default?'selected':''}>${esc(x.label||'Alamat')} — ${esc(x.city)}</option>`).join('')}</select></div></div><div class="eta">Kurir dan kontak WhatsApp akan muncul di riwayat pesanan setelah dipilih Owner. Ongkir final dikonfirmasi Owner sebelum pembayaran COD.</div>`:`<div class="eta">Waktu pengambilan dikonfirmasi Owner.</div>`}</div>
    <div class="checkoutSec"><h2>Detail Pesanan</h2>${(c.items||[]).map(i=>{const v=i.variant||{},prd=v.product||{};return `<div class="checkoutItem"><div class="grow"><b>${esc(prd.name||'Produk')}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')} × ${i.quantity}</div><div class="price">${rp(Number(v.price||0)*i.quantity)}</div></div><img loading="lazy" onerror="this.style.display='none'" src="assets/${localPic(prd.name)}" alt="${esc(prd.name)}"></div>`}).join('')}</div>
+   <div class="checkoutSec"><h2>Voucher Cireng Indi</h2><p class="muted" style="font-size:12px;margin:0 0 9px">Voucher aktif dari Owner dapat digunakan pada pesanan ini.</p>
+   <select id="checkoutVoucher" aria-label="Pilih voucher" style="width:100%;border:1px solid var(--line);padding:12px" onchange="updateCheckoutVoucher()">
+   <option value="">Tanpa voucher</option>${eligible.map(v=>`<option value="${esc(v.id)}" ${v.id===state.selectedVoucherId?'selected':''}>${esc(v.title)} — ${esc(voucherLabel(v))}</option>`).join('')}</select>
+   <p id="checkoutVoucherMessage" style="font-size:12px;color:var(--muted)">${selected?'Estimasi potongan '+rp(previewDiscount(selected,c.subtotal)):'Pilih voucher untuk melihat estimasi diskon.'}</p></div>
    <div class="checkoutSec"><h2>Metode Pembayaran</h2><label class="payrow" style="cursor:pointer"><input type="radio" name="copay" value="cod" checked><div class="grow"><b>COD / Bayar di Tempat</b><div style="font-size:12px;color:var(--muted)">${delivery?'Bayar ke kurir':'Bayar saat pickup'}</div></div></label>
    ${bank.enabled&&availableBanks.length?`<div class="payrow" style="margin-top:10px;align-items:flex-start"><input type="radio" name="copay" id="transferRadio" value="transfer" aria-label="Transfer bank"><div class="grow"><label for="transferRadio" style="font-weight:750">Transfer BSI / BRI</label><div style="font-size:12px;color:var(--muted)">Pilih rekening penerima sebelum membuat pesanan.</div><select id="cobank" aria-label="Pilih bank tujuan" style="width:100%;margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:12px" onchange="document.getElementById('transferRadio').checked=true">${availableBanks.map(a=>`<option value="${esc(a.code||a.bank_name)}">${esc(a.bank_name)} • ${esc(a.account_number)} • a.n. ${esc(a.account_holder)}</option>`).join('')}</select><div style="font-size:12px;color:var(--muted)">Nomor rekening terpilih juga tercantum di Riwayat Pesanan. Unggah bukti transfer setelah checkout.</div></div></div>`:`<div class="eta">Transfer bank tersedia setelah rekening dikonfigurasi Owner.</div>`}</div>
-   <div class="stickyAction"><div style="flex:1"><small>Subtotal (belum termasuk ongkir)</small><div class="price">${rp(c.subtotal)}</div></div><button class="cta" onclick="placeOrder()">Pesan Sekarang</button></div>
+   <div class="stickyAction"><div style="flex:1"><small>Estimasi total (belum termasuk ongkir)</small><div id="checkoutEstimate" data-subtotal="${Number(c.subtotal||0)}" class="price">${rp(Number(c.subtotal||0)-previewDiscount(selected,Number(c.subtotal||0)))}</div></div><button class="cta" onclick="placeOrder()">Pesan Sekarang</button></div>
   </div>`;
  }catch(e){fail(e)}finally{loading(false)}
 }
+
+function updateCheckoutVoucher(){
+ const id=document.getElementById('checkoutVoucher')?.value||null;
+ const v=state.vouchers.find(x=>x.id===id);
+ state.selectedVoucherId=id;
+ const el=document.getElementById('checkoutEstimate');
+ const subtotal=Number(el?.dataset.subtotal||0);
+ const discount=previewDiscount(v,subtotal);
+ if(el)el.textContent=rp(subtotal-discount);
+ const message=document.getElementById('checkoutVoucherMessage');
+ if(message)message.textContent=v?'Estimasi diskon '+rp(discount)+' · Server akan memvalidasi voucher sebelum pesanan dibuat.':'Tanpa voucher';
+}
+
 async function placeOrder(){
  if(state.placingOrder)return;
  state.placingOrder=true;loading(true);
  try{
   const delivery=state.fulfillment==='delivery';
   const payment_method=document.querySelector('input[name="copay"]:checked')?.value||'cod';
+  const voucher_id=document.getElementById('checkoutVoucher')?.value||null;
   const bank_code=payment_method==='transfer'?(document.getElementById('cobank')?.value||null):null;
   if(payment_method==='transfer'&&!bank_code)throw new Error('PILIH_BANK');
-  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:null});
+  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,voucher_id,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:null});
   state.cartSnapshot=null;state.ordersSnapshot=[];state.selectedVoucherId=null;toast('Pesanan '+d.order.order_number+' berhasil dibuat.');await go('orders');
  }catch(e){fail(e)}finally{state.placingOrder=false;loading(false)}
 }
