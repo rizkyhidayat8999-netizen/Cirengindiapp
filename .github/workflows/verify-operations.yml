@@ -103,6 +103,25 @@ jobs:
             }
             if(!member.includes('OFFICIAL_IMAGE_SLUGS')||!member.includes('photoFallback'))
               throw Error('Official website photo selection/fallback absent from Member');
+            // Installed APKs do not include OTA-added official_*.webp assets.
+            // Never allow a newly published HTML to paint blank photographs.
+            const legacyRoot='apps/member/app/src/main/assets/assets/';
+            for(const asset of ['banner_reseller.webp','banner_churros.webp','banner_cafe.webp','banner_puding.webp',
+             'product_cireng.webp','product_cireng_isi.webp','product_cilok.webp','logo_cireng_indi.png']){
+              if(!fs.existsSync(legacyRoot+asset))throw Error('Missing offline legacy photo '+asset);
+            }
+            if(!member.includes("return 'assets/'+localPic(p?.name)") ||
+               !member.includes("return 'src=\"assets/'+esc(local)") ||
+               !member.includes('upgradedImages.get(id).then'))
+              throw Error('Member images must paint from bundled assets before OTA photo upgrade');
+            if(!member.includes('id="launchBrand"') || !member.includes('assets/logo_cireng_indi.png') ||
+               !member.includes("classList.add('hide')"))
+              throw Error('Opening Cireng Indi logo not wired for existing APKs');
+            if(!member.includes('Number(a.price||Infinity)-Number(b.price||Infinity)'))
+              throw Error('Starting price should use the cheapest available variant');
+            if(!member.includes('cartScreen')||!member.includes('photoAttrs(prd)'))
+              throw Error('Compact cart/checkout photos must match main catalogue');
+
 
             if(boot.data.bank_transfer?.enabled!==true)throw Error('Live bank transfer not enabled');
           const banks=boot.data.bank_transfer?.accounts||[];
