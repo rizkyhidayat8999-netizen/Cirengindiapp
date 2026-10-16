@@ -39,6 +39,19 @@ jobs:
           if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
           if(owner.includes('/auth/v1/signup'))throw Error('Do not duplicate Owner account creation when account already exists');
           if(!owner.includes('Verifikasi Owner'))throw Error('Missing secure owner activation guidance');
+          // UI must never block taps behind a full-screen waiting overlay.
+          if(member.includes('id="loader"')||owner.includes('id="loading"'))throw Error('A modal loading overlay was reintroduced');
+          for(const [name,source] of [['Member',member],['Owner',owner]]){
+            if(!source.includes('const instantViews=new Map()')||!source.includes('previewPage('))throw Error(name+' instant-route cache missing');
+            if(!source.includes('instantViews.clear()'))throw Error(name+' must discard cached private content on logout');
+            if(!source.includes('navId'))throw Error(name+' navigation race guard missing');
+          }
+          for(const p of ['home','store','addresses','cart','checkout','orders','rewards','profile']){
+            if(!member.includes("state.route!=='"+p+"'"))throw Error('Member stale-response guard missing for '+p);
+          }
+          for(const p of ['dashboard','orders','products','members','rewards','operations','settings']){
+            if(!owner.includes("state.page!=='"+p+"'"))throw Error('Owner stale-response guard missing for '+p);
+          }
           if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
           if(!member.includes('id="cobank"')||!member.includes('bank_code'))throw Error('Member bank selection missing');
           const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
