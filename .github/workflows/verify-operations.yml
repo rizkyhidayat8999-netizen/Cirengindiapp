@@ -1,0 +1,52 @@
+name: Verify Cireng Indi Operations
+on:
+  push:
+    paths:
+      - 'apps/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/verify-operations.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source syntax, catalogue and authorization gates
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          const member=fs.readFileSync('apps/member/app/src/main/assets/index.html','utf8');
+          const owner=fs.readFileSync('apps/owner/app/src/main/assets/index.html','utf8');
+          const backend=fs.readFileSync('supabase/functions/cirengindi-backend/index.ts','utf8');
+          for(const [label,html] of [['Member',member],['Owner',owner]]){
+            const js=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+            if(!js)throw Error(label+' script missing');
+            new Function(js);
+          }
+          for(const needle of ['payment_proof_upload','payment_review','ci_assign_courier_safe','ci_checkout','set_bank_transfer'])if(!backend.includes(needle))throw Error('Missing backend operation '+needle);
+          if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
+          if(!owner.includes("onclick=\"registerOwner()\""))throw Error('Missing owner activation');
+          const m=member.match(/const SB='([^']+)', KEY='([^']+)'/);
+          if(!m)throw Error('Missing mobile backend config');
+          const [,base,key]=m;
+          const call=async (endpoint,action)=>{
+            const response=await fetch(base+'/functions/v1/'+endpoint,{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify({action})});
+            let data;try{data=await response.json()}catch{throw Error('Invalid JSON from '+endpoint+' ('+response.status+')')}
+            return {status:response.status,data};
+          };
+          (async()=>{
+            const boot=await call('cirengindi-mobile-api','bootstrap');
+            if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
+            for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
+            if(typeof boot.data.bank_transfer?.enabled!=='boolean')throw Error('Bank transfer configuration missing');
+            const secret=[['cirengindi-mobile-api','orders'],['cirengindi-mobile-api','checkout'],['cirengindi-mobile-api','payment_proof_upload'],['cirengindi-owner-api','orders'],['cirengindi-owner-api','assign_courier'],['cirengindi-owner-api','payment_review'],['cirengindi-owner-api','set_bank_transfer']];
+            for(const [ep,action] of secret){const r=await call(ep,action);if(r.status!==401)throw Error('Unauthorized action '+ep+'/'+action+' returned '+r.status)}
+            console.log('PASS: scripts parse, catalogue 31/42/3, bank settings, and 7 protected operations');
+          })().catch(e=>{console.error(e);process.exit(1)})
+          JS
