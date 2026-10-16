@@ -11,7 +11,20 @@ const err=(message,status=400)=>reply({error:message,message},status);
 function check(d){if(d.error)throw new Error(d.error.message);return d.data}
 async function list(table,query='*',opts={}){let r=admin.from(table).select(query);if(opts.eq)for(const [key,v] of Object.entries(opts.eq))r=r.eq(key,v);if(opts.order)r=r.order(opts.order,{ascending:!!opts.asc});if(opts.limit)r=r.limit(opts.limit);return check(await r)}
 async function member(req){const token=req.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');if(!token)throw new Error('AUTH_REQUIRED');const {data,error}=await admin.auth.getUser(token);if(error||!data.user)throw new Error('AUTH_REQUIRED');const p=check(await admin.from('member_profiles').select('*').eq('user_id',data.user.id).maybeSingle());if(!p||p.status!=='active')throw new Error('AUTH_REQUIRED');return {user:data.user,profile:p};}
-async function staff(req){const token=req.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');if(!token)throw new Error('AUTH_REQUIRED');const {data,error}=await admin.auth.getUser(token);if(error||!data.user)throw new Error('AUTH_REQUIRED');const s=check(await admin.from('staff_profiles').select('*').eq('user_id',data.user.id).eq('active',true).maybeSingle());if(!s)throw new Error('STAFF_REQUIRED');return {user:data.user,staff:s};}
+async function staff(req){
+ const token=req.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');if(!token)throw new Error('AUTH_REQUIRED');
+ const {data,error}=await admin.auth.getUser(token);if(error||!data.user)throw new Error('AUTH_REQUIRED');
+ let s=check(await admin.from('staff_profiles').select('*').eq('user_id',data.user.id).eq('active',true).maybeSingle());
+ // One-time onboarding of the designated proprietor after verifiable email confirmation.
+ // Requiring a confirmation-sent event avoids trusting auto-confirmed signups.
+ const u=data.user;
+ const sent=u.confirmation_sent_at,confirmed=u.email_confirmed_at;
+ if(!s && String(u.email||'').toLowerCase()==='rizkyhidayat8999@gmail.com'
+  && sent && confirmed && Date.parse(confirmed)>=Date.parse(sent)){
+   s=check(await admin.from('staff_profiles').upsert({user_id:u.id,full_name:'Owner Cireng Indi',role:'owner',active:true},{onConflict:'user_id'}).select('*').single());
+ }
+ if(!s)throw new Error('STAFF_REQUIRED');return {user:u,staff:s};
+}
 async function points(id){let rows=await list('ci_point_ledger','delta',{eq:{member_id:id}});return rows.reduce((n,x)=>n+Number(x.delta),0)}
 async function cart(id){const ct=check(await admin.from('ci_carts').select('id').eq('member_id',id).maybeSingle());if(!ct)return {items:[],subtotal:0};const lines=await list('ci_cart_items','id,variant_id,quantity',{eq:{cart_id:ct.id}});const variants=lines.length?check(await admin.from('ci_product_variants').select('*,product:ci_products(*)').in('id',lines.map(x=>x.variant_id))):[];const items=lines.map(i=>({...i,variant:variants.find(v=>v.id===i.variant_id)}));return {items,subtotal:items.reduce((n,i)=>n+Number(i.variant?.price||0)*i.quantity,0)};}
 async function orderRows(rows){
