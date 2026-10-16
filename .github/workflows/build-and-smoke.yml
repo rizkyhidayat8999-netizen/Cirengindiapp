@@ -106,19 +106,31 @@ jobs:
           script: |
             adb install -r apps/member/app/build/outputs/apk/debug/app-debug.apk
             adb shell monkey -p com.cirengindi.member.internal -c android.intent.category.LAUNCHER 1
-            sleep 5
-            adb logcat -d -t 500 > /tmp/member-log.txt
+            sleep 14
+            adb logcat -d -t 1200 > /tmp/member-log.txt
             ! grep -E "FATAL EXCEPTION|ANR in com.cirengindi.member.internal" /tmp/member-log.txt
             adb exec-out screencap -p > /tmp/member-login.png
 
             adb install -r apps/owner/app/build/outputs/apk/debug/app-debug.apk
             adb shell monkey -p com.cirengindi.owner.internal -c android.intent.category.LAUNCHER 1
-            sleep 5
-            adb logcat -d -t 500 > /tmp/owner-log.txt
+            sleep 14
+            adb logcat -d -t 1200 > /tmp/owner-log.txt
             ! grep -E "FATAL EXCEPTION|ANR in com.cirengindi.owner.internal" /tmp/owner-log.txt
             adb exec-out screencap -p > /tmp/owner-login.png
 
 
+      - name: Upload emulator startup evidence even if screenshot assertion fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CirengIndi-Diagnostics
+          path: |
+            /tmp/member-login.png
+            /tmp/owner-login.png
+            /tmp/member-log.txt
+            /tmp/owner-log.txt
+          if-no-files-found: warn
+          retention-days: 7
       - name: Assert both WebViews render visible content (not a blank screen)
         shell: bash
         run: |
