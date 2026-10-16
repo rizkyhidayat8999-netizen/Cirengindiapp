@@ -1,0 +1,63 @@
+name: Build Signed Cireng Indi Release APKs
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK 35
+        shell: bash
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Import durable release signing key
+        env:
+          KEY_BASE64: ${{ secrets.CI_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.CI_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.CI_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.CI_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${KEY_BASE64}" || -z "${STORE_PASS}" || -z "${KEY_ALIAS}" || -z "${KEY_PASS}" ]]; then
+            echo "::error::Configure four CI_* signing secrets before releasing"; exit 1
+          fi
+          printf '%s' "${KEY_BASE64}" | base64 -d > "${RUNNER_TEMP}/cirengindi-release.jks"
+          chmod 600 "${RUNNER_TEMP}/cirengindi-release.jks"
+      - name: Build and verify both signed release APKs
+        env:
+          CI_SIGNING_KEYSTORE: ${{ runner.temp }}/cirengindi-release.jks
+          CI_STORE_PASSWORD: ${{ secrets.CI_STORE_PASSWORD }}
+          CI_KEY_ALIAS: ${{ secrets.CI_KEY_ALIAS }}
+          CI_KEY_PASSWORD: ${{ secrets.CI_KEY_PASSWORD }}
+        run: |
+          gradle -p apps/member :app:assembleRelease --stacktrace
+          gradle -p apps/owner :app:assembleRelease --stacktrace
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose apps/member/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose apps/owner/app/build/outputs/apk/release/app-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CirengIndi-Member-Signed-Release
+          path: apps/member/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CirengIndi-Owner-Signed-Release
+          path: apps/owner/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Erase temporary signing key
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/cirengindi-release.jks"
