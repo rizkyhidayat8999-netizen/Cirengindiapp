@@ -108,7 +108,9 @@ async function authApi(b){const a=b.action;if(a==='register'){
 }
 async function mobile(req,b){
  const a=b.action;
- if(a==='bootstrap')return reply({categories:await list('ci_categories','*',{eq:{active:true},order:'sort_order'}),products:await list('ci_products','*',{eq:{active:true},order:'sort_order'}),variants:await list('ci_product_variants','*',{eq:{active:true},order:'sort_order'}),banners:await list('ci_banners','*',{eq:{active:true},order:'sort_order'}),couriers:await list('ci_couriers','*',{eq:{active:true},order:'sort_order'}),bank_transfer:await paymentSettings()});
+ // Website catalogue order is ascending: Cireng (1) must precede Rengginang (31).
+ // Never use list()'s default descending sort for customer-facing menu ordering.
+ if(a==='bootstrap')return reply({categories:await list('ci_categories','*',{eq:{active:true},order:'sort_order',asc:true}),products:await list('ci_products','*',{eq:{active:true},order:'sort_order',asc:true}),variants:await list('ci_product_variants','*',{eq:{active:true},order:'sort_order',asc:true}),banners:await list('ci_banners','*',{eq:{active:true},order:'sort_order',asc:true}),couriers:await list('ci_couriers','*',{eq:{active:true},order:'sort_order',asc:true}),bank_transfer:await paymentSettings()});
  const {user,profile}=await member(req),uid=user.id;
  if(a==='me')return reply({profile,points:await points(uid)});
  if(a==='addresses')return reply({addresses:await list('ci_addresses','*',{eq:{member_id:uid},order:'created_at'})});
