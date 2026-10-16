@@ -31,6 +31,10 @@ jobs:
           }
           for(const needle of ['payment_proof_upload','payment_review','ci_assign_courier_safe','ci_checkout','set_bank_transfer'])if(!backend.includes(needle))throw Error('Missing backend operation '+needle);
           if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
+          if(!member.includes('id="cobank"')||!member.includes('bank_code'))throw Error('Member bank selection missing');
+          const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
+          for(const s of ['ci_checkout_with_bank','bank_snapshot','7306336217','457901008978533'])if(!bankSQL.includes(s))throw Error('Two-bank migration missing '+s);
+          if(!member.includes('raw.githubusercontent.com')||!owner.includes('raw.githubusercontent.com'))throw Error('Remote theme link missing');
           if(!owner.includes("onclick=\"registerOwner()\""))throw Error('Missing owner activation');
           const m=member.match(/const SB='([^']+)', KEY='([^']+)'/);
           if(!m)throw Error('Missing mobile backend config');
