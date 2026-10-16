@@ -1,0 +1,71 @@
+name: Rebuild Cireng Indi Studio Photos
+on:
+  push:
+    paths:
+      - 'tools/cirengindi_brand_studio.py'
+      - '.github/workflows/rebuild-brand-photos.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install photo dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy
+      - name: Render 26 honest product photos and 4 harmonized banners
+        run: python tools/cirengindi_brand_studio.py
+      - name: Validate product inventory and output dimensions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root=Path('apps/member/app/src/main/assets/assets')
+          photos=list(root.glob('product_*.webp'))
+          banners=list(root.glob('banner_*.webp'))
+          assert len(photos)==26 and len(banners)==4,(len(photos),len(banners))
+          for f in photos:
+              assert Image.open(f).size==(720,720),f
+          for f in banners:
+              assert Image.open(f).size==(1200,620),f
+          print('PASS: 26 product images, four banners, consistent dimensions')
+          PY
+      - name: Commit verified studio assets to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "cirengindi-brand-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/member/app/src/main/assets/assets/product_*.webp apps/member/app/src/main/assets/assets/banner_*.webp
+          if git diff --cached --quiet; then
+            echo "Studio assets already committed"
+            exit 0
+          fi
+          git commit -m "Apply uniform Cireng Indi studio styling to all product and banner photos"
+          git push origin HEAD:main
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Build Android Member and Owner with updated photo assets
+        run: |
+          gradle -p apps/member :app:assembleDebug --stacktrace
+          gradle -p apps/owner :app:assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CirengIndi-Studio-Member-Owner-APK
+          path: |
+            apps/member/app/build/outputs/apk/debug/*.apk
+            apps/owner/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
