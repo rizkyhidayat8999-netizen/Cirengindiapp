@@ -31,6 +31,9 @@ jobs:
             if(label==='Member' && js.includes('function top(')) throw Error('Reserved top() causes blank Member WebView');
           }
           for(const needle of ['payment_proof_upload','payment_review','ci_assign_courier_safe','ci_checkout','set_bank_transfer'])if(!backend.includes(needle))throw Error('Missing backend operation '+needle);
+          if(!member.includes('Lupa password?</button>')||member.includes('>Lupa PW</button>'))throw Error('Member reset link should be below password, not a third login tab');
+          if(!member.includes("repeat(2,1fr)"))throw Error('Member auth layout should have two tabs');
+          if(!owner.includes('resendOwnerVerification(this)')||!owner.includes('email_not_confirmed'))throw Error('Owner must support secure verification recovery');
           if(!member.includes('onchange="uploadProof('))throw Error('Missing member file input');
           if(!member.includes('id="cobank"')||!member.includes('bank_code'))throw Error('Member bank selection missing');
           const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
