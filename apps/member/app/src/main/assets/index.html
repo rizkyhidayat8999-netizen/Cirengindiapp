@@ -734,6 +734,25 @@ html,body{background:#fff9f2!important}
 .chips{scroll-snap-type:x proximity}
 .chips .chip{scroll-snap-align:start}
 @media(max-width:360px){.ciBestSellerBadge{font-size:9px;padding:2px 7px}}
+
+
+/* Website-driven menu: Cireng first, best-sellers marked, categories grouped. */
+.ciWebsiteProductList{padding-bottom:calc(110px + var(--ci-gesture-clearance,14px))}
+.ciWebsiteCategory{padding:0 0 13px}
+.ciWebsiteCategoryTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px 11px}
+.ciWebsiteCategoryTitle h3{font-size:17px;font-weight:850;line-height:1.25;color:#663727;letter-spacing:-.2px;margin:0}
+.ciWebsiteCategoryTitle span{font-size:11px;color:#8e7a6d;white-space:nowrap}
+.ciWebsiteCategory .prow{margin-bottom:10px}
+.ciWebsiteCategory .prow:has(.ciBestSellerBadge){border-color:#e2c29e}
+.ciWebsiteCategory .prow>div{min-width:0}
+.ciWebsiteCategory .prow p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.42;font-size:12px}
+.ciCatalogueEmpty{text-align:center;background:#fff;border:1px dashed #e5d8ca;border-radius:16px;padding:20px;color:#806c5f;font-size:12.5px}
+.ciStoreRecommend p{font-size:11.5px;color:#88736b;margin:-6px 0 0;line-height:1.4}
+#ciCatalogFilters{gap:8px;scrollbar-width:none;scroll-snap-type:x proximity}
+#ciCatalogFilters .chip{font-size:12px;padding:8px 13px;min-height:36px;scroll-snap-align:start}
+#ciCatalogFilters .chip.active{border-color:#985039;background:#f7e8db;color:#85432e}
+@media(max-width:375px){.ciWebsiteCategoryTitle h3{font-size:16px}.ciWebsiteProductList{padding-inline:12px}.ciWebsiteCategory .prow{grid-template-columns:77px minmax(0,1fr) 35px;gap:9px;padding:10px}.ciWebsiteCategory .prow img{width:77px;height:79px}.ciWebsiteCategory .prow h3{font-size:15.5px}.ciWebsiteCategory .prow .price{font-size:16px}}
+
 </style>
 </head>
 <body>
@@ -974,7 +993,21 @@ async function home(){
  if(!state.boot)req.push(boot());
  if(req.length)Promise.allSettled(req).then(()=>{if(state.route==='home')refreshHomeData()});
 }
-async function store(){try{const b=await boot();if(state.route!=='store')return;const ps=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&(state.category==='all'||(state.category==='bestseller'?p.best_seller:p.category_id===state.category))));const cats=websiteCatalogueOrder(b.categories||[]);const rec=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&p.best_seller)).slice(0,3);root.innerHTML=shell(`<div class="storeHead"><h1><img class="storeLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"><span>Cireng Indi</span></h1><div class="segment"><button class="${state.fulfillment==='pickup'?'active':''}" onclick="setFulfillment('pickup')">Pick Up</button><button class="${state.fulfillment==='delivery'?'active':''}" onclick="setFulfillment('delivery')">Delivery</button></div><p class="storeTagline">Pesan cepat, stok real-time, tampilan lebih premium.</p></div><div class="locationCard"><div class="locrow" role="button" tabindex="0" aria-label="Buka lokasi Outlet Cireng Indi di Google Maps" onclick="showOutlet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOutlet()}"><div class="locicon">${icon('i-store')}</div><div class="grow"><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div>${icon('i-right')}</div>${state.fulfillment==='delivery'?`<div class="locrow" role="button" tabindex="0" aria-label="Pilih alamat pengiriman pelanggan" onclick="openDeliveryLocation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDeliveryLocation()}"><div class="locicon">${icon('i-pin')}</div><div class="grow"><b>Lokasi pengiriman</b><span>${esc((state.addressesSnapshot||[]).find(a=>a.is_default)?.address_line||'Pilih lokasi saya atau alamat tersimpan')}</span></div>${icon('i-right')}</div>`:`<div class="locrow"><div class="locicon">${icon('i-bag')}</div><div class="grow"><b>Ambil di outlet</b><span>Pesanan disiapkan untuk pickup</span></div>${icon('i-right')}</div>`}</div><div class="chips"><button class="chip ${state.category==='all'?'active':''}" onclick="setCat('all')">Semua</button><button class="chip ${state.category==='bestseller'?'active':''}" onclick="setCat('bestseller')">Best Seller</button>${cats.map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')">${esc(c.name)}</button>`).join('')}</div><div class="promo" role="button" tabindex="0" onclick="go('vouchers')" onkeydown="if(event.key==='Enter')go('vouchers')"><div class="circle">${icon('i-gift')}</div><div class="grow"><b>Voucher Eksklusif Member</b><span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}</div><div class="section" style="padding-bottom:12px"><h2>Rekomendasi</h2></div><div class="hscroll">${rec.map(p=>pcard(p,b)).join('')}</div><div class="section" style="padding-bottom:2px"><h2>Menu Cireng Indi</h2></div><div class="productList">${ps.map(p=>prow(p,b)).join('')}</div>`, 'store');void cartBar()}finally{loading(false)}}
+
+/* Never depend on descending API order for website catalogue rendering. */
+function storeCatalogByCategory(products,categories,bootstrap,selection){
+ const visible=websiteCatalogueOrder(products||[]);
+ const sections=selection==='all'
+  ?(categories||[]).map(c=>({title:c.name,products:visible.filter(p=>p.category_id===c.id)}))
+  :[{title:selection==='bestseller'?'Best Seller':(categories||[]).find(c=>c.id===selection)?.name||'Pilihan Produk',products:visible}];
+ const nonEmpty=sections.filter(g=>g.products.length);
+ if(!nonEmpty.length)return '<div class="ciCatalogueEmpty">Belum ada menu yang tersedia.</div>';
+ return nonEmpty.map(group=>'<section class="ciWebsiteCategory" aria-label="'+esc(group.title)+'">'+
+  '<div class="ciWebsiteCategoryTitle"><h3>'+esc(group.title)+'</h3><span>'+group.products.length+' menu</span></div>'+
+  group.products.map(p=>prow(p,bootstrap)).join('')+'</section>').join('');
+}
+
+async function store(){try{const b=await boot();if(state.route!=='store')return;const ps=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&(state.category==='all'||(state.category==='bestseller'?p.best_seller:p.category_id===state.category))));const cats=websiteCatalogueOrder(b.categories||[]);const rec=websiteCatalogueOrder((b.products||[]).filter(p=>p.active!==false&&p.best_seller)).slice(0,5);root.innerHTML=shell(`<div class="storeHead"><h1><img class="storeLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"><span>Cireng Indi</span></h1><div class="segment"><button class="${state.fulfillment==='pickup'?'active':''}" onclick="setFulfillment('pickup')">Pick Up</button><button class="${state.fulfillment==='delivery'?'active':''}" onclick="setFulfillment('delivery')">Delivery</button></div><p class="storeTagline">Pesan cepat, stok real-time, tampilan lebih premium.</p></div><div class="locationCard"><div class="locrow" role="button" tabindex="0" aria-label="Buka lokasi Outlet Cireng Indi di Google Maps" onclick="showOutlet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOutlet()}"><div class="locicon">${icon('i-store')}</div><div class="grow"><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div>${icon('i-right')}</div>${state.fulfillment==='delivery'?`<div class="locrow" role="button" tabindex="0" aria-label="Pilih alamat pengiriman pelanggan" onclick="openDeliveryLocation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDeliveryLocation()}"><div class="locicon">${icon('i-pin')}</div><div class="grow"><b>Lokasi pengiriman</b><span>${esc((state.addressesSnapshot||[]).find(a=>a.is_default)?.address_line||'Pilih lokasi saya atau alamat tersimpan')}</span></div>${icon('i-right')}</div>`:`<div class="locrow"><div class="locicon">${icon('i-bag')}</div><div class="grow"><b>Ambil di outlet</b><span>Pesanan disiapkan untuk pickup</span></div>${icon('i-right')}</div>`}</div><div class="chips" id="ciCatalogFilters" aria-label="Filter kategori"><button class="chip ${state.category==='all'?'active':''}" onclick="setCat('all')" aria-pressed="${state.category==='all'}">Semua</button>${cats.slice(0,1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}<button class="chip ${state.category==='bestseller'?'active':''}" onclick="setCat('bestseller')" aria-pressed="${state.category==='bestseller'}">Best Seller</button>${cats.slice(1).map(c=>`<button class="chip ${state.category===c.id?'active':''}" onclick="setCat('${c.id}')" aria-pressed="${state.category===c.id}">${esc(c.name)}</button>`).join('')}</div><div class="promo" role="button" tabindex="0" onclick="go('vouchers')" onkeydown="if(event.key==='Enter')go('vouchers')"><div class="circle">${icon('i-gift')}</div><div class="grow"><b>Voucher Eksklusif Member</b><span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}</div><div class="section ciStoreRecommend" style="padding-bottom:12px"><h2>Best Seller Cireng Indi</h2><p>Mulai dari menu Cireng favorit pelanggan</p></div><div class="hscroll">${rec.map(p=>pcard(p,b)).join('')}</div><div class="section" style="padding-bottom:2px"><h2>Menu Cireng Indi</h2></div><div class="productList ciWebsiteProductList">${storeCatalogByCategory(ps,cats,b,state.category)}</div>`, 'store');void cartBar()}finally{loading(false)}}
 const CIRENG_OUTLET_GOOGLE_MAPS='https://share.google/Vm2DfxTQKNcOuuiBM';
 function showOutlet(){Native.openUrl(CIRENG_OUTLET_GOOGLE_MAPS)}
 async function openDeliveryLocation(){
