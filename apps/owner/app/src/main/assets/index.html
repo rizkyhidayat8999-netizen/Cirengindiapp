@@ -148,20 +148,44 @@ function orderCard(o){
 
 async function orders(){
  busy(true);try{
-  const d=await ownerApi("orders",{limit:150}),os=d.orders||[];state.cache.orders=os;
-  root.innerHTML=shell(`<div class="section"><h2>Pesanan</h2><div class="subnav">${["","pending","processing","shipped","completed","cancelled"].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||"Semua"}</button>`).join("")}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join("")||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,"orders");
+  const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
+  const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
+  root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
- const next=o.status==="pending"?"processing":o.status==="processing"?"shipped":o.status==="shipped"?"completed":null;
- const first=o.items?.[0];
- return `<div class="card order-item" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||"")+" "+o.status+" "+(first?.product_name||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(o.order_number||o.id)}</b><div class="muted">${new Date(o.created_at).toLocaleString("id-ID")} • ${esc(o.fulfillment_type||"delivery")}</div></div><span class="badge ${esc(o.status)}">${esc(o.status)}</span></div>${first?`<div style="margin-top:10px"><b>${esc(first.product_name)}</b><div class="muted">${(o.items||[]).length} item</div></div>`:""}<div class="money" style="margin-top:10px">${rp(o.total)}</div><div class="actions">${next?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==="processing"?"Proses":next==="shipped"?"Kirim":"Selesaikan"}</button>`:""}${["pending","processing"].includes(o.status)?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:""}</div></div>`
+ const p=o.payment||{},next=o.status==='pending'?'processing':o.status==='processing'?(o.fulfillment_type==='pickup'?'completed':'shipped'):o.status==='shipped'?'completed':null;
+ const first=o.items?.[0],c=o.courier||{},cs=state.cache.couriers||[];
+ const canContinue=p.method==='cod'||p.status==='paid';
+ return `<div class="card order-item" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||'')+' '+o.status+' '+(first?.product_name||'')).toLowerCase())}">
+  <div class="row"><div class="grow"><b>${esc(o.order_number||o.id)}</b><div class="muted">${new Date(o.created_at).toLocaleString('id-ID')} • ${o.fulfillment_type==='pickup'?'Pick Up':'Delivery'}</div></div><span class="badge ${esc(o.status)}">${esc(o.status)}</span></div>
+  ${first?`<div style="margin-top:10px"><b>${esc(first.product_name)}</b><div class="muted">${(o.items||[]).length} jenis produk</div></div>`:''}
+  <div class="money" style="margin-top:10px">${rp(o.total)}</div>
+  <div class="row" style="margin-top:12px"><div class="grow"><b>Pembayaran: ${p.method==='transfer'?'Transfer':'COD'}</b><div class="muted">Status: ${esc(p.status||'pending')}${p.review_note?' • '+esc(p.review_note):''}</div></div></div>
+  ${p.proof_url?`<button class="btn secondary" style="margin-top:8px" onclick="Native.openUrl('${esc(p.proof_url)}')">Lihat Bukti Transfer</button>`:''}
+  ${p.method==='transfer'&&p.status==='submitted'&&o.status!=='cancelled'?`<div class="actions"><button class="btn" onclick="reviewPayment('${o.id}','approve')">Konfirmasi Transfer</button><button class="btn danger" onclick="reviewPayment('${o.id}','reject')">Tolak Bukti</button></div>`:''}
+  ${p.method==='cod'&&p.status==='pending'&&o.status!=='cancelled'?`<div class="actions"><button class="btn secondary" onclick="confirmCod('${o.id}')">Konfirmasi COD Diterima</button></div>`:''}
+  ${o.fulfillment_type==='delivery'&&o.status!=='cancelled'&&o.status!=='completed'?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><b>Pilih Kurir Delivery</b><div class="muted">${c.name?'Ditugaskan: '+esc(c.name):'Belum ditugaskan'}${c.whatsapp?' • WA '+esc(c.whatsapp):''}</div><div class="row" style="margin-top:6px"><select id="courier-${o.id}" class="grow" style="min-width:0;padding:10px;border-radius:10px"><option value="">Pilih kurir</option>${cs.filter(x=>x.active).map(x=>`<option value="${x.id}" ${o.courier_id===x.id?'selected':''}>${esc(x.name)} • ${rp(x.flat_fee)}</option>`).join('')}</select><button class="btn" onclick="assignCourier('${o.id}')">Tugaskan</button></div>${p.method==='transfer'?`<div class="muted">Untuk transfer, kurir harus memiliki ongkir Rp0 agar total tidak berubah setelah pembayaran.</div>`:''}</div>`:''}
+  <div class="actions">${next&&canContinue?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==='processing'?'Proses':next==='shipped'?'Kirim':'Selesaikan'}</button>`:''}${next&&!canContinue?'<div class="muted">Menunggu bukti dan konfirmasi transfer.</div>':''}${['pending','processing'].includes(o.status)&&p.status!=='paid'&&p.status!=='submitted'?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:''}</div>
+ </div>`;
 }
-function filterOrders(q){q=q.toLowerCase();document.querySelectorAll(".order-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
-function filterOrderStatus(s){document.querySelectorAll(".order-item").forEach(x=>x.classList.toggle("hidden",!!s&&x.dataset.status!==s))}
+function filterOrders(q){q=q.toLowerCase();document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!x.dataset.q.includes(q)))}
+function filterOrderStatus(s){document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!!s&&x.dataset.status!==s))}
 async function setOrderStatus(id,status){
- if(!confirm("Ubah status pesanan menjadi "+status+"?"))return;
- busy(true);try{await ownerApi("set_order_status",{id,status});toast("Status diperbarui.");await orders()}catch(e){fail(e)}finally{busy(false)}
+ if(!confirm('Ubah status pesanan menjadi '+status+'?'))return;
+ busy(true);try{await ownerApi('set_order_status',{id,status});toast('Status diperbarui.');await orders()}catch(e){fail(e)}finally{busy(false)}
+}
+async function reviewPayment(id,decision){
+ const note=decision==='reject'?prompt('Alasan penolakan bukti transfer (wajib):','Foto tidak jelas'):'';
+ if(note===null||decision==='reject'&&!note.trim())return;
+ if(decision==='approve'&&!confirm('Pastikan dana sudah masuk ke rekening. Konfirmasi pembayaran?'))return;
+ busy(true);try{await ownerApi('payment_review',{id,decision,note});toast('Pembayaran diperbarui.');await orders()}catch(e){fail(e)}finally{busy(false)}
+}
+async function confirmCod(id){if(!confirm('Pastikan uang COD telah diterima.'))return;busy(true);try{await ownerApi('confirm_cod_payment',{id});toast('COD dikonfirmasi.');await orders()}catch(e){fail(e)}finally{busy(false)}}
+async function assignCourier(id){
+ const courier_id=document.getElementById('courier-'+id)?.value;
+ if(!courier_id)return toast('Pilih kurir terlebih dahulu.');
+ busy(true);try{await ownerApi('assign_courier',{id,courier_id});toast('Kurir ditugaskan. Member dapat melihat kontak kurir.');await orders()}catch(e){fail(e)}finally{busy(false)}
 }
 
 async function products(){
@@ -204,19 +228,39 @@ async function redemptionStatus(id,status){if(!confirm("Ubah status reward menja
 
 async function operations(){
  busy(true);try{
-  const d=await ownerApi("settings"),bs=d.banners||[],cs=d.couriers||[];
+  const d=await ownerApi('settings'),bs=d.banners||[],cs=d.couriers||[],bank=d.bank_transfer||{};
   state.cache.operations=d;
-  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Promo, Banner & Kurir</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Banner</h3>${bs.map(b=>`<div class="card"><div class="row"><div class="grow"><b>${esc(b.title)}</b><div class="muted">${esc(b.subtitle||"")}</div></div><button class="switch ${b.active?"on":""}" onclick="toggleBanner('${b.id}',${!b.active})"></button></div></div>`).join("")}<h3>Kurir</h3>${cs.map(c=>`<div class="card"><div class="row"><div class="grow"><b>${esc(c.name)}</b><div class="muted">Ongkir ${rp(c.flat_fee)}</div></div><button class="switch ${c.active?"on":""}" onclick="toggleCourier('${c.id}',${!c.active})"></button><button class="btn secondary" onclick="editCourier('${c.id}')">Edit</button></div></div>`).join("")}</div>`,"settings")
+  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Pengaturan Operasional</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div>
+   <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Rekening hanya tampil kepada Member setelah diisi dan diaktifkan oleh Owner.</div>
+   <label>Bank</label><input id="bankname" style="width:100%;margin:6px 0 10px" value="${esc(bank.bank_name||'')}" placeholder="Nama Bank">
+   <label>Nomor rekening</label><input id="banknumber" inputmode="numeric" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_number||'')}" placeholder="Nomor rekening asli">
+   <label>Nama pemilik rekening</label><input id="bankholder" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_holder||'')}" placeholder="Atas nama">
+   <label style="display:flex;align-items:center;gap:10px;margin-top:8px"><input id="bankenabled" type="checkbox" ${bank.enabled?'checked':''}>Aktifkan transfer bank</label>
+   <button class="btn" style="margin-top:12px" onclick="saveBank()">Simpan Rekening</button></div>
+   <h3>Kurir Delivery</h3>${cs.map(c=>`<div class="card"><div class="row"><div class="grow"><b>${esc(c.name)}</b><div class="muted">Ongkir ${rp(c.flat_fee)} • WhatsApp ${esc(c.whatsapp||'-')}</div></div><button class="switch ${c.active?'on':''}" onclick="toggleCourier('${c.id}',${!c.active})"></button><button class="btn secondary" onclick="editCourier('${c.id}')">Edit</button></div></div>`).join('')}
+   <h3>Banner</h3>${bs.map(b=>`<div class="card"><div class="row"><div class="grow"><b>${esc(b.title)}</b><div class="muted">${esc(b.subtitle||'')}</div></div><button class="switch ${b.active?'on':''}" onclick="toggleBanner('${b.id}',${!b.active})"></button></div></div>`).join('')}
+  </div>`,'settings');
  }catch(e){fail(e)}finally{busy(false)}
 }
-async function toggleBanner(id,active){const b=(state.cache.operations?.banners||[]).find(x=>x.id===id);if(!b)return;busy(true);try{await ownerApi("update_banner",{id:b.id,title:b.title,subtitle:b.subtitle,kind:b.kind,active,sort_order:b.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
-async function toggleCourier(id,active){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;busy(true);try{await ownerApi("update_courier",{id:c.id,name:c.name,flat_fee:Number(c.flat_fee||0),active,sort_order:c.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
-async function editCourier(id){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;const fee=prompt("Ongkir kurir (angka)",c.flat_fee||0);if(fee===null)return;busy(true);try{await ownerApi("update_courier",{id:c.id,name:c.name,flat_fee:Number(fee),active:!!c.active,sort_order:c.sort_order});toast("Kurir diperbarui.");await operations()}catch(e){fail(e)}finally{busy(false)}}
+async function saveBank(){
+ const d={bank_name:bankname.value.trim(),account_number:banknumber.value.trim(),account_holder:bankholder.value.trim(),enabled:bankenabled.checked};
+ if(d.enabled&&(!d.bank_name||!d.account_number||!d.account_holder))return toast('Lengkapi semua data rekening.');
+ busy(true);try{await ownerApi('set_bank_transfer',d);toast('Rekening berhasil disimpan.');await operations()}catch(e){fail(e)}finally{busy(false)}
+}
+async function toggleBanner(id,active){const b=(state.cache.operations?.banners||[]).find(x=>x.id===id);if(!b)return;busy(true);try{await ownerApi('update_banner',{id:b.id,title:b.title,subtitle:b.subtitle,kind:b.kind,active,sort_order:b.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
+async function toggleCourier(id,active){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;busy(true);try{await ownerApi('update_courier',{id:c.id,name:c.name,flat_fee:Number(c.flat_fee||0),active,sort_order:c.sort_order,whatsapp:c.whatsapp});await operations()}catch(e){fail(e)}finally{busy(false)}}
+async function editCourier(id){
+ const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;
+ const name=prompt('Nama kurir',c.name);if(name===null)return;
+ const fee=prompt('Ongkir (Rp, angka)',c.flat_fee||0);if(fee===null)return;
+ const whatsapp=prompt('WhatsApp kurir (format 62...)',c.whatsapp||'');if(whatsapp===null)return;
+ busy(true);try{await ownerApi('update_courier',{id:c.id,name:name.trim(),flat_fee:Number(fee),active:!!c.active,sort_order:c.sort_order,whatsapp:whatsapp.trim()});toast('Kurir diperbarui.');await operations()}catch(e){fail(e)}finally{busy(false)}
+}
 
 async function settings(){
  busy(true);try{
   const me=await ownerApi("me");
-  root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Promo, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
+  root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
