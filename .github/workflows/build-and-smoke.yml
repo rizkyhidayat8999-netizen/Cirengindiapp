@@ -118,6 +118,23 @@ jobs:
             ! grep -E "FATAL EXCEPTION|ANR in com.cirengindi.owner.internal" /tmp/owner-log.txt
             adb exec-out screencap -p > /tmp/owner-login.png
 
+
+      - name: Assert both WebViews render visible content (not a blank screen)
+        shell: bash
+        run: |
+          python3 -m pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          from collections import Counter
+          from PIL import Image
+          for name in ('member','owner'):
+              image=Image.open('/tmp/'+name+'-login.png').convert('RGB')
+              center=image.crop((5,70,image.width-5,image.height-85))
+              pixels=center.width*center.height
+              ratio=Counter(center.getdata()).most_common(1)[0][1]/pixels
+              print(f'{name} dominant color ratio: {ratio:.3f}')
+              if ratio > 0.92:
+                  raise SystemExit(f'FAIL: {name} WebView is nearly blank ({ratio:.2%})')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: CirengIndi-Smoke-Screenshots
