@@ -51,18 +51,41 @@ Starpoint Garage is not used by these apps.
 
 COD and BSI/BRI transfer are enabled in the active Supabase project. The `cirengindi_enable_bsi_bri_checkout` migration was successfully applied. A bank is selected for each transfer order, with an immutable recipient snapshot. The mobile and owner APIs run Edge Function version 7. The public bootstrap and authorization gates passed live CI checks. QRIS is disabled. Full paid-order end-to-end testing requires authorized Member and Owner test sessions.
 
-## Build/UI version and no-reinstall updates
+## Final v2.0.0 — automatic UI updates
 
-Android apps package their core HTML/JavaScript in a local WebView. Installed copies cannot change their native code or app icons without a signed Android update. The updated APKs include an optional, non-blocking HTTPS stylesheet at `https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css`. Subsequent CSS/theme tweaks to `apps/shared/premium-overrides.css` can take effect when the apps reconnect, without reinstalling. Core checkout/auth changes still require a signed app update (or a supported store update).
+Both **production signed** Android packages include a native remote-HTML bootstrap:
+- Member: `com.cirengindi.member`, version `2.0.0`, versionCode `4`
+- Owner: `com.cirengindi.owner`, version `2.0.0`, versionCode `3`
 
-The bank migration `supabase/migrations/20261016_two_bank_checkout.sql` is active. The `cirengindi-mobile-api` and `cirengindi-owner-api` Edge Functions were deployed with the checkout and role-validation code; the unchanged `member-auth` route remains deployed. Existing Member apps that do not have the bank selection UI can only display the default BSI transfer destination. Full two-bank bank selection and branding require the updated Member APK, while backend activation does not require reinstalling the existing app.
+On cold start, `RemoteHtmlUpdater` fetches the appropriate application HTML from this trusted repository over HTTPS:
+- `apps/member/app/src/main/assets/index.html`
+- `apps/owner/app/src/main/assets/index.html`
 
-Official location: Tanah Grogot, East Kalimantan. The bundled brand logo is used for Member and Owner header and Android launcher icons.
+The HTML is validated, cached privately for offline use and loaded under the existing local WebView origin so bundled product/logo assets still resolve. It falls back to the cached or bundled copy on connection failure. Future HTML/CSS/JS changes pushed to this repository appear automatically at a subsequent launch **without installing another APK**. This requires internet connectivity for fetching updates. The GitHub raw CDN may cache changes briefly.
 
-## Signed update distribution
+**Not supported:** Automatic updates of the Android native binary, permissions, and home-screen launcher icon. Those still require a properly signed APK update delivered through Android/Play Store. OTA HTML changes are trusted code controlled by repository maintainers; protect GitHub access and review changes before merging. Never load arbitrary third-party HTML.
 
-- Member release package: `com.cirengindi.member`, version 1.2.0 (3).
-- Owner release package: `com.cirengindi.owner`, version 1.1.0 (2).
-- Workflow `.github/workflows/release-signed.yml` requires secrets `CI_ANDROID_KEYSTORE_BASE64`, `CI_STORE_PASSWORD`, `CI_KEY_ALIAS`, and `CI_KEY_PASSWORD`.
-- Reuse the same securely stored keystore for every release. Existing `.internal` debug APKs use a different Android application ID and cannot update production packages in place.
-- Theme changes are fetched from the remote CSS source after initial supported release installation; core code and native icons still require a signed APK/store update.
+The official logo PNG is bundled identically in both APKs and their native Android launcher icons, and the outlet is Tanah Grogot, East Kalimantan.
+
+## Payments
+
+COD and BSI/BRI are enabled in Supabase project `tbviryuimoxgapubdjio`. Each transfer checkout selects a recipient and keeps an immutable bank snapshot. QRIS is disabled. Owner reviews uploaded transfer proofs. End-to-end paid transaction verification with real test accounts is still required.
+
+## Signing and future native releases
+
+The first production v2.0.0 Member and Owner APKs were both compiled and signed in one GitHub Actions run:
+[Production signing build](https://github.com/rizkyhidayat8999-netizen/Cirengindiapp/actions/runs/38840557809).
+
+The private signing key was generated once and **never committed to the repository**. Its GitHub Actions recovery artifact was encrypted to a public-only recovery certificate and can be decrypted with the separately held private recovery key. The recovered release keystore and credentials must be stored offline by the owner and imported into GitHub Actions encrypted secrets for subsequent releases:
+
+- `CI_ANDROID_KEYSTORE_BASE64`: Base64 of the original JKS keystore bytes
+- `CI_STORE_PASSWORD`: password from private recovery credentials
+- `CI_KEY_ALIAS`: alias from private recovery credentials
+- `CI_KEY_PASSWORD`: password from private recovery credentials
+
+`.github/workflows/release-signed.yml` builds future signed Android releases with that same key. **Never regenerate the key**: a different signing certificate cannot update these packages without uninstalling the old app. First-time installation of these production IDs is separate from previously distributed `.internal` debug packages. Existing users of production IDs signed with any different earlier key also cannot install these as an in-place update.
+
+Release signing certificate SHA-256:
+`D4:57:44:40:D6:92:27:2E:B9:64:E9:BC:C1:1A:0B:57:DF:D6:57:30:6C:8A:31:C9:DB:A6:E6:89:D7:AD:ED:A1`.
+
+The one-time signing bootstrap workflow was removed after completion to prevent accidentally creating a second incompatible signing key.
