@@ -19,7 +19,7 @@ async function staff(req){
  // Requiring a confirmation-sent event avoids trusting auto-confirmed signups.
  const u=data.user;
  const sent=u.confirmation_sent_at,confirmed=u.email_confirmed_at;
- if(!s && String(u.email||'').toLowerCase()==='rizkyhidayat8999@gmail.com'
+ if(!s && String(u.email||'').toLowerCase()==='indicireng@gmail.com'
   && sent && confirmed && Date.parse(confirmed)>=Date.parse(sent)){
    s=check(await admin.from('staff_profiles').upsert({user_id:u.id,full_name:'Owner Cireng Indi',role:'owner',active:true},{onConflict:'user_id'}).select('*').single());
  }
