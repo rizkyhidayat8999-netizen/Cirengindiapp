@@ -249,7 +249,7 @@ async function doRegister(){
  if(submit?.disabled)return; if(submit){submit.disabled=true;submit.textContent='Memproses…'}
  const msg=document.getElementById('authStatus');if(msg)msg.textContent='';
  try{
-  const d=await auth({action:'register',fullName,username,email,password,phone:phone||undefined,referralCode:referralCode||undefined});
+  const d=await auth({action:'register',fullName,username,email,password,phone:phone||undefined,referral:referralCode||undefined});
   if(d.pendingVerification){renderAuth('login');toast('Pendaftaran diterima. Periksa email untuk verifikasi akun.');return}
   if(!d.session?.access_token)throw new Error('REGISTRATION_INCOMPLETE');
   sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id});state.boot=null;await go('home');
@@ -263,7 +263,7 @@ async function doRegister(){
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
 async function doForgot(){const email=document.getElementById('femail')?.value.trim()||'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');loading(true);try{await auth({action:'forgot_password',email});renderAuth('login');toast('Jika email terdaftar, tautan pemulihan telah dikirim.')}catch(e){fail(e)}finally{loading(false)}}
-let heroTimer=null;let heroIndex=0;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>el.classList.toggle('is-active',i===heroIndex));document.querySelectorAll('.heroDots button').forEach((el,i)=>el.classList.toggle('active',i===heroIndex));}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
+let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>el.classList.toggle('is-active',i===heroIndex));document.querySelectorAll('.heroDots button').forEach((el,i)=>el.classList.toggle('active',i===heroIndex));}function startHero(){clearInterval(heroTimer);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;heroTimer=setInterval(()=>{if(document.visibilityState==='visible'&&state.route==='home')heroSlide(heroIndex+1)},1600)}
 let heroTouchStartX=null,heroTouchStartY=null;
 root.addEventListener('touchstart',event=>{
  const hero=event.target.closest?.('.hero');
@@ -297,6 +297,7 @@ function updateCatalogQuietly(){
 }
 async function go(r){
  if(r!=='home')clearInterval(heroTimer);
+ if(r!=='orders'){clearInterval(orderPollTimer);orderPollTimer=null;}
  const previous=state.route;
  if(previous&&previous!==r&&previous!=='auth'&&previous!=='checkout'&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(previous,root.innerHTML);
  state.route=r;const key=++navId;
@@ -537,14 +538,26 @@ function renderOrders(os){
    <div class="orderFoot"><div class="grow"><b>${rp(o.total)}</b></div>${o.status==='pending'&&p.status!=='paid'&&p.status!=='submitted'?`<button class="outline" onclick="cancelOrder('${o.id}')">Batalkan</button>`:`<button class="outline" onclick="go('store')">Beli Lagi</button>`}</div></div>`;
   }).join('')||`<p style="text-align:center;color:var(--muted)">Belum ada pesanan.</p>`}</div>`,'orders');
 }
-async function orders(){
- // Render immediately from memory; never display a blank waiting screen.
- renderOrders(state.ordersSnapshot||[]);
+async function updateOrdersQuietly(){
+ if(state.route!=='orders'||orderPollBusy||document.visibilityState!=='visible')return;
+ orderPollBusy=true;
  try{
   const d=await api('orders');
-  state.ordersSnapshot=d.orders||[];
-  if(state.route==='orders')renderOrders(state.ordersSnapshot);
- }catch(e){if(state.route==='orders')fail(e)}
+  const latest=d.orders||[];
+  if(state.route!=='orders')return;
+  const changed=JSON.stringify(latest.map(x=>[x.id,x.status,x.updated_at,x.courier_id,x.payment?.status]))
+   !==JSON.stringify((state.ordersSnapshot||[]).map(x=>[x.id,x.status,x.updated_at,x.courier_id,x.payment?.status]));
+  state.ordersSnapshot=latest;
+  if(changed)renderOrders(latest);
+ }catch(e){/* Keep last known orders visible while offline. */}
+ finally{orderPollBusy=false}
+}
+async function orders(){
+ // Show the latest already known orders immediately without a blocking spinner.
+ renderOrders(state.ordersSnapshot||[]);
+ await updateOrdersQuietly();
+ clearInterval(orderPollTimer);
+ if(state.route==='orders')orderPollTimer=setInterval(updateOrdersQuietly,15000);
 }
 async function cancelOrder(id){if(!confirm('Batalkan pesanan? Stok akan dikembalikan.'))return;loading(true);try{await api('order_cancel',{id});await orders()}catch(e){fail(e)}finally{loading(false)}}
 
