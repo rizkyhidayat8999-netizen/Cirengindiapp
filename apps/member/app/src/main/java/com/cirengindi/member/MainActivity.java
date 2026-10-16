@@ -7,6 +7,9 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
 public final class MainActivity extends Activity {
     private WebView webView;
     private String pendingDeepLink;
+    private static final int PROOF_PICKER_REQUEST = 4391;
+    private ValueCallback<Uri[]> pendingImageSelection;
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override protected void onCreate(Bundle state) {
@@ -34,14 +39,44 @@ public final class MainActivity extends Activity {
         settings.setDomStorageEnabled(false);
         settings.setDatabaseEnabled(false);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        settings.setAllowContentAccess(true); // Required for user-selected proof-of-transfer photos
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setSupportMultipleWindows(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setSafeBrowsingEnabled(true);
         settings.setUserAgentString(settings.getUserAgentString() + " CirengIndi/1.1");
         webView.addJavascriptInterface(new NativeBridge(this, sessionStore), "Native");
+        webView.setWebChromeClient(new WebChromeClient(){
+            @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params){
+                if (pendingImageSelection != null) pendingImageSelection.onReceiveValue(null);
+                pendingImageSelection = callback;
+                try {
+                    Intent choose = new Intent(Intent.ACTION_GET_CONTENT);
+                    choose.addCategory(Intent.CATEGORY_OPENABLE);
+                    choose.setType("image/*");
+                    startActivityForResult(Intent.createChooser(choose, "Pilih foto bukti transfer"), PROOF_PICKER_REQUEST);
+                    return true;
+                } catch(Exception ex) {
+                    pendingImageSelection = null;
+                    callback.onReceiveValue(null);
+                    return true;
+                }
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                Uri u = request.getUrl();
+                String path = u.getPath();
+                if ("app.cirengindi.local".equalsIgnoreCase(u.getHost()) && path != null
+                        && path.startsWith("/assets/") && !path.contains("..")) {
+                    try {
+                        InputStream asset = getAssets().open(path.substring(1));
+                        String mime = path.endsWith(".png") ? "image/png" : "image/webp";
+                        return new WebResourceResponse(mime, null, asset);
+                    } catch (Exception ignored) {}
+                }
+                return super.shouldInterceptRequest(view, request);
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("app.cirengindi.local".equalsIgnoreCase(uri.getHost())) return false;
@@ -77,6 +112,16 @@ public final class MainActivity extends Activity {
         String value = pendingDeepLink;
         pendingDeepLink = null;
         webView.evaluateJavascript("window.onNativeDeepLink && window.onNativeDeepLink(" + JSONObject.quote(value) + ");", null);
+    }
+
+    @Override protected void onActivityResult(int requestCode,int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == PROOF_PICKER_REQUEST && pendingImageSelection != null) {
+            Uri[] values = resultCode == RESULT_OK && data != null && data.getData() != null
+                ? new Uri[]{data.getData()} : null;
+            pendingImageSelection.onReceiveValue(values);
+            pendingImageSelection = null;
+        }
     }
 
     @Override protected void onNewIntent(Intent intent) {
