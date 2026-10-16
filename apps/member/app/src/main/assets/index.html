@@ -167,6 +167,20 @@ input,select,textarea{min-height:48px;border-radius:12px}
 #launchBrand strong{font-size:23px;color:#482719;display:block}#launchBrand span{font-size:12px;color:#857567;display:block;margin-top:8px}
 .heroSlides>.banner{background:#f7eee5;object-fit:cover}
 .pCard img,.prow img,.orderMode .pic img,.productHero img,.orderProduct img{object-fit:contain;background:#f7eee5!important}
+
+/* Compact Fore-style basket controls; keeps footer clear of Android navigation bar. */
+.cartScreen .section{padding:12px 16px 24px}
+.cartScreen .orderCard{padding:12px;margin-bottom:11px;border-radius:17px}
+.cartScreen .orderProduct{display:flex;align-items:center;gap:11px}
+.cartScreen .orderProduct img{width:74px!important;height:74px!important;flex:none;border-radius:13px}
+.cartScreen .orderProduct>div:not(.qty){min-width:0}
+.cartScreen .orderProduct b{font-size:14px;line-height:1.3}
+.cartScreen .orderProduct .price{font-size:16px;margin-top:5px}
+.cartScreen .qty{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.cartScreen .qty button{width:34px!important;height:34px!important;padding:5px!important;min-width:34px}
+.cartScreen .qty b{font-size:14px}
+.cartScreen .stickyAction{padding-bottom:max(14px,env(safe-area-inset-bottom,0px));background:#fffdfa}
+@media(max-width:375px){.cartScreen .orderProduct img{width:61px!important;height:61px!important}.cartScreen .orderProduct{gap:8px}.cartScreen .qty{gap:4px}.cartScreen .qty button{width:31px!important;height:31px!important;min-width:31px}}
 </style>
 </head>
 <body>
@@ -471,8 +485,9 @@ function observeBanners(){
 }
 new MutationObserver(()=>{observeCatalogPhotos();observeBanners()}).observe(root,{childList:true,subtree:true});
 function photoAttrs(p){
- const id=officialImageId(p),local=localPic(p?.name);
- return 'src="assets/'+esc(local)+'" alt="'+esc(p?.name||'Produk Cireng Indi')+'" decoding="async" loading="lazy"'+
+ const resolved=BUILTIN_PUBLIC_CATALOG.products.find(x=>x.source_key===p?.source_key||x.name?.toLowerCase()===String(p?.name||'').toLowerCase())||p;
+ const id=officialImageId(resolved),local=localPic(resolved?.name);
+ return 'src="assets/'+esc(local)+'" alt="'+esc(resolved?.name||'Produk Cireng Indi')+'" decoding="async" loading="lazy"'+
  (id?' data-photo-id="'+id+'" data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
 function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
@@ -502,7 +517,7 @@ async function addresses(){
 
 function addAddressForm(){root.innerHTML=`<div class="app">${uiTop('Tambah Alamat','addresses')}<div class="section"><div class="form"><label>Label</label><input id="alabel" placeholder="Rumah / Kantor"><label>Nama penerima</label><input id="aname"><label>No. HP</label><input id="aphone" inputmode="tel"><label>Alamat lengkap</label><textarea id="aline" rows="3"></textarea><label>Kota/Kabupaten</label><input id="acity"><label>Provinsi</label><input id="aprov"><label>Kode pos</label><input id="apost"><button class="fullbtn" onclick="saveAddress()">Simpan Alamat</button></div></div></div>`}
 async function saveAddress(){loading(true);try{const d=await api('address_create',{label:alabel.value.trim(),recipient_name:aname.value.trim(),phone:aphone.value.trim(),address_line:aline.value.trim(),city:acity.value.trim(),province:aprov.value.trim(),postal_code:apost.value.trim()});await api('address_default',{id:d.address.id});await addresses()}catch(e){fail(e)}finally{loading(false)}}async function defaultAddr(id){loading(true);try{await api('address_default',{id});toast('Alamat utama diperbarui.')}catch(e){fail(e)}finally{loading(false)}}
-function renderCart(c){const items=c.items||[];if(state.route!=='cart')return;root.innerHTML=`<div class="app" style="padding-bottom:92px">${uiTop('Keranjang','store')}<div class="section">${items.length?items.map(i=>{const v=i.variant||{},p=v.product||{},price=Number(v.price??p.base_price??0);return `<div class="orderCard"><div class="orderProduct" style="margin:0;border-top:0"><img src="assets/${localPic(p.name)}"><div style="flex:1"><b>${esc(p.name)}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')}</div><div class="price">${rp(price*i.quantity)}</div></div><div class="qty"><button onclick="cartQty('${i.variant_id}',${i.quantity-1})">${icon('i-minus')}</button><b>${i.quantity}</b><button class="plus" onclick="cartQty('${i.variant_id}',${i.quantity+1})">${icon('i-plus')}</button></div></div></div>`}).join(''):`<p style="text-align:center;color:var(--muted);padding:40px 0">Keranjang masih kosong.</p>`}</div>${items.length?`<div class="stickyAction"><div style="flex:1"><small>Subtotal</small><div class="price">${rp(c.subtotal)}</div></div><button class="cta" onclick="go('checkout')">Lanjut Checkout</button></div>`:''}</div>`}
+function renderCart(c){const items=c.items||[];if(state.route!=='cart')return;root.innerHTML=`<div class="app cartScreen" style="padding-bottom:92px">${uiTop('Keranjang','store')}<div class="section">${items.length?items.map(i=>{const v=i.variant||{},p=v.product||{},price=Number(v.price??p.base_price??0);return `<div class="orderCard"><div class="orderProduct" style="margin:0;border-top:0"><img ${photoAttrs(p)}><div style="flex:1"><b>${esc(p.name)}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')}</div><div class="price">${rp(price*i.quantity)}</div></div><div class="qty"><button onclick="cartQty('${i.variant_id}',${i.quantity-1})">${icon('i-minus')}</button><b>${i.quantity}</b><button class="plus" onclick="cartQty('${i.variant_id}',${i.quantity+1})">${icon('i-plus')}</button></div></div></div>`}).join(''):`<p style="text-align:center;color:var(--muted);padding:40px 0">Keranjang masih kosong.</p>`}</div>${items.length?`<div class="stickyAction"><div style="flex:1"><small>Subtotal</small><div class="price">${rp(c.subtotal)}</div></div><button class="cta" onclick="go('checkout')">Lanjut Checkout</button></div>`:''}</div>`}
 async function cart(){
  renderCart(state.cartSnapshot||{items:[],subtotal:0});
  try{
@@ -526,7 +541,7 @@ async function checkout(){
    <div class="checkoutHead">${uiTop('Checkout','cart')}<div class="fulfillment">${icon(delivery?'i-truck':'i-bag','lg')}<div class="grow"><b>${delivery?'Delivery':'Pick Up'}</b><div style="color:var(--muted);font-size:12px">${delivery?'Diantar oleh kurir yang ditentukan Owner':'Ambil langsung di outlet'}</div></div><button class="outline" onclick="state.fulfillment='${delivery?'pickup':'delivery'}';checkout()">Ubah</button></div></div>
    <div class="checkoutSec"><h2>Outlet</h2><div class="route"><div class="circle">${icon('i-store')}</div><div><b>Cireng Indi • Tanah Grogot</b><span>Outlet utama</span></div></div>
    ${delivery?`<div class="route"><div class="circle">${icon('i-pin')}</div><div class="grow"><b>Alamat tujuan</b><select id="coaddr">${as.map(x=>`<option value="${x.id}" ${x.is_default?'selected':''}>${esc(x.label||'Alamat')} — ${esc(x.city)}</option>`).join('')}</select></div></div><div class="eta">Kurir dan kontak WhatsApp akan muncul di riwayat pesanan setelah dipilih Owner. Ongkir final dikonfirmasi Owner sebelum pembayaran COD.</div>`:`<div class="eta">Waktu pengambilan dikonfirmasi Owner.</div>`}</div>
-   <div class="checkoutSec"><h2>Detail Pesanan</h2>${(c.items||[]).map(i=>{const v=i.variant||{},prd=v.product||{};return `<div class="checkoutItem"><div class="grow"><b>${esc(prd.name||'Produk')}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')} × ${i.quantity}</div><div class="price">${rp(Number(v.price||0)*i.quantity)}</div></div><img loading="lazy" onerror="this.style.display='none'" src="assets/${localPic(prd.name)}" alt="${esc(prd.name)}"></div>`}).join('')}</div>
+   <div class="checkoutSec"><h2>Detail Pesanan</h2>${(c.items||[]).map(i=>{const v=i.variant||{},prd=v.product||{};return `<div class="checkoutItem"><div class="grow"><b>${esc(prd.name||'Produk')}</b><div style="color:var(--muted);font-size:12px">${esc(v.name||'')} × ${i.quantity}</div><div class="price">${rp(Number(v.price||0)*i.quantity)}</div></div><img ${photoAttrs(prd)}></div>`}).join('')}</div>
    <div class="checkoutSec"><h2>Voucher Cireng Indi</h2><p class="muted" style="font-size:12px;margin:0 0 9px">Voucher aktif dari Owner dapat digunakan pada pesanan ini.</p>
    <select id="checkoutVoucher" aria-label="Pilih voucher" style="width:100%;border:1px solid var(--line);padding:12px" onchange="updateCheckoutVoucher()">
    <option value="">Tanpa voucher</option>${eligible.map(v=>`<option value="${esc(v.id)}" ${v.id===state.selectedVoucherId?'selected':''}>${esc(v.title)} — ${esc(voucherLabel(v))}</option>`).join('')}</select>
@@ -597,7 +612,7 @@ function renderOrders(os){
    const payText=p.method==='transfer'?'Transfer Bank':'COD';
    const statusText={pending:'Menunggu pembayaran',submitted:'Bukti dikirim, menunggu Owner',paid:'Pembayaran dikonfirmasi',rejected:'Bukti ditolak',cancelled:'Dibatalkan'}[p.status]||'Menunggu';
    return `<div class="orderCard" style="margin-bottom:14px"><div class="orderTop"><div class="circle">${icon(o.fulfillment_type==='pickup'?'i-bag':'i-truck')}</div><div class="grow"><b>${esc(o.order_number||'Pesanan')}</b><div style="font-size:12px;color:var(--muted)">${new Date(o.created_at).toLocaleString('id-ID')} · ${o.fulfillment_type==='pickup'?'Pick Up':'Delivery'}</div></div><span class="tag ${o.status==='completed'?'done':''}">${esc(orderStatusText(o.status))}</span></div>
-   ${orderTimeline(o)}<div class="orderProduct"><img src="assets/${localPic(o.items?.[0]?.product_name||'cireng')}" alt="Produk" onerror="this.style.display='none'"><div><b>${esc(o.items?.[0]?.product_name||'Pesanan Cireng Indi')}</b><div style="color:var(--muted);font-size:12px">${(o.items||[]).length} jenis produk</div></div></div>
+   ${orderTimeline(o)}<div class="orderProduct"><img ${photoAttrs({name:o.items?.[0]?.product_name||'Cireng'})}><div><b>${esc(o.items?.[0]?.product_name||'Pesanan Cireng Indi')}</b><div style="color:var(--muted);font-size:12px">${(o.items||[]).length} jenis produk</div></div></div>
    <div style="padding:6px 0;font-size:13px"><b>${esc(payText)} — ${esc(statusText)}</b>${p.review_note?`<div style="color:#a7372e">Alasan: ${esc(p.review_note)}</div>`:''}</div>
    ${p.method==='transfer'&&p.bank_snapshot?`<div class="eta" style="margin:8px 0;padding:12px"><b>Transfer ke ${esc(p.bank_snapshot.bank_name||'Bank')}</b><div>Nomor: <b>${esc(p.bank_snapshot.account_number||'')}</b></div><div>Atas nama: <b>${esc(p.bank_snapshot.account_holder||'')}</b></div><div>Nominal pesanan: <b>${rp(o.total)}</b></div></div>`:''}
    ${o.fulfillment_type==='delivery'?`<div style="padding:7px 0;font-size:13px">${courier.name?`<b>Kurir: ${esc(courier.name)}</b>${wa?`<button class="outline" style="margin-left:8px" onclick="Native.openUrl('https://wa.me/${wa}')">WhatsApp Kurir</button>`:''}`:'Kurir sedang ditentukan oleh Owner.'}</div>`:'<div style="font-size:12px;color:var(--muted)">Pengambilan langsung di outlet Tanah Grogot</div>'}
