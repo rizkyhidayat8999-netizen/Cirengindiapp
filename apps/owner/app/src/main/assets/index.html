@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://kzvlelcngcxgjsvtvsnj.supabase.co; img-src data: https://kzvlelcngcxgjsvtvsnj.supabase.co; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+<title>Cireng Indi Owner</title>
+<style>
+:root{
+  --brand:#7d321b;--brand2:#b85b2c;--cream:#fff8f1;--soft:#fff0e7;--ink:#211814;
+  --muted:#756b65;--line:#eee4de;--green:#197150;--yellow:#a66a00;--red:#a7372e;
+  --card:#fff;--shadow:0 10px 30px rgba(75,40,20,.08);--r:20px
+}
+*{box-sizing:border-box}html,body{margin:0;background:#f7f4f1;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{min-height:100vh}button,input,select{font:inherit}.app{max-width:760px;margin:auto;min-height:100vh;background:#f7f4f1;padding-bottom:88px}
+.hidden{display:none!important}.icon{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top{position:sticky;top:0;z-index:20;background:rgba(255,248,241,.97);backdrop-filter:blur(12px);padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:14px;background:var(--brand);color:#fff;display:grid;place-items:center}.top .grow{flex:1}.top b{font-size:17px}.top span{display:block;font-size:11px;color:var(--muted)}
+.section{padding:18px}.section h2{font-size:20px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:0 2px 9px rgba(0,0,0,.03)}
+.metric .label{font-size:12px;color:var(--muted)}.metric strong{display:block;font-size:22px;margin-top:6px}.metric .hint{font-size:11px;color:var(--green);margin-top:4px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:var(--shadow);margin-bottom:12px}
+.row{display:flex;gap:12px;align-items:center}.grow{flex:1}.muted{color:var(--muted);font-size:12px}.money{font-weight:900;color:var(--brand);font-size:17px}
+.badge{display:inline-flex;padding:6px 9px;border-radius:99px;font-size:11px;font-weight:800;background:#f3efe9;color:#6c625c}
+.badge.pending{background:#fff1c8;color:#765700}.badge.processing{background:#e8efff;color:#3f5d91}.badge.shipped{background:#eee8ff;color:#6350a1}.badge.completed{background:#dff5e8;color:#247049}.badge.cancelled{background:#fbe2df;color:#94362f}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:12px;padding:10px 12px;font-weight:800;background:var(--brand);color:#fff}.btn.secondary{background:#fff;color:var(--brand);border:1px solid #ddb39f}.btn.danger{background:#fff0ee;color:var(--red);border:1px solid #f0c1bb}
+.nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);height:76px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{border:0;background:transparent;color:#79716d;font-size:10px;padding:7px 3px}.nav .icon{display:block;margin:0 auto 4px}.nav button.active{color:var(--brand);font-weight:800}
+.search{margin-bottom:12px}.search input{width:100%;border:1px solid #d9ccc5;border-radius:14px;padding:12px 14px;background:#fff}
+.stock{display:flex;align-items:center;gap:8px}.stock button{width:34px;height:34px;border-radius:10px;border:1px solid #dbc9bf;background:#fff;color:var(--brand);font-size:21px}.stock b{min-width:34px;text-align:center}
+.switch{width:48px;height:28px;border-radius:99px;background:#d9d4d0;position:relative;border:0}.switch:after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;box-shadow:0 2px 6px #0003}.switch.on{background:var(--green)}.switch.on:after{left:23px}
+.login{min-height:100vh;background:linear-gradient(145deg,#7d321b,#b85b2c);display:flex;align-items:center;padding:24px}.loginbox{width:100%;max-width:480px;margin:auto;background:#fff;border-radius:26px;padding:24px;box-shadow:0 20px 60px #0004}
+.loginbrand{width:70px;height:70px;border-radius:22px;background:var(--brand);color:#fff;display:grid;place-items:center;margin:0 auto 16px}.login h1{text-align:center;margin:0}.login p{text-align:center;color:var(--muted)}
+label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin:13px 0 6px}input{width:100%;border:1px solid #d9ccc5;border-radius:13px;padding:13px 14px;outline:none}.full{width:100%;margin-top:17px;border:0;border-radius:999px;background:var(--brand);color:#fff;padding:14px;font-weight:900}
+.notice{background:#fff6dc;border:1px solid #f2d88e;border-radius:13px;padding:12px;font-size:12px;color:#715726;margin-top:14px}.empty{text-align:center;color:var(--muted);padding:30px 12px}
+.loading{position:fixed;inset:0;background:#fff8f1cc;z-index:100;display:none;place-items:center}.loading.show{display:grid}.spin{width:42px;height:42px;border:4px solid #ead5ca;border-top-color:var(--brand);border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:90px;z-index:120;transform:translateX(-50%) translateY(20px);opacity:0;background:#211814;color:#fff;padding:11px 15px;border-radius:12px;max-width:88%;text-align:center;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%)}
+
+.editline{display:flex;gap:8px;align-items:center;margin-top:10px}.editline input{width:110px;padding:8px 9px}
+.subnav{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.subnav button{white-space:nowrap;border:1px solid #d9ccc5;background:#fff;border-radius:999px;padding:9px 12px;color:var(--brand);font-weight:750}
+.kv{display:flex;gap:12px;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.kv:last-child{border-bottom:0}
+</style>
+</head>
+<body>
+<div id="root"></div><div id="loading" class="loading"><div class="spin"></div></div><div id="toast" class="toast"></div>
+
+<svg width="0" height="0" style="position:absolute">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+<symbol id="i-order" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M4 7 12 3l8 4-8 4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2"/><path d="M16 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 4v2"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 13a7 7 0 0 0 0-2l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-2h-4L9 6a8 8 0 0 0-2 1L5 6 3 10l2 1a7 7 0 0 0 0 2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 2h4l1-2a8 8 0 0 0 2-1l2 1 2-4z"/></symbol>
+<symbol id="i-store" viewBox="0 0 24 24"><path d="M4 10v10h16V10"/><path d="M3 10h18l-2-6H5z"/><path d="M8 20v-6h8v6"/></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 9 17H3z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 5H5v14h5"/><path d="m13 8 4 4-4 4M17 12H9"/></symbol>
+</svg>
+
+
+<script>
+const SUPABASE_URL="https://kzvlelcngcxgjsvtvsnj.supabase.co";
+const KEY="sb_publishable_C_77iF81PKDdNQYY34xvYg_EEvXq3eA";
+const state={session:null,page:"dashboard",cache:{}};
+const root=document.getElementById("root");
+const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const rp=n=>"Rp"+Number(n||0).toLocaleString("id-ID");
+function busy(v){loading.classList.toggle("show",!!v)}
+let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600)}
+function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
+function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
+function clearSession(){state.session=null;Native.clearSession()}
+
+async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok)throw new Error(d.message||d.error||("HTTP_"+r.status));return d}
+async function loginAuth(email,password){
+ return parse(await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{
+  method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})
+ }))
+}
+async function refresh(){
+ const s=state.session||getSession();if(!s?.refresh_token)throw new Error("AUTH_REQUIRED");
+ const d=await parse(await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=refresh_token",{
+  method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})
+ }));
+ saveSession(d);return d
+}
+async function ownerApi(action,payload={},retry=true){
+ let s=state.session||getSession();state.session=s;if(!s?.access_token)throw new Error("AUTH_REQUIRED");
+ const r=await fetch(SUPABASE_URL+"/functions/v1/cirengindi-owner-api",{
+  method:"POST",
+  headers:{"apikey":KEY,"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json"},
+  body:JSON.stringify({action,...payload})
+ });
+ if(r.status===401&&retry&&s?.refresh_token){await refresh();return ownerApi(action,payload,false)}
+ return parse(r)
+}
+async function verifyStaff(){try{await ownerApi("me");return true}catch(e){return false}}
+
+function shell(body,active){
+ const nav=[["dashboard","i-home","Dashboard"],["orders","i-order","Pesanan"],["products","i-box","Produk"],["members","i-users","Member"],["settings","i-settings","Lainnya"]];
+ return `<div class="app"><div class="top"><div class="logo">${icon("i-store")}</div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
+}
+function renderLogin(msg=""){
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand">${icon("i-store")}</div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@email.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div></div></section>`
+}
+async function doLogin(){
+ const mail=document.getElementById("email").value.trim(),password=document.getElementById("pw").value;
+ if(!mail||!password)return toast("Isi email dan password.");
+ busy(true);try{
+  const d=await loginAuth(mail,password);saveSession(d);
+  if(!await verifyStaff()){clearSession();return renderLogin("Akun ini belum memiliki role Owner/Staff.")}
+  await go("dashboard");toast("Login berhasil.");
+ }catch(e){clearSession();toast(errorText(e.message))}finally{busy(false)}
+}
+function errorText(m){
+ const map={AUTH_REQUIRED:"Sesi berakhir.",STAFF_REQUIRED:"Akun tidak memiliki akses Owner/Staff.",
+ INVALID_STATUS_TRANSITION:"Perubahan status pesanan tidak diizinkan.",INVALID_STOCK:"Stok tidak valid."};
+ return map[m]||String(m).replaceAll("_"," ");
+}
+function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
+async function go(p){
+ state.page=p;
+ if(p==="dashboard")return dashboard();
+ if(p==="orders")return orders();
+ if(p==="products")return products();
+ if(p==="members")return members();
+ if(p==="rewards")return rewards();
+ if(p==="operations")return operations();
+ if(p==="settings")return settings();
+}
+
+async function dashboard(){
+ busy(true);try{
+  const d=await ownerApi("dashboard");
+  root.innerHTML=shell(`<div class="section"><h2>Ringkasan Hari Ini</h2><div class="grid">
+   <div class="metric"><div class="label">Pesanan hari ini</div><strong>${Number(d.today_orders||0)}</strong><div class="hint">Semua status</div></div>
+   <div class="metric"><div class="label">Omzet selesai</div><strong>${rp(d.today_completed_revenue)}</strong><div class="hint">Hari ini</div></div>
+   <div class="metric"><div class="label">Perlu diproses</div><strong>${Number(d.pending_processing||0)}</strong><div class="hint">Pending + proses</div></div>
+   <div class="metric"><div class="label">Stok menipis</div><strong>${Number(d.low_stock||0)}</strong><div class="hint">≤ 5 unit</div></div>
+   <div class="metric"><div class="label">Produk aktif</div><strong>${Number(d.active_products||0)}</strong><div class="hint">Katalog</div></div>
+   <div class="metric"><div class="label">Member aktif</div><strong>${Number(d.active_members||0)}</strong><div class="hint">${Number(d.pending_redemptions||0)} reward menunggu</div></div>
+  </div></div><div class="section"><h2>Pesanan Terbaru</h2>${(d.latest_orders||[]).map(orderCard).join("")||'<div class="empty">Belum ada pesanan.</div>'}</div>`,"dashboard")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+function orderCard(o){
+ return `<div class="card"><div class="row"><div class="grow"><b>${esc(o.order_number||"Pesanan")}</b><div class="muted">${new Date(o.created_at).toLocaleString("id-ID")}</div></div><span class="badge ${esc(o.status)}">${esc(o.status)}</span></div><div class="row" style="margin-top:10px"><div class="grow money">${rp(o.total)}</div><button class="btn secondary" onclick="go('orders')">Buka</button></div></div>`
+}
+
+async function orders(){
+ busy(true);try{
+  const d=await ownerApi("orders",{limit:150}),os=d.orders||[];state.cache.orders=os;
+  root.innerHTML=shell(`<div class="section"><h2>Pesanan</h2><div class="subnav">${["","pending","processing","shipped","completed","cancelled"].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||"Semua"}</button>`).join("")}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join("")||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,"orders");
+ }catch(e){fail(e)}finally{busy(false)}
+}
+function orderManageCard(o){
+ const next=o.status==="pending"?"processing":o.status==="processing"?"shipped":o.status==="shipped"?"completed":null;
+ const first=o.items?.[0];
+ return `<div class="card order-item" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||"")+" "+o.status+" "+(first?.product_name||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(o.order_number||o.id)}</b><div class="muted">${new Date(o.created_at).toLocaleString("id-ID")} • ${esc(o.fulfillment_type||"delivery")}</div></div><span class="badge ${esc(o.status)}">${esc(o.status)}</span></div>${first?`<div style="margin-top:10px"><b>${esc(first.product_name)}</b><div class="muted">${(o.items||[]).length} item</div></div>`:""}<div class="money" style="margin-top:10px">${rp(o.total)}</div><div class="actions">${next?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==="processing"?"Proses":next==="shipped"?"Kirim":"Selesaikan"}</button>`:""}${["pending","processing"].includes(o.status)?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:""}</div></div>`
+}
+function filterOrders(q){q=q.toLowerCase();document.querySelectorAll(".order-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
+function filterOrderStatus(s){document.querySelectorAll(".order-item").forEach(x=>x.classList.toggle("hidden",!!s&&x.dataset.status!==s))}
+async function setOrderStatus(id,status){
+ if(!confirm("Ubah status pesanan menjadi "+status+"?"))return;
+ busy(true);try{await ownerApi("set_order_status",{id,status});toast("Status diperbarui.");await orders()}catch(e){fail(e)}finally{busy(false)}
+}
+
+async function products(){
+ busy(true);try{
+  const d=await ownerApi("products"),ps=d.products||[],vs=d.variants||[];
+  state.cache.products=d;
+  const html=ps.map(p=>`<div class="card"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row" style="padding-top:12px;margin-top:12px;border-top:1px solid var(--line)"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',${Math.max(0,Number(v.stock)-1)})">−</button><b>${v.stock}</b><button onclick="stock('${v.id}',${Number(v.stock)+1})">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
+  root.innerHTML=shell(`<div class="section"><h2>Produk & Stok</h2>${html||'<div class="empty">Produk belum tersedia.</div>'}</div>`,"products")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+async function stock(id,n){busy(true);try{await ownerApi("set_stock",{id,stock:n});await products()}catch(e){fail(e)}finally{busy(false)}}
+async function toggleProduct(id,on){busy(true);try{await ownerApi("set_product_active",{id,active:on});await products()}catch(e){fail(e)}finally{busy(false)}}
+async function editVariant(id){
+ const v=(state.cache.products?.variants||[]).find(x=>x.id===id);if(!v)return;
+ const name=prompt("Nama varian",v.name);if(name===null)return;
+ const price=prompt("Harga (angka)",v.price);if(price===null)return;
+ const stockValue=prompt("Stok (angka)",v.stock);if(stockValue===null)return;
+ busy(true);try{
+  await ownerApi("update_variant",{id,name:name.trim(),price:Number(price),stock:Number(stockValue),active:!!v.active});
+  toast("Varian diperbarui.");await products()
+ }catch(e){fail(e)}finally{busy(false)}
+}
+
+async function members(){
+ busy(true);try{
+  const d=await ownerApi("members",{limit:200}),ms=d.members||[];
+  root.innerHTML=shell(`<div class="section"><h2>Member</h2><div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Classic")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
+
+async function rewards(){
+ busy(true);try{
+  const d=await ownerApi("rewards"),rs=d.rewards||[],reds=d.redemptions||[];
+  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Reward & Penukaran</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+async function rewardStock(id,n){busy(true);try{await ownerApi("set_reward_stock",{id,stock:n});await rewards()}catch(e){fail(e)}finally{busy(false)}}
+async function redemptionStatus(id,status){if(!confirm("Ubah status reward menjadi "+status+"?"))return;busy(true);try{await ownerApi("set_redemption_status",{id,status});await rewards()}catch(e){fail(e)}finally{busy(false)}}
+
+async function operations(){
+ busy(true);try{
+  const d=await ownerApi("settings"),bs=d.banners||[],cs=d.couriers||[];
+  state.cache.operations=d;
+  root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Promo, Banner & Kurir</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Banner</h3>${bs.map(b=>`<div class="card"><div class="row"><div class="grow"><b>${esc(b.title)}</b><div class="muted">${esc(b.subtitle||"")}</div></div><button class="switch ${b.active?"on":""}" onclick="toggleBanner('${b.id}',${!b.active})"></button></div></div>`).join("")}<h3>Kurir</h3>${cs.map(c=>`<div class="card"><div class="row"><div class="grow"><b>${esc(c.name)}</b><div class="muted">Ongkir ${rp(c.flat_fee)}</div></div><button class="switch ${c.active?"on":""}" onclick="toggleCourier('${c.id}',${!c.active})"></button><button class="btn secondary" onclick="editCourier('${c.id}')">Edit</button></div></div>`).join("")}</div>`,"settings")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+async function toggleBanner(id,active){const b=(state.cache.operations?.banners||[]).find(x=>x.id===id);if(!b)return;busy(true);try{await ownerApi("update_banner",{id:b.id,title:b.title,subtitle:b.subtitle,kind:b.kind,active,sort_order:b.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
+async function toggleCourier(id,active){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;busy(true);try{await ownerApi("update_courier",{id:c.id,name:c.name,flat_fee:Number(c.flat_fee||0),active,sort_order:c.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
+async function editCourier(id){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;const fee=prompt("Ongkir kurir (angka)",c.flat_fee||0);if(fee===null)return;busy(true);try{await ownerApi("update_courier",{id:c.id,name:c.name,flat_fee:Number(fee),active:!!c.active,sort_order:c.sort_order});toast("Kurir diperbarui.");await operations()}catch(e){fail(e)}finally{busy(false)}}
+
+async function settings(){
+ busy(true);try{
+  const me=await ownerApi("me");
+  root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Promo, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
+ }catch(e){fail(e)}finally{busy(false)}
+}
+async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
+
+(async()=>{state.session=getSession();if(state.session?.access_token){busy(true);try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}finally{busy(false)}}else renderLogin()})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+-- After creating a real Owner user in Supabase Authentication > Users,
+-- replace OWNER_EMAIL_HERE and OWNER_FULL_NAME_HERE, then run once.
+-- Do not invent an email; use the business owner's valid email.
+
+insert into public.staff_profiles(user_id, full_name, role, active)
+select id, 'OWNER_FULL_NAME_HERE', 'owner', true
+from auth.users
+where lower(email)=lower('OWNER_EMAIL_HERE')
+on conflict(user_id) do update
+set full_name=excluded.full_name, role='owner', active=true, updated_at=now();
