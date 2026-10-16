@@ -160,7 +160,7 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .orderStep small{display:block;font-size:8px;line-height:1.1;margin:3px 0 0;color:#81736a}
 
 
-#launchBrand{position:fixed;inset:0;z-index:2200;background:#f9f2e9;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:1;visibility:visible;transition:opacity .26s ease,visibility .26s ease}
+#launchBrand{position:fixed;inset:0;z-index:2200;background:#f9f2e9;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:1;visibility:visible;transition:opacity .14s ease,visibility .14s ease}
 #launchBrand.hide{opacity:0;visibility:hidden}
 #launchBrand .brandPanel{text-align:center;padding:20px}
 #launchBrand img{display:block;width:112px;height:112px;object-fit:contain;margin:0 auto 14px;filter:drop-shadow(0 5px 10px rgba(100,55,25,.12))}
@@ -711,8 +711,9 @@ async function profile(){loading(true);try{const d=await api('me');state.me=d;co
 function shareReferral(){const c=state.me?.profile?.referral_code;if(c)Native.shareText('Kode referral Cireng Indi saya: '+c);else toast('Kode referral belum tersedia.')}async function logout(){loading(true);try{try{await api('logout')}catch(e){}sessionClear();state.boot=null;renderAuth('login')}finally{loading(false)}}
 window.onNativeDeepLink=function(url){try{const u=new URL(url);const p=new URLSearchParams((u.hash||'').replace(/^#/,''));const a=p.get('access_token'),r=p.get('refresh_token');if(a){sessionSave({accessToken:a,refreshToken:r||'',memberId:''});root.innerHTML=`<section class="auth"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Reset Password</h1><div class="form"><label>Password baru</label><input id="npw" type="password"><button class="fullbtn" onclick="changeRecovery()">Simpan Password</button></div></div></section>`}}catch(e){}};async function changeRecovery(){loading(true);try{await api('change_password',{password:npw.value});toast('Password berhasil diubah.');await logout()}catch(e){fail(e)}finally{loading(false)}}
 (async()=>{state.session=sessionRead();readPublicCatalog();if(state.session?.accessToken){try{await go('home');updateCatalogQuietly()}catch(e){fail(e)}}else{renderAuth('login');void freshCatalog().catch(()=>{})}})();
-setTimeout(()=>document.getElementById('launchBrand')?.classList.add('hide'),720);
-setTimeout(()=>document.getElementById('launchBrand')?.remove(),1100);
+// The brand frame finishes by 1 second, regardless of network activity.
+setTimeout(()=>document.getElementById('launchBrand')?.classList.add('hide'),840);
+setTimeout(()=>document.getElementById('launchBrand')?.remove(),1000);
 </script>
 </body>
 </html>
