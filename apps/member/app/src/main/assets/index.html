@@ -1025,6 +1025,70 @@ html,body{background:#fff9f2!important}
 /* Checkout cannot be submitted until server-side cart validation is complete. */
 .ciCheckoutFooter button:disabled{opacity:.67;cursor:progress;box-shadow:none}
 
+
+/* PERMANENT PHOTO FRAMES: visually trim baked-in blurred padding.
+   No photo URL changes after paint, no animations, no remote replacements. */
+#root .ciFixedPhotoFrame{
+ display:block!important;
+ position:relative!important;
+ overflow:hidden!important;
+ isolation:isolate;
+ flex:none;
+ width:88px;
+ height:88px;
+ min-width:0;
+ box-sizing:border-box;
+ border-radius:14px;
+ background:#f9eee2!important;
+ contain:paint;
+}
+#root .ciFixedPhotoFrame>img{
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ max-width:none!important;
+ max-height:none!important;
+ aspect-ratio:1/1!important;
+ object-fit:cover!important;
+ object-position:50% 50%!important;
+ background:transparent!important;
+ border:0!important;
+ border-radius:0!important;
+ margin:0!important;
+ padding:0!important;
+ transform:scale(var(--ci-photo-crop,1))!important;
+ transform-origin:center center!important;
+ filter:none!important;
+ transition:none!important;
+ animation:none!important;
+ will-change:auto!important;
+}
+#root .ciCatalogProduct>.ciFixedPhotoFrame{
+ width:88px!important;
+ height:88px!important;
+ border-radius:13px;
+}
+#root .ciVividPopularScroll .pCard>.ciFixedPhotoFrame{
+ width:108px!important;
+ height:123px!important;
+ border-radius:14px;
+}
+#root .ciStoreRecommend+.hscroll .pCard>.ciFixedPhotoFrame{
+ width:87px!important;
+ height:97px!important;
+ border-radius:12px;
+}
+@media(max-width:370px){
+ #root .ciCatalogProduct>.ciFixedPhotoFrame{
+   width:75px!important;
+   height:78px!important;
+ }
+ #root .ciVividPopularScroll .pCard>.ciFixedPhotoFrame{
+   width:98px!important;
+   height:119px!important;
+ }
+}
+
 </style>
 </head>
 <body>
@@ -1561,8 +1625,36 @@ function photoAttrs(p){
   '" decoding="async" loading="eager"'+
   (id&&id!==1?' data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
-function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></div>`}
-function prow(p,b){const v=variantFor(p,b);return `<article class="prow ciCatalogProduct" tabindex="0" role="button" aria-label="Detail ${esc(p.name)}" onclick="openP('${p.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openP('${p.id}')}" ><img ${photoAttrs(p)}><div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}<p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button></article>`}
+function productMediaFrame(product){
+ const id=officialImageId(product);
+ const crop={3:1.65,4:1.90,5:1.76,6:1.55,8:1.46}[id]||1;
+ const attr=crop===1?'':' style="--ci-photo-crop:'+crop+'"';
+ return '<span class="ciFixedPhotoFrame'+(crop!==1?' ciFixedPhotoFrame--crop':'')+'"'+attr+'>'+
+  '<img '+photoAttrs(product)+' width="180" height="180" draggable="false"></span>';
+}
+
+function pcard(p,b){
+ const v=variantFor(p,b);
+ return `<div class="pCard" onclick="openP('${p.id}')">
+  ${productMediaFrame(p)}
+  <div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}
+  <div class="meta">${esc(p.description||'Favorit member')}</div>
+  <div class="price">${rp(v?.price??p.base_price)}</div></div>
+  <button type="button" class="add" aria-label="Tambah ${esc(p.name)}" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button>
+ </div>`;
+}
+
+function prow(p,b){
+ const v=variantFor(p,b);
+ return `<article class="prow ciCatalogProduct" tabindex="0" role="button" aria-label="Detail ${esc(p.name)}"
+  onclick="openP('${p.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openP('${p.id}')}">
+  ${productMediaFrame(p)}
+  <div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}
+  <p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div>
+  <button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang"
+    onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button>
+ </article>`;
+}
 function setCat(id){
  if(state.category===id)return;
  state.category=id;
