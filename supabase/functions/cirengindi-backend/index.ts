@@ -117,9 +117,19 @@ async function mobile(req,b){
   const method=a==='checkout_cod'?'cod':String(b.payment_method||'cod');
   // The SQL procedure performs stock validation, deductions, and order/payment creation atomically.
   const payload={p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_payment_method:method,p_address_id:b.address_id||null,p_notes:b.notes||null,p_bank_code:method==='transfer'?String(b.bank_code||'').toUpperCase():null};
-  // One database transaction validates the chosen bank, stock and payment snapshot.
-  const d=check(await admin.rpc('ci_checkout_with_bank',payload));
-  return reply({order:d});
+  // Prefer the atomic two-bank RPC. Do not fall back on generic errors:
+  // retrying a checkout after an uncertain response could create duplicate orders.
+  const result=await admin.rpc('ci_checkout_with_bank',payload);
+  if(!result.error)return reply({order:result.data});
+  if(!['PGRST202','42883'].includes(String(result.error.code||'')))throw new Error(result.error.message);
+  // Until the verified bank RPC migration is applied, preserve COD for older and newer clients.
+  // Never silently route a bank-specific transfer to a different recipient.
+  if(method!=='cod')return err('TRANSFER_SETUP_PENDING',503);
+  const legacy=check(await admin.rpc('ci_checkout',{
+    p_member_id:payload.p_member_id,p_fulfillment:payload.p_fulfillment,
+    p_payment_method:'cod',p_address_id:payload.p_address_id,p_notes:payload.p_notes
+  }));
+  return reply({order:legacy});
  }
  if(a==='payment_proof_upload'){
   const order=check(await admin.from('ci_orders').select('id,status').eq('id',b.order_id).eq('member_id',uid).maybeSingle());
