@@ -105,7 +105,9 @@ const SUPABASE_URL="https://tbviryuimoxgapubdjio.supabase.co";
 const KEY="sb_publishable_DxP6XDJP2XfZAC45pAniHQ_1WJqC4Fr";
 const state={session:null,page:"dashboard",cache:{}};
 const root=document.getElementById("root");
-const instantViews=new Map();let navId=0;
+const instantViews=new Map();const pendingOwnerActions=new Set();let navId=0;
+function reserveAction(key){if(pendingOwnerActions.has(key))return false;pendingOwnerActions.add(key);return true}
+function releaseAction(key){pendingOwnerActions.delete(key)}
 function previewPage(page){
  const old=instantViews.get(page);
  if(old){root.innerHTML=old;return;}
@@ -119,7 +121,7 @@ function busy(v){/* No blocking spinner */}
 let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600)}
 function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
 function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
-function clearSession(){state.session=null;instantViews.clear();Native.clearSession()}
+function clearSession(){state.session=null;instantViews.clear();pendingOwnerActions.clear();Native.clearSession()}
 
 async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.error_code||d.error_description||d.msg||d.message||d.error||((typeof d.code==='string'&&!/^\d+$/.test(d.code))?d.code:null)||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
 async function loginAuth(email,password){
@@ -185,11 +187,12 @@ async function resendOwnerVerification(button){
 async function doLogin(){
  const mail=document.getElementById("email").value.trim(),password=document.getElementById("pw").value;
  if(!mail||!password)return toast("Isi email dan password.");
- busy(true);try{
+ if(!reserveAction('owner-login'))return;
+ try{
   const d=await loginAuth(mail,password);saveSession(d);
   await ownerApi('me');
   await go("dashboard");toast("Login berhasil.");
- }catch(e){clearSession();renderLogin(errorText(e.message))}finally{busy(false)}
+ }catch(e){clearSession();renderLogin(errorText(e.message))}finally{releaseAction('owner-login')}
 }
 function errorText(m){
  const code=String(m||'').trim();
@@ -265,19 +268,22 @@ function filterOrders(q){q=q.toLowerCase();document.querySelectorAll('.order-ite
 function filterOrderStatus(s){document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!!s&&x.dataset.status!==s))}
 async function setOrderStatus(id,status){
  if(!confirm('Ubah status pesanan menjadi '+status+'?'))return;
- busy(true);try{await ownerApi('set_order_status',{id,status});toast('Status diperbarui.');await orders()}catch(e){fail(e)}finally{busy(false)}
+ if(!reserveAction('order:'+id))return;
+ try{await ownerApi('set_order_status',{id,status});toast('Status diperbarui.');await orders()}catch(e){fail(e)}finally{releaseAction('order:'+id)}
 }
 async function reviewPayment(id,decision){
  const note=decision==='reject'?prompt('Alasan penolakan bukti transfer (wajib):','Foto tidak jelas'):'';
  if(note===null||decision==='reject'&&!note.trim())return;
  if(decision==='approve'&&!confirm('Pastikan dana sudah masuk ke rekening. Konfirmasi pembayaran?'))return;
- busy(true);try{await ownerApi('payment_review',{id,decision,note});toast('Pembayaran diperbarui.');await orders()}catch(e){fail(e)}finally{busy(false)}
+ if(!reserveAction('order:'+id))return;
+ try{await ownerApi('payment_review',{id,decision,note});toast('Pembayaran diperbarui.');await orders()}catch(e){fail(e)}finally{releaseAction('order:'+id)}
 }
-async function confirmCod(id){if(!confirm('Pastikan uang COD telah diterima.'))return;busy(true);try{await ownerApi('confirm_cod_payment',{id});toast('COD dikonfirmasi.');await orders()}catch(e){fail(e)}finally{busy(false)}}
+async function confirmCod(id){if(!confirm('Pastikan uang COD telah diterima.'))return;if(!reserveAction('order:'+id))return;try{await ownerApi('confirm_cod_payment',{id});toast('COD dikonfirmasi.');await orders()}catch(e){fail(e)}finally{releaseAction('order:'+id)}}
 async function assignCourier(id){
  const courier_id=document.getElementById('courier-'+id)?.value;
  if(!courier_id)return toast('Pilih kurir terlebih dahulu.');
- busy(true);try{await ownerApi('assign_courier',{id,courier_id});toast('Kurir ditugaskan. Member dapat melihat kontak kurir.');await orders()}catch(e){fail(e)}finally{busy(false)}
+ if(!reserveAction('order:'+id))return;
+ try{await ownerApi('assign_courier',{id,courier_id});toast('Kurir ditugaskan. Member dapat melihat kontak kurir.');await orders()}catch(e){fail(e)}finally{releaseAction('order:'+id)}
 }
 
 async function products(){
@@ -338,7 +344,8 @@ function fillBank(name){const banks={BSI:'7306336217',BRI:'457901008978533'};if(
 async function saveBank(){
  const d={bank_name:bankname.value.trim(),account_number:banknumber.value.trim(),account_holder:bankholder.value.trim(),enabled:bankenabled.checked};
  if(d.enabled&&(!d.bank_name||!d.account_number||!d.account_holder))return toast('Lengkapi semua data rekening.');
- busy(true);try{await ownerApi('set_bank_transfer',d);toast('Rekening berhasil disimpan.');await operations()}catch(e){fail(e)}finally{busy(false)}
+ if(!reserveAction('bank-settings'))return;
+ try{await ownerApi('set_bank_transfer',d);toast('Rekening berhasil disimpan.');await operations()}catch(e){fail(e)}finally{releaseAction('bank-settings')}
 }
 async function toggleBanner(id,active){const b=(state.cache.operations?.banners||[]).find(x=>x.id===id);if(!b)return;busy(true);try{await ownerApi('update_banner',{id:b.id,title:b.title,subtitle:b.subtitle,kind:b.kind,active,sort_order:b.sort_order});await operations()}catch(e){fail(e)}finally{busy(false)}}
 async function toggleCourier(id,active){const c=(state.cache.operations?.couriers||[]).find(x=>x.id===id);if(!c)return;busy(true);try{await ownerApi('update_courier',{id:c.id,name:c.name,flat_fee:Number(c.flat_fee||0),active,sort_order:c.sort_order,whatsapp:c.whatsapp});await operations()}catch(e){fail(e)}finally{busy(false)}}
