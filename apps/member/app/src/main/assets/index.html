@@ -141,9 +141,10 @@ async function doRegister(){
   sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id});state.boot=null;await go('home');
  }catch(e){
   const m=String(e?.message||e).toLowerCase();
-  if(/email.rate.limit|over_email_send_rate_limit|email_rate_limit|http_429/.test(m))registrationError('Pendaftaran belum berhasil karena layanan pengiriman email verifikasi sedang mencapai batas. Silakan coba nanti. Jangan menekan Daftar berulang kali.');
+  if(/email.*rate.*limit|over_email_send_rate_limit|email_service_rate_limit|email_rate_limit|http_429/.test(m))registrationError('Pendaftaran belum berhasil karena layanan pengiriman email verifikasi sedang mencapai batas. Silakan coba nanti. Jangan menekan Daftar berulang kali.');
   else if(m.includes('username_taken'))registrationError('Username sudah digunakan.');
   else if(m.includes('email_taken'))registrationError('Email sudah terdaftar. Silakan masuk atau pulihkan password.');
+  else if(m.includes('email_service_not_configured')||m.includes('email_service_unavailable')||m.includes('registration_unavailable'))registrationError('Pendaftaran belum dapat diproses karena layanan autentikasi sedang bermasalah. Silakan coba nanti atau hubungi pengelola aplikasi.');
   else registrationError('Pendaftaran belum berhasil: '+String(e.message||e).replaceAll('_',' '));
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
