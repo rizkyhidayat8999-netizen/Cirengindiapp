@@ -66,6 +66,9 @@ async function authApi(b){const a=b.action;if(a==='register'){
  if(password.length<8||!/[a-z]/i.test(password)||!/[0-9]/.test(password))return err('WEAK_PASSWORD');
  if((await list('member_profiles','user_id',{eq:{username}})).length)return err('USERNAME_TAKEN');
  if((await list('member_profiles','user_id',{eq:{email}})).length)return err('EMAIL_TAKEN');
+ const referral=String(b.referral||'').trim().toUpperCase();
+ const inviter=referral?check(await admin.from('member_profiles').select('user_id').eq('referral_code',referral).maybeSingle()):null;
+ if(referral&&!inviter)return err('INVALID_REFERRAL_CODE');
  const created=await client.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:'https://cirengindi.com/reset-password'}});
  if(created.error){
   const reason=String(created.error.code||created.error.message||'').toLowerCase();
@@ -75,9 +78,6 @@ async function authApi(b){const a=b.action;if(a==='register'){
   return err('REGISTRATION_UNAVAILABLE',503);
  }
  const id=created.data.user.id;
- const referral=String(b.referral||'').trim().toUpperCase();
- const inviter=referral?check(await admin.from('member_profiles').select('user_id').eq('referral_code',referral).maybeSingle()):null;
- if(referral&&!inviter)return err('INVALID_REFERRAL_CODE');
  const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase(),referred_by:inviter?.user_id!==id?inviter?.user_id||null:null};
  const ins=await admin.from('member_profiles').insert(profile).select('*').single();if(ins.error){return err(ins.error.message)};
  if(!created.data.session)return reply({member:ins.data,pendingVerification:true});
