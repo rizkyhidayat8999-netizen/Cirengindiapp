@@ -65,7 +65,13 @@ async function authApi(b){const a=b.action;if(a==='register'){
  if((await list('member_profiles','user_id',{eq:{username}})).length)return err('USERNAME_TAKEN');
  if((await list('member_profiles','user_id',{eq:{email}})).length)return err('EMAIL_TAKEN');
  const created=await client.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:'https://cirengindi.com/reset-password'}});
- if(created.error)return err(created.error.message,400);
+ if(created.error){
+  const reason=String(created.error.code||created.error.message||'').toLowerCase();
+  if(reason.includes('rate_limit')||reason.includes('rate limit')||created.error.status===429)return err('EMAIL_SERVICE_RATE_LIMIT',429);
+  if(reason.includes('email_address_not_authorized'))return err('EMAIL_SERVICE_NOT_CONFIGURED',503);
+  if(reason.includes('already_registered')||reason.includes('already registered'))return err('EMAIL_TAKEN',409);
+  return err('REGISTRATION_UNAVAILABLE',503);
+ }
  const id=created.data.user.id;
  const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase()};
  const ins=await admin.from('member_profiles').insert(profile).select('*').single();if(ins.error){return err(ins.error.message)};
@@ -83,7 +89,14 @@ async function authApi(b){const a=b.action;if(a==='register'){
  if(a==='forgot_password'){
  const email=String(b.email||'').trim();if(!email)return err('EMAIL_REQUIRED');
  const p=check(await admin.from('member_profiles').select('email').ilike('email',email).maybeSingle());
- if(p)await client.auth.resetPasswordForEmail(email,{redirectTo:'https://cirengindi.com/reset-password'});
+ if(p){
+   const reset=await client.auth.resetPasswordForEmail(email,{redirectTo:'https://cirengindi.com/reset-password'});
+   if(reset.error){
+    const reason=String(reset.error.code||reset.error.message||'').toLowerCase();
+    if(reason.includes('rate_limit')||reason.includes('rate limit')||reset.error.status===429)return err('EMAIL_SERVICE_RATE_LIMIT',429);
+    return err('EMAIL_SERVICE_UNAVAILABLE',503);
+   }
+ }
  return reply({ok:true});
  }
  return err('UNKNOWN_ACTION',404);
