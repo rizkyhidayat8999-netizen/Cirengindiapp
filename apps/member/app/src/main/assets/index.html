@@ -275,6 +275,35 @@ input,select,textarea{min-height:48px;border-radius:12px}
 }
 @media(prefers-reduced-motion:reduce){.heroFore .heroDots button{transition:none!important}}
 
+
+/* Stable Android WebView bottom navigation: never place fixed nav inside the scrolling content. */
+html:has(#root > .app),body:has(#root > .app){
+ height:100%!important;overflow:hidden!important;overscroll-behavior:none!important;
+}
+#root:has(> .app){height:100dvh!important;max-height:100dvh!important;overflow:hidden!important}
+#root > .app{
+ height:100dvh!important;max-height:100dvh!important;min-height:0!important;
+ overflow-y:auto!important;overflow-x:hidden!important;
+ overscroll-behavior-y:contain!important;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:none;
+ padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))!important
+}
+#root > .app::-webkit-scrollbar{display:none}
+#root > .bottomnav{
+ position:fixed!important;inset:auto 0 0 0!important;
+ left:0!important;right:0!important;bottom:0!important;
+ width:100%!important;max-width:760px!important;
+ margin:0 auto!important;transform:none!important;
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ height:calc(76px + env(safe-area-inset-bottom,0px))!important;
+ padding-bottom:env(safe-area-inset-bottom,0px)!important;
+ background:#fffdfa!important;border-top:1px solid #e9dace!important;
+ box-shadow:0 -4px 18px rgba(86,51,30,.07)!important;
+ z-index:90!important;contain:layout paint!important
+}
+#root > .bottomnav button{touch-action:manipulation!important;min-width:0}
+
 </style>
 </head>
 <body>
@@ -371,7 +400,7 @@ async function auth(payload){return parse(await fetch(SB+'/functions/v1/member-a
 async function refresh(){const s=state.session||sessionRead();if(!s?.refreshToken)throw new Error('AUTH_REQUIRED');const d=await parse(await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY},body:JSON.stringify({refresh_token:s.refreshToken})}));sessionSave({accessToken:d.access_token,refreshToken:d.refresh_token,memberId:s.memberId||d.user?.id||''});return state.session}
 async function api(action,payload={},secure=true,retry=true){let s=state.session||sessionRead();state.session=s;const h={'Content-Type':'application/json',apikey:KEY};if(secure&&s?.accessToken)h.Authorization='Bearer '+s.accessToken;const r=await fetch(SB+'/functions/v1/cirengindi-mobile-api',{method:'POST',headers:h,body:JSON.stringify({action,...payload})});if(r.status===401&&secure&&retry&&s?.refreshToken){await refresh();return api(action,payload,secure,false)}return parse(r)}
 function fail(e){const m=String(e?.message||e);if(m==='AUTH_REQUIRED'||m.includes('JWT')){sessionClear();renderAuth('login');toast('Sesi berakhir. Silakan masuk lagi.');return}const map={INVALID_CREDENTIALS:'Username atau password salah.',USERNAME_TAKEN:'Username sudah digunakan.',EMAIL_TAKEN:'Email sudah digunakan.',WEAK_PASSWORD:'Password minimal 8 karakter dan mengandung huruf serta angka.',CART_EMPTY:'Keranjang masih kosong.',INSUFFICIENT_STOCK:'Stok tidak mencukupi.',INSUFFICIENT_POINTS:'Point belum cukup.'};toast(map[m]||({'INVALID_REFERRAL_CODE':'Kode referral tidak dikenal.','VOUCHER_UNAVAILABLE':'Voucher sudah tidak berlaku.','VOUCHER_ALREADY_USED':'Voucher sudah digunakan.','VOUCHER_MIN_SPEND':'Belanja belum mencapai minimum voucher.','VOUCHER_FULFILLMENT_MISMATCH':'Voucher tidak berlaku untuk metode pengiriman ini.','VOUCHER_LIMIT_REACHED':'Kuota voucher habis.'}[m])||m.replaceAll('_',' '))}
-function shell(content,active='home'){const nav=[['home','i-home','Home'],['store','i-bag','Pesan'],['orders','i-receipt','Pesanan'],['profile','i-user','Akun']];return `<div class="app">${content}<nav class="bottomnav">${nav.map(n=>`<button class="${active===n[0]?'active':''}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join('')}</nav></div>`}
+function shell(content,active='home'){const nav=[['home','i-home','Home'],['store','i-bag','Pesan'],['orders','i-receipt','Pesanan'],['profile','i-user','Akun']];return `<div class="app">${content}</div><nav class="bottomnav" aria-label="Navigasi utama">${nav.map(n=>`<button type="button" class="${active===n[0]?'active':''}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join('')}</nav>`}
 function uiTop(title,back='home'){return `<header class="top"><button class="back" onclick="go('${back}')">${icon('i-left')}</button><h1>${esc(title)}</h1><img class="topBrand" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></header>`}
 function renderAuth(tab='login'){state.route='auth';let f='';if(tab==='login')f=`<div class="form"><label>Username</label><input id="luser" autocomplete="username"><label for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password"><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Lupa password?</button></div><button class="fullbtn" onclick="doLogin()">Masuk</button></div>`;if(tab==='register')f=`<div class="form"><div id="authStatus" class="auth-feedback" role="alert" aria-live="polite"></div><label>Nama lengkap</label><input id="rname"><label>Username</label><input id="ruser"><label>Email</label><input id="remail" type="email"><label>No. HP (opsional)</label><input id="rphone" inputmode="tel"><label>Kode referral (opsional)</label><input id="rref"><label>Password</label><input id="rpass" type="password"><label>Ulangi password</label><input id="rpass2" type="password"><button class="fullbtn" onclick="doRegister()">Daftar</button><div class="notice">Alamat email perlu diverifikasi setelah pendaftaran sebelum akun bisa digunakan.</div></div>`;if(tab==='forgot')f=`<div class="form"><div class="auth-recovery-title">Atur ulang password</div><p class="notice">Masukkan email yang terhubung dengan akun. Kami akan mengirimkan tautan pemulihan jika email terdaftar.</p><label for="femail">Alamat email</label><input id="femail" type="email" inputmode="email" autocomplete="email" placeholder="contoh@email.com"><button class="fullbtn" onclick="doForgot()">Kirim Tautan Pemulihan</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;root.innerHTML=`<section class="auth ${tab==='register'?'auth--register':''}"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Cireng Indi</h1><p class="lead">Camilan & frozen food pilihan keluarga</p>${tab==='forgot'?'':`<div class="authTabs"><button type="button" class="${tab==='login'?'active':''}" onclick="renderAuth('login')">Masuk</button><button type="button" class="${tab==='register'?'active':''}" onclick="renderAuth('register')">Daftar</button></div>`}${f}</div></section>`}
 async function doLogin(){const username=luser.value.trim(),password=lpass.value;if(!username||!password)return toast('Lengkapi username dan password.');if(state.authenticating)return;state.authenticating=true;try{const d=await auth({action:'login',username,password});sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id,username:d.member?.username||username,fullName:d.member?.full_name||''});state.boot=null;await go('home')}catch(e){fail(e)}finally{state.authenticating=false}}
