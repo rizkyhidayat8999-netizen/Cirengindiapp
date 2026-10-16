@@ -90,7 +90,8 @@ public final class MainActivity extends Activity {
         });
         setContentView(webView);
         handleIntent(getIntent());
-        webView.loadDataWithBaseURL("https://app.cirengindi.local/", readAsset("index.html"), "text/html", "UTF-8", null);
+        RemoteHtmlUpdater.start(this, readAsset("index.html"), html ->
+            webView.loadDataWithBaseURL("https://app.cirengindi.local/", html, "text/html", "UTF-8", null));
     }
 
     private String readAsset(String name) {
