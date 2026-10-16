@@ -14,7 +14,30 @@ async function member(req){const token=req.headers.get('Authorization')?.replace
 async function staff(req){const token=req.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');if(!token)throw new Error('AUTH_REQUIRED');const {data,error}=await admin.auth.getUser(token);if(error||!data.user)throw new Error('AUTH_REQUIRED');const s=check(await admin.from('staff_profiles').select('*').eq('user_id',data.user.id).eq('active',true).maybeSingle());if(!s)throw new Error('STAFF_REQUIRED');return {user:data.user,staff:s};}
 async function points(id){let rows=await list('ci_point_ledger','delta',{eq:{member_id:id}});return rows.reduce((n,x)=>n+Number(x.delta),0)}
 async function cart(id){const ct=check(await admin.from('ci_carts').select('id').eq('member_id',id).maybeSingle());if(!ct)return {items:[],subtotal:0};const lines=await list('ci_cart_items','id,variant_id,quantity',{eq:{cart_id:ct.id}});const variants=lines.length?check(await admin.from('ci_product_variants').select('*,product:ci_products(*)').in('id',lines.map(x=>x.variant_id))):[];const items=lines.map(i=>({...i,variant:variants.find(v=>v.id===i.variant_id)}));return {items,subtotal:items.reduce((n,i)=>n+Number(i.variant?.price||0)*i.quantity,0)};}
-async function orderRows(rows){if(!rows?.length)return [];const ids=rows.map(x=>x.id);const items=check(await admin.from('ci_order_items').select('*').in('order_id',ids));return rows.map(o=>({...o,items:items.filter(i=>i.order_id===o.id)}));}
+async function orderRows(rows){
+ if(!rows?.length)return [];
+ const ids=rows.map(x=>x.id),courierIds=[...new Set(rows.map(x=>x.courier_id).filter(Boolean))];
+ const items=check(await admin.from('ci_order_items').select('*').in('order_id',ids));
+ const payments=check(await admin.from('ci_payments').select('*').in('order_id',ids));
+ const couriers=courierIds.length?check(await admin.from('ci_couriers').select('id,name,flat_fee').in('id',courierIds)):[];
+ const contacts=courierIds.length?check(await admin.from('ci_courier_contacts').select('courier_id,whatsapp').in('courier_id',courierIds)):[];
+ const proofUrls=new Map();
+ for(const p of payments.filter(p=>p.proof_storage_path)){
+   const signed=await admin.storage.from('ci-payment-proofs').createSignedUrl(p.proof_storage_path,600);
+   if(!signed.error)proofUrls.set(p.order_id,signed.data.signedUrl);
+ }
+ return rows.map(o=>{
+  const pay=payments.find(x=>x.order_id===o.id), courier=couriers.find(x=>x.id===o.courier_id);
+  return {...o,items:items.filter(i=>i.order_id===o.id),
+   payment:pay?{id:pay.id,method:pay.method,status:pay.status,amount:pay.amount,review_note:pay.review_note,proof_submitted_at:pay.proof_submitted_at,proof_url:proofUrls.get(o.id)||null}:null,
+   courier:courier?{id:courier.id,name:courier.name,whatsapp:contacts.find(x=>x.courier_id===courier.id)?.whatsapp||null}:null};
+ });
+}
+async function paymentSettings(){
+ const x=check(await admin.from('ci_app_settings').select('value').eq('key','bank_transfer').maybeSingle())?.value||{};
+ return {enabled:!!(x.enabled&&x.bank_name&&x.account_number&&x.account_holder),bank_name:String(x.bank_name||''),account_number:String(x.account_number||''),account_holder:String(x.account_holder||'')};
+}
+
 async function authApi(b){const a=b.action;if(a==='register'){
  const username=String(b.username||'').trim().toLowerCase(),email=String(b.email||'').trim().toLowerCase(),name=String(b.fullName||'').trim(),password=String(b.password||'');
  if(!/^[a-z0-9._]{3,24}$/.test(username)||!/^\S+@\S+\.\S+$/.test(email)||name.length<2)return err('INVALID_INPUT');
@@ -47,7 +70,7 @@ async function authApi(b){const a=b.action;if(a==='register'){
 }
 async function mobile(req,b){
  const a=b.action;
- if(a==='bootstrap')return reply({categories:await list('ci_categories','*',{eq:{active:true},order:'sort_order'}),products:await list('ci_products','*',{eq:{active:true},order:'sort_order'}),variants:await list('ci_product_variants','*',{eq:{active:true},order:'sort_order'}),banners:await list('ci_banners','*',{eq:{active:true},order:'sort_order'}),couriers:await list('ci_couriers','*',{eq:{active:true},order:'sort_order'})});
+ if(a==='bootstrap')return reply({categories:await list('ci_categories','*',{eq:{active:true},order:'sort_order'}),products:await list('ci_products','*',{eq:{active:true},order:'sort_order'}),variants:await list('ci_product_variants','*',{eq:{active:true},order:'sort_order'}),banners:await list('ci_banners','*',{eq:{active:true},order:'sort_order'}),couriers:await list('ci_couriers','*',{eq:{active:true},order:'sort_order'}),bank_transfer:await paymentSettings()});
  const {user,profile}=await member(req),uid=user.id;
  if(a==='me')return reply({profile,points:await points(uid)});
  if(a==='addresses')return reply({addresses:await list('ci_addresses','*',{eq:{member_id:uid},order:'created_at'})});
@@ -70,16 +93,41 @@ async function mobile(req,b){
   else check(await admin.from('ci_cart_items').upsert({cart_id:carts.id,variant_id:variant.id,quantity},{onConflict:'cart_id,variant_id'}));
   return reply(await cart(uid));
  }
- if(a==='checkout_cod'){
-  // Atomic checkout is executed in a private PostgreSQL function, with server-validated identity.
-  const d=check(await admin.rpc('ci_checkout_cod',{p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_address_id:b.address_id||null,p_courier_id:b.courier_id||null,p_notes:b.notes||null}));return reply({order:d});
+ if(a==='checkout_cod'||a==='checkout'){
+  const method=a==='checkout_cod'?'cod':String(b.payment_method||'cod');
+  // The SQL procedure performs stock validation, deductions, and order/payment creation atomically.
+  const d=check(await admin.rpc('ci_checkout',{p_member_id:uid,p_fulfillment:String(b.fulfillment_type||'pickup'),p_payment_method:method,p_address_id:b.address_id||null,p_notes:b.notes||null}));
+  return reply({order:d});
+ }
+ if(a==='payment_proof_upload'){
+  const order=check(await admin.from('ci_orders').select('id,status').eq('id',b.order_id).eq('member_id',uid).maybeSingle());
+  if(!order||order.status==='cancelled'||order.status==='completed')return err('ORDER_NOT_FOUND',404);
+  const pay=check(await admin.from('ci_payments').select('*').eq('order_id',order.id).single());
+  if(pay.method!=='transfer'||!['pending','rejected'].includes(pay.status))return err('PROOF_NOT_ALLOWED');
+  const mime=String(b.mime||''),encoded=String(b.base64||'');
+  if(!['image/png','image/jpeg','image/webp'].includes(mime)||!encoded||encoded.length>4_200_000||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))return err('INVALID_IMAGE');
+  let bytes;try{bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0))}catch{return err('INVALID_IMAGE')}
+  if(!bytes.length||bytes.length>3_145_728)return err('IMAGE_TOO_LARGE');
+  const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+  const png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71;
+  const webp=bytes[0]===82&&bytes[1]===73&&bytes[2]===70&&bytes[3]===70&&bytes[8]===87&&bytes[9]===69&&bytes[10]===66&&bytes[11]===80;
+  if(!(mime==='image/jpeg'&&jpeg||mime==='image/png'&&png||mime==='image/webp'&&webp))return err('INVALID_IMAGE');
+  const ext=mime==='image/jpeg'?'jpg':mime==='image/png'?'png':'webp';
+  const path=uid+'/'+order.id+'/'+crypto.randomUUID()+'.'+ext;
+  const saved=await admin.storage.from('ci-payment-proofs').upload(path,bytes,{contentType:mime,upsert:false});
+  if(saved.error)throw saved.error;
+  const previous=pay.proof_storage_path;
+  const upd=check(await admin.from('ci_payments').update({status:'submitted',proof_storage_path:path,proof_file_type:mime,proof_submitted_at:new Date().toISOString(),review_note:null,reviewed_at:null,reviewed_by:null}).eq('id',pay.id).in('status',['pending','rejected']).select('id').maybeSingle());
+  if(!upd){await admin.storage.from('ci-payment-proofs').remove([path]);return err('PROOF_NOT_ALLOWED')}
+  if(previous)await admin.storage.from('ci-payment-proofs').remove([previous]);
+  return reply({ok:true,status:'submitted'});
  }
  if(a==='orders'){
   const orders=await list('ci_orders','*',{eq:{member_id:uid},order:'created_at',limit:100});return reply({orders:await orderRows(orders)});
  }
  if(a==='order_cancel'){
   const o=check(await admin.from('ci_orders').select('*').eq('id',b.id).eq('member_id',uid).maybeSingle());if(!o||o.status!=='pending')return err('INVALID_STATUS_TRANSITION');
-  check(await admin.from('ci_orders').update({status:'cancelled',cancelled_at:new Date().toISOString()}).eq('id',o.id).eq('status','pending'));
+  check(await admin.rpc('ci_cancel_order_safe',{p_order_id:o.id,p_member_id:uid}));
   return reply({ok:true});
  }
  if(a==='rewards')return reply({rewards:await list('ci_rewards','*',{eq:{active:true},order:'sort_order'}),points:await points(uid)});
@@ -109,7 +157,45 @@ async function owner(req,b){
  if(a==='products')return reply({products:await list('ci_products','*',{order:'sort_order'}),variants:await list('ci_product_variants','*',{order:'sort_order'})});
  if(a==='members')return reply({members:await list('member_profiles','*',{order:'created_at',limit:Math.min(200,Number(b.limit)||200)})});
  if(a==='rewards')return reply({rewards:await list('ci_rewards','*',{order:'sort_order'}),redemptions:await list('ci_reward_redemptions','*',{order:'created_at'})});
- if(a==='settings')return reply({banners:await list('ci_banners','*',{order:'sort_order'}),couriers:await list('ci_couriers','*',{order:'sort_order'})});
+ if(a==='settings'){
+  const couriers=await list('ci_couriers','*',{order:'sort_order'});
+  const contacts=await list('ci_courier_contacts','*');
+  return reply({banners:await list('ci_banners','*',{order:'sort_order'}),couriers:couriers.map(c=>({...c,whatsapp:contacts.find(x=>x.courier_id===c.id)?.whatsapp||''})),bank_transfer:await paymentSettings()});
+ }
+ if(a==='set_bank_transfer'){
+  if(s.role!=='owner')return err('OWNER_REQUIRED',403);
+  const bank_name=String(b.bank_name||'').trim().slice(0,70);
+  const account_number=String(b.account_number||'').replace(/\s/g,'').slice(0,40);
+  const account_holder=String(b.account_holder||'').trim().slice(0,100);
+  const enabled=!!b.enabled;
+  if(enabled&&(!bank_name||!account_holder||!/^[-0-9]{5,40}$/.test(account_number)))return err('INVALID_BANK_DETAILS');
+  check(await admin.from('ci_app_settings').upsert({key:'bank_transfer',value:{enabled,bank_name,account_number,account_holder}},{onConflict:'key'}));
+  return reply({ok:true,bank_transfer:await paymentSettings()});
+ }
+ if(a==='assign_courier'){
+  const updated=check(await admin.rpc('ci_assign_courier_safe',{p_order_id:b.id,p_courier_id:b.courier_id}));
+  return reply({ok:true,order:updated});
+ }
+ if(a==='payment_review'){
+  const decision=String(b.decision||'');if(!['approve','reject'].includes(decision))return err('INVALID_PAYMENT_DECISION');
+  const o=check(await admin.from('ci_orders').select('id,status').eq('id',b.id).maybeSingle());
+  if(!o||o.status==='cancelled'||o.status==='completed')return err('ORDER_NOT_FOUND');
+  const payment=check(await admin.from('ci_payments').select('*').eq('order_id',o.id).maybeSingle());
+  if(!payment||payment.method!=='transfer'||payment.status!=='submitted'||!payment.proof_storage_path)return err('PAYMENT_NOT_SUBMITTED');
+  const note=String(b.note||'').trim().slice(0,250);
+  if(decision==='reject'&&!note)return err('REJECTION_REASON_REQUIRED');
+  const update=check(await admin.from('ci_payments').update({status:decision==='approve'?'paid':'rejected',review_note:note||null,reviewed_at:new Date().toISOString(),reviewed_by:user.id,paid_at:decision==='approve'?new Date().toISOString():null}).eq('id',payment.id).eq('status','submitted').select('id').maybeSingle());
+  if(!update)return err('PAYMENT_ALREADY_REVIEWED');
+  return reply({ok:true});
+ }
+ if(a==='confirm_cod_payment'){
+  const o=check(await admin.from('ci_orders').select('id,status').eq('id',b.id).maybeSingle());
+  if(!o||o.status==='cancelled')return err('ORDER_NOT_FOUND');
+  const p=check(await admin.from('ci_payments').select('*').eq('order_id',o.id).single());
+  if(p.method!=='cod')return err('NOT_COD');
+  check(await admin.from('ci_payments').update({status:'paid',paid_at:new Date().toISOString(),reviewed_by:user.id,reviewed_at:new Date().toISOString()}).eq('id',p.id).eq('status','pending'));
+  return reply({ok:true});
+ }
  if(a==='set_stock'){
   if(!Number.isInteger(Number(b.stock))||Number(b.stock)<0)return err('INVALID_STOCK');check(await admin.from('ci_product_variants').update({stock:Number(b.stock)}).eq('id',b.id));return reply({ok:true});
  }
@@ -125,7 +211,9 @@ async function owner(req,b){
  }
  if(a==='update_courier'){
   if(Number(b.flat_fee)<0||!Number.isInteger(Number(b.flat_fee)))return err('INVALID_FEE');
-  check(await admin.from('ci_couriers').update({name:String(b.name||'').slice(0,100),flat_fee:Number(b.flat_fee),active:!!b.active,sort_order:Number(b.sort_order)||0}).eq('id',b.id));return reply({ok:true});
+  check(await admin.from('ci_couriers').update({name:String(b.name||'').slice(0,100),flat_fee:Number(b.flat_fee),active:!!b.active,sort_order:Number(b.sort_order)||0}).eq('id',b.id));
+  if(b.whatsapp!==undefined){const wa=String(b.whatsapp||'').replace(/[^0-9]/g,'');if(wa&&!/^62[0-9]{8,14}$/.test(wa))return err('INVALID_WA');check(await admin.from('ci_courier_contacts').upsert({courier_id:b.id,whatsapp:wa||null},{onConflict:'courier_id'}));}
+  return reply({ok:true});
  }
  if(a==='set_reward_stock'){
   if(Number(b.stock)<0||!Number.isInteger(Number(b.stock)))return err('INVALID_STOCK');check(await admin.from('ci_rewards').update({stock:Number(b.stock)}).eq('id',b.id));return reply({ok:true});
@@ -138,15 +226,21 @@ async function owner(req,b){
  }
  if(a==='set_order_status'){
   const o=check(await admin.from('ci_orders').select('*').eq('id',b.id).maybeSingle());if(!o)return err('ORDER_NOT_FOUND');
-  const next={pending:['processing','cancelled'],processing:['shipped','cancelled'],shipped:['completed'],completed:[],cancelled:[]};
+  const next={pending:['processing','cancelled'],processing:o.fulfillment_type==='pickup'?['completed','cancelled']:['shipped','cancelled'],shipped:['completed'],completed:[],cancelled:[]};
   if(!(next[o.status]||[]).includes(b.status))return err('INVALID_STATUS_TRANSITION');
+  const pay=check(await admin.from('ci_payments').select('method,status').eq('order_id',o.id).single());
+  if(pay.method==='transfer' && b.status!=='cancelled' && pay.status!=='paid')return err('PAYMENT_NOT_CONFIRMED');
+  if(b.status==='shipped'&&o.fulfillment_type==='delivery'&&!o.courier_id)return err('COURIER_REQUIRED');
+  if(b.status==='cancelled'){
+   check(await admin.rpc('ci_cancel_order_safe',{p_order_id:o.id,p_member_id:null}));return reply({ok:true});
+  }
   const update={status:b.status, ...(b.status==='completed'?{completed_at:new Date().toISOString()}:{}),...(b.status==='cancelled'?{cancelled_at:new Date().toISOString()}: {})};
   check(await admin.from('ci_orders').update(update).eq('id',o.id).eq('status',o.status));
   if(b.status==='completed'){
    const ledger=check(await admin.from('ci_point_ledger').select('id').eq('order_id',o.id).eq('reason','order_completed').maybeSingle());
    const amount=Math.floor(Number(o.subtotal)/10000);
    if(!ledger&&amount>0)check(await admin.from('ci_point_ledger').insert({member_id:o.member_id,delta:amount,reason:'order_completed',order_id:o.id}));
-   check(await admin.from('ci_payments').update({status:'paid',paid_at:new Date().toISOString()}).eq('order_id',o.id));
+   if(pay.method==='cod')check(await admin.from('ci_payments').update({status:'paid',paid_at:new Date().toISOString()}).eq('order_id',o.id).eq('status','pending')); 
   }
   return reply({ok:true});
  }
