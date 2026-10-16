@@ -90,10 +90,25 @@ jobs:
                serverProductOrder[0]!=='Cireng'||serverProductOrder[1]!=='Cireng Isi'||
                serverProductOrder.at(-1)!=='Rengginang')
               throw Error('Bootstrap must return website order directly (Cireng first): '+JSON.stringify(serverProductOrder.slice(0,5)));
-            if(!member.includes('storeCatalogByCategory(ps,cats,b,state.category)')||
+            if(!member.includes('storeCatalogByCategory(ps,cats,b)')||
+               !member.includes('function applyCatalogFilter(')||
+               !member.includes('item.hidden=!visible')||
+               !member.includes('data-ci-category')||
                !member.includes('ciBestSellerBadge')||
                !member.includes("setCat('bestseller')"))
               throw Error('Member website category grouping or Best Seller controls missing');
+            // Catch broken pickup/delivery header markup and unnecessary catalogue repaints.
+            const storePage=member.slice(member.indexOf('async function store(){'),
+              member.indexOf('const CIRENG_OUTLET_GOOGLE_MAPS'));
+            const filterFn=member.slice(member.indexOf('function setCat('),
+              member.indexOf('async function openP('));
+            if(!storePage.includes('Pick Up</button>')||!storePage.includes('Delivery</button>')||
+               !storePage.includes('fulfillmentLocationRow()'))
+              throw Error('Pick Up/Delivery header incomplete');
+            if(filterFn.includes('products.innerHTML')||filterFn.includes('await store()'))
+              throw Error('Store filters must toggle visibility without re-rendering photos');
+            if(!member.includes('data:image/webp;base64,')||member.includes('new MutationObserver('))
+              throw Error('Approved AI photos must stay pinned without late source swapping');
             const websiteCategories=['Cireng','Frozen','Jamu','Lainnya'];
             const actualCategories=boot.data.categories.map(c=>c.name);
             if(JSON.stringify(actualCategories)!==JSON.stringify(websiteCategories))
