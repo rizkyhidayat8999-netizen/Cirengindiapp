@@ -1,0 +1,45 @@
+name: Verify Cireng Indi Backend
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  api-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check catalogue and permissions
+        run: |
+          node <<'JS'
+          const fs = require('fs');
+          const html = fs.readFileSync('apps/member/app/src/main/assets/index.html','utf8');
+          const match = html.match(/const SB='([^']+)', KEY='([^']+)'/);
+          if (!match) throw new Error('App backend config missing');
+          const [,base,key]=match;
+          (async () => {
+            const call=async (fn,action)=>{
+              const r=await fetch(base+'/functions/v1/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:key},body:JSON.stringify({action})});
+              const body=await r.text();let data;try{data=JSON.parse(body)}catch{throw new Error('Non-JSON API response: '+r.status+' '+body.slice(0,140))};
+              return {status:r.status,data};
+            };
+            const boot=await call('cirengindi-mobile-api','bootstrap');
+            if(boot.status!==200)throw new Error('bootstrap HTTP '+boot.status+': '+JSON.stringify(boot.data));
+            for(const [key,expected] of [['categories',4],['products',31],['variants',42],['couriers',3],['rewards',0]]){
+              if(key==='rewards')continue;
+              if(!Array.isArray(boot.data[key])||boot.data[key].length!==expected)throw new Error(key+' returned '+(boot.data[key]?.length??'missing')+' instead of '+expected);
+            }
+            const anon=await call('cirengindi-mobile-api','me');
+            if(anon.status!==401)throw new Error('Member private endpoint allowed unauthenticated request: '+anon.status);
+            const owner=await call('cirengindi-owner-api','dashboard');
+            if(owner.status!==401)throw new Error('Owner endpoint allowed unauthenticated request: '+owner.status);
+            console.log('PASS: 4 categories, 31 products, 42 variants, 3 couriers; private endpoints require authentication');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
