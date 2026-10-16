@@ -1,14 +1,6 @@
 name: Build Signed Cireng Indi Release APKs
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/member/app/src/main/java/**'
-      - 'apps/owner/app/src/main/java/**'
-      - 'apps/member/app/build.gradle'
-      - 'apps/owner/app/build.gradle'
-      - '.github/workflows/release-signed.yml'
 permissions:
   contents: read
 jobs:
