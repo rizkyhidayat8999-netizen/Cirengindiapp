@@ -490,6 +490,130 @@ html:has(#root > .app),body:has(#root > .app){
 .ciCheckoutSection button:focus-visible,.ciCheckoutFooter button:focus-visible{outline:2px solid #985039;outline-offset:2px}
 @media(max-width:350px){.ciCheckoutSection{padding-inline:12px}.ciCheckoutMode{padding-inline:12px}.ciCheckoutSuggestion{flex-basis:185px}.ciCheckoutItem{grid-template-columns:minmax(0,1fr) 65px}.ciCheckoutItem img{height:65px;width:65px}.ciCheckoutOutline{padding-inline:10px}}
 
+
+
+/* Cireng Indi member v2.0.1: unified Android system-bars clearance & screen polish.
+   Keep all app pages BELOW the status bar even if Android 15 lays WebView edge-to-edge.
+   The scroll view itself starts below the system bar: sticky headings never climb under it.
+   No native reinstall is needed for this HTML/CSS OTA correction. */
+:root{
+  --ci-status-clearance:max(34px, env(safe-area-inset-top, 0px));
+  --ci-gesture-clearance:max(14px, env(safe-area-inset-bottom, 0px));
+}
+html,body{background:#fff9f2!important}
+#root{isolation:isolate}
+#root:has(> .app){height:100dvh!important;max-height:100dvh!important;overflow:hidden!important}
+#root > .app{
+  box-sizing:border-box!important;
+  position:relative!important;
+  margin-top:var(--ci-status-clearance)!important;
+  height:calc(100dvh - var(--ci-status-clearance))!important;
+  max-height:calc(100dvh - var(--ci-status-clearance))!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+#root > .app::-webkit-scrollbar{display:none}
+/* Also keep unauthenticated entry/recovery forms away from status indicators. */
+#root > .auth{
+  box-sizing:border-box;
+  min-height:100dvh;
+  padding-top:calc(var(--ci-status-clearance) + 16px)!important;
+  padding-bottom:calc(var(--ci-gesture-clearance) + 40px)!important;
+}
+#root > .bottomnav{
+  height:calc(64px + var(--ci-gesture-clearance))!important;
+  padding:0 0 var(--ci-gesture-clearance)!important;
+  border-top:1px solid #e9dace!important;
+}
+#root > .bottomnav button{
+  min-height:48px;
+  padding:7px 3px 5px;
+  font-size:11px;
+  line-height:1.12;
+}
+#root > .bottomnav button .icon{width:21px;height:21px;margin:0 auto 3px}
+/* Fixed order/checkout actions never cover Android's gesture handle. */
+#root > .ciCartFooter,
+#root > .ciCheckoutFooter,
+.ciProductBottom,
+.stickyAction{
+  padding-bottom:calc(10px + var(--ci-gesture-clearance))!important;
+}
+#root > .ciCartFooter{min-height:calc(61px + var(--ci-gesture-clearance))!important}
+#root > .ciCheckoutFooter{padding-top:10px!important}
+#root > .ciCartScreen{padding-bottom:calc(94px + var(--ci-gesture-clearance))!important}
+#root > .ciCheckoutScreen{padding-bottom:calc(104px + var(--ci-gesture-clearance))!important}
+#root > .ciProductPage{padding-bottom:calc(105px + var(--ci-gesture-clearance))!important}
+.ciSheet{padding-bottom:calc(18px + var(--ci-gesture-clearance))!important}
+.cartbar{bottom:calc(73px + var(--ci-gesture-clearance))!important}
+/* Every secondary page title is smaller and stays on a separate non-system row. */
+.top,.ciCartScreen .ciCartHeader,.ciCheckoutTop{flex-shrink:0}
+.top{height:59px;min-height:59px}
+.top h1{font-size:18px;max-width:calc(100% - 110px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .back{width:38px;height:38px}
+.top .topBrand{width:32px;height:32px}
+.ciCartScreen .ciCartHeader{min-height:65px;padding:9px 14px}
+.ciCheckoutTop{min-height:59px}
+.ciProductBack{top:13px;left:13px;width:38px;height:38px}
+.ciProductBack .icon{width:20px;height:20px}
+.ciQtyControl button{width:36px;height:36px}
+.ciQtyControl{gap:7px}
+.ciAddToCart{min-height:45px}
+.ciProductBottom{padding-top:10px}
+.ciCheckoutBagRow{margin:0}
+.ciCheckoutSection h2{font-size:17px}
+/* Empty cart is a deliberate state, not a broken giant blank screen. */
+.ciCartScreen .ciCartList:has(.ciCartEmpty){
+  display:flex;align-items:center;justify-content:center;
+  min-height:calc(100% - 125px);
+  padding:20px 20px 46px;
+}
+.ciCartScreen .ciCartEmpty{
+  width:100%;
+  max-width:320px;
+  margin:0 auto;
+  padding:20px 6px;
+  text-align:center;
+  color:#7c685c;
+}
+.ciCartScreen .ciCartEmptyIcon{
+  display:grid;place-items:center;
+  width:70px;height:70px;margin:0 auto 17px;border-radius:20px;
+  background:#f9ede0;color:#985039;
+}
+.ciCartScreen .ciCartEmptyIcon .icon{width:32px;height:32px}
+.ciCartScreen .ciCartEmpty h2{margin:0 0 8px;color:#372820;font-size:18px;line-height:1.3;font-weight:800}
+.ciCartScreen .ciCartEmpty p{margin:0 auto 19px;font-size:13px;line-height:1.55;max-width:260px}
+.ciCartScreen .ciCartEmpty button{
+  min-height:42px;padding:10px 25px;border:0;border-radius:13px;
+  background:#985039;color:white;font-size:13px;font-weight:800;
+}
+.ciCheckoutScreen .ciCheckoutBillRow span{min-width:0}
+.ciCheckoutScreen .ciCheckoutBillTotal span{min-width:0}
+.ciCheckoutScreen .ciCheckoutBillTotal strong{font-size:clamp(15px,4.2vw,19px)}
+@media(max-width:360px){
+ .ciCartScreen .ciCartHeader{gap:9px;padding-inline:11px}
+ .ciCartScreen .ciCartHeading h1{font-size:18px}
+ .ciCartScreen .ciCartHeading p{font-size:11px}
+ .top h1{font-size:17px}
+ .ciProductIntro h1{font-size:23px}
+ .ciCheckoutSection{padding-inline:12px}
+ .ciCheckoutFooter{padding-inline:12px}
+}
+@media(max-height:670px){
+ .ciCartScreen .ciCartList:has(.ciCartEmpty){min-height:calc(100% - 105px)}
+ .ciCartScreen .ciCartEmpty{padding-block:10px}
+ .ciCartScreen .ciCartEmptyIcon{width:58px;height:58px;margin-bottom:12px}
+}
+/* Support accessible text scaling without clipping fixed buttons. */
+@media(prefers-reduced-motion:reduce){
+ .ciCheckoutSwitch,.ciCheckoutSwitch:after{transition:none}
+}
+
 </style>
 </head>
 <body>
@@ -1015,7 +1139,7 @@ function renderCart(c){
    '<div class="ciCartHeading"><h1>Keranjang</h1><p>'+itemCount+' produk di keranjang Anda</p></div>'+
    '<span class="ciCartBag" aria-hidden="true">'+icon('i-bag')+'<em>'+itemCount+'</em></span>'+
   '</header>'+
-  '<main class="ciCartList">'+(itemCount?rows:'<div class="ciCartEmpty">Keranjang masih kosong. Pilih menu favorit untuk mulai berbelanja.</div>')+'</main></div>'+
+  '<main class="ciCartList">'+(itemCount?rows:'<section class="ciCartEmpty" role="status"><span class="ciCartEmptyIcon">'+icon('i-bag')+'</span><h2>Keranjangmu masih kosong</h2><p>Pilih menu favorit Cireng Indi untuk mulai berbelanja.</p><button type="button" onclick="go(\'store\')">Lihat Menu</button></section>')+'</main></div>'+
   (itemCount?'<footer class="ciCartFooter" aria-label="Ringkasan keranjang">'+
     '<div class="ciCartSummary"><small>Subtotal</small><strong>'+rp(c.subtotal)+'</strong></div>'+
     '<button type="button" class="ciCartCheckout" onclick="go(\'checkout\')">Lanjut Checkout '+icon('i-right')+'</button>'+
@@ -1076,7 +1200,7 @@ async function flushCartQty(id,request){
 }
 
 async function checkout(){
-  const oldScroll=state.route==='checkout'&&document.querySelector('.ciCheckoutScreen')?window.scrollY:0;
+  const oldScroll=state.route==='checkout'&&document.querySelector('.ciCheckoutScreen')?document.querySelector('.ciCheckoutScreen').scrollTop:0;
   const before=document.querySelector('.ciCheckoutScreen');
   if(before){
     const savedPay=document.querySelector('input[name="copay"]:checked')?.value;
@@ -1134,7 +1258,7 @@ async function checkout(){
       </section>
       <section class="ciCheckoutSection"><h2>Rincian Pembayaran</h2><div class="ciCheckoutBill"><div class="ciCheckoutBillRow"><span>Harga produk</span><b>${rp(subtotal)}</b></div><div class="ciCheckoutBillRow discount"><span>Diskon voucher</span><b id="checkoutDiscount">${discount?'-'+rp(discount):rp(0)}</b></div><div class="ciCheckoutBillTotal"><span>Total Pembayaran</span><strong id="checkoutBillTotal">${rp(subtotal-discount)}</strong></div></div>${delivery?'<p style="font-size:11px;color:#806f63;margin-bottom:0">Ongkir belum termasuk dan akan dikonfirmasi Owner.</p>':''}</section>
       </div><footer class="ciCheckoutFooter"><button type="button" onclick="placeOrder()">Pesan Sekarang</button><small id="checkoutEstimate" data-subtotal="${subtotal}">Estimasi ${rp(subtotal-discount)}${delivery?' · belum termasuk ongkir':''}</small></footer>`;
-    if(oldScroll)window.scrollTo(0,oldScroll);
+    if(oldScroll){const scroller=root.querySelector('.ciCheckoutScreen');if(scroller)scroller.scrollTop=oldScroll;}
   }catch(e){fail(e)}
 }
 
