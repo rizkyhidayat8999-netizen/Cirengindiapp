@@ -218,6 +218,51 @@ async function owner(req,b){
  if(a==='products')return reply({products:await list('ci_products','*',{order:'sort_order'}),variants:await list('ci_product_variants','*',{order:'sort_order'})});
  if(a==='members')return reply({members:await list('member_profiles','*',{order:'created_at',limit:Math.min(200,Number(b.limit)||200)})});
  if(a==='rewards')return reply({rewards:await list('ci_rewards','*',{order:'sort_order'}),redemptions:await list('ci_reward_redemptions','*',{order:'created_at'})});
+ if(a==='vouchers'){
+  const vouchers=await list('ci_vouchers','*',{order:'created_at'});
+  const assignments=await list('ci_member_vouchers','voucher_id,member_id,status,used_at');
+  const members=await list('member_profiles','user_id,username,full_name,email',{order:'created_at',limit:200});
+  return reply({vouchers,assignments,members});
+ }
+ if(a==='voucher_create'){
+  if(s.role!=='owner')return err('OWNER_REQUIRED',403);
+  const code=String(b.code||'').trim().toUpperCase(),title=String(b.title||'').trim();
+  const discount_type=String(b.discount_type||''),discount_value=Number(b.discount_value),min_spend=Number(b.min_spend||0);
+  const max_discount=b.max_discount?Number(b.max_discount):null;
+  const usage_limit=b.usage_limit?Number(b.usage_limit):null,fulfillment_scope=String(b.fulfillment_scope||'all');
+  const starts_at=b.starts_at?new Date(b.starts_at):new Date(),ends_at=new Date(b.ends_at);
+  if(!/^[A-Z0-9_-]{3,30}$/.test(code)||title.length<3||title.length>100
+    ||!['fixed','percent'].includes(discount_type)||!Number.isInteger(discount_value)||discount_value<=0
+    ||discount_type==='percent'&&discount_value>100||!Number.isInteger(min_spend)||min_spend<0
+    ||max_discount!==null&&(!Number.isInteger(max_discount)||max_discount<=0)
+    ||usage_limit!==null&&(!Number.isInteger(usage_limit)||usage_limit<=0)
+    ||!['all','pickup','delivery'].includes(fulfillment_scope)
+    ||!Number.isFinite(ends_at.valueOf())||ends_at<=starts_at)return err('INVALID_VOUCHER');
+  const voucher=check(await admin.from('ci_vouchers').insert({
+   code,title,description:String(b.description||'').slice(0,500),
+   discount_type,discount_value,min_spend,max_discount,fulfillment_scope,
+   starts_at:starts_at.toISOString(),ends_at:ends_at.toISOString(),
+   all_members:!!b.all_members,usage_limit,created_by:user.id
+  }).select('*').single());
+  return reply({voucher});
+ }
+ if(a==='voucher_issue'){
+  if(s.role!=='owner')return err('OWNER_REQUIRED',403);
+  const voucher=check(await admin.from('ci_vouchers').select('id,active').eq('id',b.id).maybeSingle());
+  const person=check(await admin.from('member_profiles').select('user_id').eq('user_id',b.member_id).maybeSingle());
+  if(!voucher?.active||!person)return err('VOUCHER_OR_MEMBER_NOT_FOUND');
+  check(await admin.from('ci_member_vouchers').upsert(
+   {voucher_id:voucher.id,member_id:person.user_id,issued_by:user.id},
+   {onConflict:'voucher_id,member_id',ignoreDuplicates:true}
+  ));
+  return reply({ok:true});
+ }
+ if(a==='voucher_toggle'){
+  if(s.role!=='owner')return err('OWNER_REQUIRED',403);
+  const updated=check(await admin.from('ci_vouchers').update({active:!!b.active,updated_at:new Date().toISOString()}).eq('id',b.id).select('id').maybeSingle());
+  if(!updated)return err('VOUCHER_NOT_FOUND');
+  return reply({ok:true});
+ }
  if(a==='settings'){
   const couriers=await list('ci_couriers','*',{order:'sort_order'});
   const contacts=await list('ci_courier_contacts','*');
