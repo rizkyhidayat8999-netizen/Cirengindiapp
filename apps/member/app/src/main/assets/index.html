@@ -255,6 +255,40 @@ input,select,textarea{min-height:48px;border-radius:12px}
 @media(prefers-reduced-motion:reduce){
  .heroFore .heroSlides>.forePromo,.heroFore .heroDots button{transition:none!important}
 }
+
+/* Fore-style first-screen proportion: promotional art stays ABOVE the greeting card.
+   Keeps all artwork visible, no half-panel, and prevents overlap with system status bar. */
+.app:has(.heroFore){padding-top:max(24px,env(safe-area-inset-top,0px))!important}
+.hero.heroFore{
+ height:clamp(255px,68vw,300px)!important;
+ margin:0!important;
+ border-radius:0 0 23px 23px!important;
+}
+.heroFore .forePromoLogo{width:36px!important;height:36px!important;top:7px!important}
+.heroFore .forePromoCopy{top:45px!important;left:17px!important;right:17px!important;gap:4px!important}
+.heroFore .forePromoEyebrow{font-size:9px!important;letter-spacing:1.3px!important}
+.heroFore .forePromoCopy h2{
+ font-size:clamp(19px,5vw,23px)!important;
+ line-height:1.11!important;max-width:325px!important;
+}
+.heroFore .forePromoCopy p{font-size:11px!important;line-height:1.27!important;max-width:330px}
+.heroFore .forePromoImage{
+ width:min(73%,270px)!important;height:39%!important;
+ bottom:44px!important;
+}
+.heroFore .forePromoImage:before{filter:blur(12px)}
+.heroFore .forePromoImage img{border-radius:13px!important;object-fit:contain!important}
+.heroFore .heroDots{bottom:38px!important}
+.heroFore+.member{margin-top:-24px!important}
+@media(max-width:375px){
+ .hero.heroFore{height:255px!important}
+ .heroFore .forePromoCopy{top:44px!important;gap:3px!important}
+ .heroFore .forePromoCopy h2{font-size:18px!important}
+ .heroFore .forePromoCopy p{font-size:10px!important}
+ .heroFore .forePromoImage{width:71%!important;height:37%!important;bottom:43px!important}
+ .heroFore .heroDots{bottom:38px!important}
+}
+
 </style>
 </head>
 <body>
