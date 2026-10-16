@@ -41,6 +41,23 @@ public final class NativeBridge {
         Uri uri = Uri.parse(url);
         String scheme = uri.getScheme();
         if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) return;
-        activity.runOnUiThread(() -> activity.startActivity(new Intent(Intent.ACTION_VIEW, uri)));
+        activity.runOnUiThread(() -> {
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(java.util.Locale.ROOT);
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            boolean isMaps = host.equals("share.google") || host.equals("maps.google.com") ||
+                    (host.equals("www.google.com") && path.startsWith("/maps"));
+            if (isMaps) {
+                try {
+                    Intent maps = new Intent(Intent.ACTION_VIEW, uri);
+                    maps.setPackage("com.google.android.apps.maps");
+                    activity.startActivity(maps);
+                    return;
+                } catch (Exception ignored) {
+                    // Google Maps is optional. Its normal HTTPS link still works in a browser.
+                }
+            }
+            try { activity.startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+            catch (Exception ignored) { /* No handler installed */ }
+        });
     }
 }
