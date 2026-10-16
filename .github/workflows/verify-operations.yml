@@ -82,6 +82,18 @@ jobs:
             const boot=await call('cirengindi-mobile-api','bootstrap');
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
+            // Regression: API response must already be sorted ascending for the Member view.
+            // Sorting a copy before checking would miss the old Rengginang-first bug.
+            const serverCategoryOrder=(boot.data.categories||[]).map(c=>c.name);
+            const serverProductOrder=(boot.data.products||[]).map(p=>p.name);
+            if(serverCategoryOrder.join('|')!=='Cireng|Frozen|Jamu|Lainnya' ||
+               serverProductOrder[0]!=='Cireng'||serverProductOrder[1]!=='Cireng Isi'||
+               serverProductOrder.at(-1)!=='Rengginang')
+              throw Error('Bootstrap must return website order directly (Cireng first): '+JSON.stringify(serverProductOrder.slice(0,5)));
+            if(!member.includes('storeCatalogByCategory(ps,cats,b,state.category)')||
+               !member.includes('ciBestSellerBadge')||
+               !member.includes("setCat('bestseller')"))
+              throw Error('Member website category grouping or Best Seller controls missing');
             const websiteCategories=['Cireng','Frozen','Jamu','Lainnya'];
             const actualCategories=boot.data.categories.map(c=>c.name);
             if(JSON.stringify(actualCategories)!==JSON.stringify(websiteCategories))
