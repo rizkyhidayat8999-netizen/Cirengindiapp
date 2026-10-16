@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://tbviryuimoxgapubdjio.supabase.co; img-src data: https://tbviryuimoxgapubdjio.supabase.co; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://tbviryuimoxgapubdjio.supabase.co; img-src 'self' data: https://tbviryuimoxgapubdjio.supabase.co; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 <title>Cireng Indi Owner</title>
 <style>
 :root{
@@ -39,6 +39,27 @@ label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin:13p
 .editline{display:flex;gap:8px;align-items:center;margin-top:10px}.editline input{width:110px;padding:8px 9px}
 .subnav{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.subnav button{white-space:nowrap;border:1px solid #d9ccc5;background:#fff;border-radius:999px;padding:9px 12px;color:var(--brand);font-weight:750}
 .kv{display:flex;gap:12px;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.kv:last-child{border-bottom:0}
+
+/* Shared Cireng Indi premium brand system */
+:root{--brand:#85432d;--brand2:#aa6848;--cream:#fff9f2;--soft:#f8e9dc;--line:#e8d7ca}
+html,body{background:linear-gradient(145deg,#fffaf6,#fff4e7)}
+.app{background:linear-gradient(160deg,#fffaf6 0%,#fff6ed 56%,#fff 100%)}
+.top{background:#fffcf7;border-bottom:1px solid #e9dace;min-height:72px}
+.top .logo{width:48px;height:48px;background:#fffaf2;border:1px solid #e5cfbe;border-radius:16px;overflow:hidden}
+.officialLogo{display:block;width:100%;height:100%;object-fit:contain}
+.login{background:radial-gradient(circle at 95% 0%,#f1c49c70 0 19%,transparent 20%),linear-gradient(140deg,#633226,#b36c48)}
+.loginbox{background:#fffdf9;border:1px solid #e6d2c4;box-shadow:0 18px 55px #2d151430}
+.loginbrand{width:82px;height:82px;border-radius:22px;background:#fffaf1;border:1px solid #e6d2c4;overflow:hidden}
+.card{border-radius:22px;border-color:#e8d7ca;background:#fffefa;box-shadow:0 6px 18px #54301d0f}
+.btn,.full{touch-action:manipulation}
+.btn:focus-visible,.full:focus-visible{outline:3px solid #bd734e;outline-offset:2px}
+.bankReference{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.bankReference button{border:1px solid #dfc7b5;border-radius:15px;background:#fff6ed;padding:12px;text-align:left;color:#512b20}
+.bankReference button b,.bankReference button span{display:block}
+.bankReference button span{font-size:11px;margin-top:3px;overflow-wrap:anywhere}
+.bankReference button:focus-visible{outline:3px solid #ab6041;outline-offset:2px}
+@media(max-width:360px){.bankReference{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -98,14 +119,14 @@ async function verifyStaff(){try{await ownerApi("me");return true}catch(e){retur
 
 function shell(body,active){
  const nav=[["dashboard","i-home","Dashboard"],["orders","i-order","Pesanan"],["products","i-box","Produk"],["members","i-users","Member"],["settings","i-settings","Lainnya"]];
- return `<div class="app"><div class="top"><div class="logo">${icon("i-store")}</div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
+ return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand">${icon("i-store")}</div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@email.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div><button class="btn secondary" style="width:100%;margin-top:12px" onclick="registerOwner()">Aktivasi Akun Owner Baru</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@email.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="notice">Akun Member biasa tidak dapat membuka data Owner.</div><button class="btn secondary" style="width:100%;margin-top:12px" onclick="registerOwner()">Aktivasi Akun Owner Baru</button></div></section>`
 }
 function registerOwner(){
  const email='rizkyhidayat8999@gmail.com';
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand">${icon('i-store')}</div><h1>Aktivasi Owner</h1><p>Akun khusus pemilik Cireng Indi</p><div class="notice">Email: ${email}. Pastikan email verifikasi dibuka sebelum login.</div><label>Password baru</label><input type="password" id="ownerpass" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter"><label>Ulangi password</label><input type="password" id="ownerpass2" autocomplete="new-password" minlength="8"><button class="full" onclick="activateOwnerSubmit()">Kirim Aktivasi</button><button class="btn secondary" style="width:100%;margin-top:10px" onclick="renderLogin()">Kembali ke Login</button></div></section>`;
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Aktivasi Owner</h1><p>Akun khusus pemilik Cireng Indi</p><div class="notice">Email: ${email}. Pastikan email verifikasi dibuka sebelum login.</div><label>Password baru</label><input type="password" id="ownerpass" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter"><label>Ulangi password</label><input type="password" id="ownerpass2" autocomplete="new-password" minlength="8"><button class="full" onclick="activateOwnerSubmit()">Kirim Aktivasi</button><button class="btn secondary" style="width:100%;margin-top:10px" onclick="renderLogin()">Kembali ke Login</button></div></section>`;
 }
 async function activateOwnerSubmit(){
  const email='rizkyhidayat8999@gmail.com';
@@ -248,7 +269,7 @@ async function operations(){
   const d=await ownerApi('settings'),bs=d.banners||[],cs=d.couriers||[],bank=d.bank_transfer||{};
   state.cache.operations=d;
   root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Pengaturan Operasional</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div>
-   <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Rekening hanya tampil kepada Member setelah diisi dan diaktifkan oleh Owner.</div>
+   <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Data rekening resmi Intan Istiqomah. Pilih BSI atau BRI untuk mengisi form rekening aktif, lalu simpan. Backend saat ini mendukung satu rekening aktif per transaksi.</div><div class="bankReference"><button type="button" onclick="fillBank('BSI')"><b>BSI</b><span>7306336217</span><span>Intan Istiqomah</span></button><button type="button" onclick="fillBank('BRI')"><b>BRI</b><span>457901008978533</span><span>Intan Istiqomah</span></button></div>
    <label>Bank</label><input id="bankname" style="width:100%;margin:6px 0 10px" value="${esc(bank.bank_name||'')}" placeholder="Nama Bank">
    <label>Nomor rekening</label><input id="banknumber" inputmode="numeric" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_number||'')}" placeholder="Nomor rekening asli">
    <label>Nama pemilik rekening</label><input id="bankholder" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_holder||'')}" placeholder="Atas nama">
@@ -259,6 +280,7 @@ async function operations(){
   </div>`,'settings');
  }catch(e){fail(e)}finally{busy(false)}
 }
+function fillBank(name){const banks={BSI:'7306336217',BRI:'457901008978533'};if(!banks[name])return;document.getElementById('bankname').value=name;document.getElementById('banknumber').value=banks[name];document.getElementById('bankholder').value='Intan Istiqomah';toast('Data '+name+' terisi. Simpan rekening untuk menerapkan.');}
 async function saveBank(){
  const d={bank_name:bankname.value.trim(),account_number:banknumber.value.trim(),account_holder:bankholder.value.trim(),enabled:bankenabled.checked};
  if(d.enabled&&(!d.bank_name||!d.account_number||!d.account_holder))return toast('Lengkapi semua data rekening.');

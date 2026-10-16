@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#FFF8F1"
-        android:pathData="M25,36 L83,36 L79,29 L29,29 Z"/>
-    <path
-        android:fillColor="#FFF8F1"
-        android:pathData="M30,40 L78,40 L78,78 C78,82 75,85 71,85 L37,85 C33,85 30,82 30,78 Z"/>
-    <path
-        android:fillColor="#7D321B"
-        android:pathData="M39,52 L49,52 L49,72 L39,72 Z M59,52 L69,52 L69,72 L59,72 Z"/>
-    <path
-        android:fillColor="#FFF8F1"
-        android:pathData="M49,17 L59,17 L59,29 L49,29 Z"/>
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="72dp" android:height="72dp" android:gravity="center">
+        <bitmap android:src="@drawable/logo_cireng_indi" android:gravity="fill"/>
+    </item>
+</layer-list>
