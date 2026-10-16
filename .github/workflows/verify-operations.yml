@@ -48,9 +48,27 @@ jobs:
             const boot=await call('cirengindi-mobile-api','bootstrap');
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
-            if(typeof boot.data.bank_transfer?.enabled!=='boolean')throw Error('Bank transfer configuration missing');
+            if(boot.data.bank_transfer?.enabled!==true)throw Error('Live bank transfer not enabled');
+          const banks=boot.data.bank_transfer?.accounts||[];
+          for(const [code,number] of [['BSI','7306336217'],['BRI','457901008978533']]){
+            const account=banks.find(b=>b.code===code);
+            if(!account||account.account_number!==number||account.account_holder!=='Intan Istiqomah')
+              throw Error('Live '+code+' account incorrect');
+          }
+          if(banks.length!==2)throw Error('Expected exactly two bank recipients');
+          const logo=fs.readFileSync('apps/member/app/src/main/assets/assets/logo_cireng_indi.png');
+          for(const path of [
+            'apps/owner/app/src/main/assets/assets/logo_cireng_indi.png',
+            'apps/member/app/src/main/res/drawable-nodpi/logo_cireng_indi.png',
+            'apps/owner/app/src/main/res/drawable-nodpi/logo_cireng_indi.png'
+          ])if(!fs.readFileSync(path).equals(logo))throw Error('Brand logo differs: '+path);
+          if(!member.includes('Tanah Grogot')||member.includes('Surabaya'))throw Error('Incorrect outlet location');
+          for(const [label,html] of [['Member',member],['Owner',owner]]){
+            const theme='premium-overrides.css';
+            if(html.lastIndexOf(theme)<html.lastIndexOf('</style>'))throw Error(label+' remote styles incorrectly ordered');
+          }
             const secret=[['cirengindi-mobile-api','orders'],['cirengindi-mobile-api','checkout'],['cirengindi-mobile-api','payment_proof_upload'],['cirengindi-owner-api','orders'],['cirengindi-owner-api','assign_courier'],['cirengindi-owner-api','payment_review'],['cirengindi-owner-api','set_bank_transfer']];
             for(const [ep,action] of secret){const r=await call(ep,action);if(r.status!==401)throw Error('Unauthorized action '+ep+'/'+action+' returned '+r.status)}
-            console.log('PASS: scripts parse, catalogue 31/42/3, bank settings, and 7 protected operations');
+            console.log('PASS: scripts parse, catalogue 31/42/3, BSI/BRI live, matching official logo, OTA style and 7 protected operations');
           })().catch(e=>{console.error(e);process.exit(1)})
           JS
