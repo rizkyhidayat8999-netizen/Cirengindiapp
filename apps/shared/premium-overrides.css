@@ -1,0 +1,24 @@
+/* Cireng Indi OTA presentation layer v1.
+ * Served over HTTPS to both Member and Owner. Only CSS may be updated remotely;
+ * transactional logic and privileged actions remain bundled / backend-validated.
+ * Keep this file public, backwards-compatible and never store secrets here.
+ */
+:root {
+  --brand:#984c32;
+  --brand2:#663123;
+  --cream:#fff9f2;
+  --soft:#f8e9dc;
+  --line:#e9dace;
+}
+button, input, select { -webkit-tap-highlight-color:transparent; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline:3px solid #b16e4e;
+  outline-offset:2px;
+}
+.app { color:#211814; }
+.storeHead .storeTagline { text-wrap:balance; }
+.locationCard, .pCard, .card { overflow:hidden; }
+.checkoutItem img, .prow img, .pCard img { object-fit:cover; }
+@media (prefers-reduced-motion:reduce) {
+ *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; }
+}

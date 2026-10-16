@@ -29,7 +29,7 @@ BEGIN
    SELECT account INTO selected_bank FROM jsonb_array_elements(
      CASE WHEN jsonb_typeof(bank->'accounts')='array' THEN bank->'accounts'
           ELSE jsonb_build_array(bank) END
-   ) AS account
+   ) AS bank_items(account)
    WHERE coalesce((account->>'enabled')::boolean,true)
      AND (p_bank_code IS NULL OR upper(account->>'code')=upper(p_bank_code)
          OR upper(account->>'bank_name')=upper(p_bank_code))
