@@ -304,6 +304,12 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .heroFore+.member{margin-top:0!important}
 @media(max-width:375px){.hero.heroFore{min-height:175px!important;margin:10px 12px!important}.heroFore .forePromoCopy{top:30%!important}.heroFore .forePromoCopy h2{font-size:17px!important}.heroFore .forePromoCopy p{font-size:10px!important}.heroFore .forePromoLogo{top:9px!important;left:14px!important;width:31px!important;height:31px!important}}
 
+
+/* Stable slide compositing: no overlapping promotional copy during autoplay. */
+.heroFore .heroSlides>.forePromo{visibility:hidden!important;opacity:0!important;transition:none!important;pointer-events:none!important}
+.heroFore .heroSlides>.forePromo.is-active{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+.heroFore .heroSlides>.forePromo:not(.is-active) *{visibility:hidden!important}
+
 </style>
 </head>
 <body>
