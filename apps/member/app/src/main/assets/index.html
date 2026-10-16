@@ -310,6 +310,22 @@ input,select,textarea{min-height:48px;border-radius:12px}
 .heroFore .heroSlides>.forePromo.is-active{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
 .heroFore .heroSlides>.forePromo:not(.is-active) *{visibility:hidden!important}
 
+
+/* Final clipping guard for member landscape banner and bottom navigation. */
+.app:has(.heroFore){overflow-x:clip!important}
+.hero.heroFore{width:calc(100% - 32px)!important;max-width:calc(100% - 32px)!important;box-sizing:border-box!important;overflow:hidden!important;margin:12px 16px!important;border-radius:20px!important;aspect-ratio:16/9!important;min-height:0!important;max-height:none!important}
+.heroFore .heroSlides{inset:0!important;overflow:hidden!important;border-radius:inherit!important}
+.heroFore .heroSlides>.forePromo{inset:0!important;width:100%!important;height:100%!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important}
+.heroFore .forePromo:before,.heroFore .forePromo:after{display:none!important}
+.heroFore .forePromoImage{right:3%!important;width:43%!important;max-width:43%!important;height:76%!important;top:12%!important;overflow:hidden!important}
+.heroFore .forePromoImage img{max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+.heroFore .forePromoCopy{left:5%!important;width:48%!important;right:auto!important;overflow-wrap:break-word!important}
+.heroFore .forePromoCopy h2{font-size:clamp(15px,3.6vw,25px)!important;overflow-wrap:break-word!important}
+.heroFore .forePromoCopy p{font-size:clamp(10px,2vw,13px)!important}
+.heroFore .forePromoLogo{left:5%!important}
+.heroFore .heroDots{bottom:8px!important}
+@media(max-width:375px){.hero.heroFore{width:calc(100% - 24px)!important;max-width:calc(100% - 24px)!important;margin:10px 12px!important}.heroFore .forePromoCopy h2{font-size:15px!important}}
+
 </style>
 </head>
 <body>
