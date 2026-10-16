@@ -95,6 +95,15 @@ button:focus-visible,.locrow:focus-visible{outline:3px solid #bb6b44;outline-off
 .instantPreview{min-height:45vh}
 .loader,.loader.show{display:none!important}
 @media(prefers-reduced-motion:reduce){.heroSlides .banner{transition:none}}
+
+/* Native product photos from the real website. No blurred fills or stretched packaging. */
+.pCard img,.prow img,.added img,.productHero img{
+  object-fit:contain!important;background:#f7eee4!important;filter:none!important;
+}
+.pCard img,.prow img{aspect-ratio:1/1}
+.productHero{background:#f7eee4}
+.productHero img{object-fit:contain!important}
+.photo-content{contain:layout paint}
 </style>
 </head>
 <body>
@@ -231,15 +240,50 @@ function localPic(n){
  if(n.includes('rengginang'))return'product_rengginang.webp';
  return'product_cireng.webp';
 }
-function pic(p){const local=localPic(p?.name);return local?'assets/'+local:(p?.image_path?img(p.image_path):'assets/product_cireng.webp')}
-function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img src="${esc(pic(p))}"><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAdd('${v?.id||''}')">${icon('i-plus')}</button></div>`}
-function prow(p,b){const v=variantFor(p,b);return `<div class="prow" onclick="openP('${p.id}')"><img src="${esc(pic(p))}"><div><h3>${esc(p.name)}</h3><p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAdd('${v?.id||''}')">${icon('i-plus')}</button></div>`}
+const OFFICIAL_IMAGE_SLUGS=[
+'cireng','cireng-isi','cilok','sempol-ayam','tahu-bakso','pempek-ikan-tenggiri',
+'chicken-katsu','nugget-ayam','bola-ayam-keju','bitterballen','bakso-ayam','ebi-furai',
+'baceman-frozen','ayam-ungkep','dimsum-crispy','rollade-ayam','kebab-pisang','kebab-daging',
+'corndog','churros','kentang-goreng','frozen-mix-platter','jamu-manjakani','jamu-komplit',
+'jamu-kunyit-asam','jamu-jahe-latte','jamu-jahe-original','sari-kacang-hijau','puding-mix',
+'salad-jelly','rengginang'
+];
+const PHOTO_BASE='https://cirengindi.com/assets/images/products/';
+const BRANDED_BASE='https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/member/app/src/main/assets/assets/';
+function officialImageId(p){
+ const key=String(p?.source_key||'');
+ const number=Number(key.replace('app-product-',''));
+ return /^app-product-\d+$/.test(key)&&Number.isInteger(number)&&number>=1&&number<=31?number:null;
+}
+function pic(p){
+ const id=officialImageId(p);
+ if(id)return 'assets/official_'+String(id).padStart(2,'0')+'.webp';
+ return p?.image_path?img(p.image_path):'assets/'+localPic(p?.name);
+}
+function photoFallback(image){
+ const oldStage=Number(image.dataset.photoStage||0);
+ const productId=Number(image.dataset.photoId);
+ if(!Number.isInteger(productId)||productId<1||productId>31){image.onerror=null;return}
+ image.dataset.photoStage=String(oldStage+1);
+ if(oldStage===0){image.src=BRANDED_BASE+'official_'+String(productId).padStart(2,'0')+'.webp';return}
+ if(oldStage===1){image.src=PHOTO_BASE+OFFICIAL_IMAGE_SLUGS[productId-1]+'.webp?v=20260829-client-final';return}
+ if(oldStage===2){image.src='assets/'+(image.dataset.localPhoto||'product_cireng.webp');return}
+ image.onerror=null;
+}
+function photoAttrs(p){
+ const id=officialImageId(p);
+ const local=localPic(p?.name);
+ return 'src="'+esc(pic(p))+'" alt="'+esc(p?.name||'Produk Cireng Indi')+'" decoding="async" loading="lazy"'+
+ (id?' data-photo-id="'+id+'" data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
+}
+function pcard(p,b){const v=variantFor(p,b);return `<div class="pCard" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.description||'Favorit member')}</div><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAdd('${v?.id||''}')">${icon('i-plus')}</button></div>`}
+function prow(p,b){const v=variantFor(p,b);return `<div class="prow" onclick="openP('${p.id}')"><img ${photoAttrs(p)}><div><h3>${esc(p.name)}</h3><p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div><button class="add" onclick="event.stopPropagation();quickAdd('${v?.id||''}')">${icon('i-plus')}</button></div>`}
 async function setCat(id){state.category=id;await store()}async function openP(id){const b=await boot();const p=(b.products||[]).find(x=>x.id===id);if(!p)return;state.product={p,vars:(b.variants||[]).filter(v=>v.product_id===id)};state.qty=1;await go('product')}
-async function product(){const x=state.product;if(!x)return go('store');const p=x.p, vars=x.vars||[];const v=vars[0];root.innerHTML=`<div class="app" style="padding-bottom:92px"><section class="productHero"><img src="${esc(pic(p))}"><button class="back" onclick="go('store')">${icon('i-left')}</button></section><div class="detail"><h1>${esc(p.name)}</h1><div class="muted">mulai dari</div><div class="price" style="font-size:25px">${rp(v?.price??p.base_price)}</div><p class="muted">${esc(p.description||'Produk pilihan Cireng Indi.')}</p></div><div class="option"><h2>Pilihan Produk <span>Wajib, pilih 1</span></h2>${vars.map((q,i)=>`<div class="optrow" onclick="selVariant('${q.id}')"><div class="grow"><b>${esc(q.name)}</b><div class="price" style="font-size:14px">${rp(q.price)}</div></div><div class="radio ${i===0?'on':''}" data-v="${q.id}"></div></div>`).join('')}</div><div class="option"><h2>Catatan <span>Opsional</span></h2><textarea id="pnote" rows="3" placeholder="Contoh: sambal dipisah"></textarea></div><div class="pointsHint">${icon('i-star')} Kamu berpotensi mendapatkan point dari transaksi ini.</div><div class="stickyAction"><div class="qty"><button onclick="changeQty(-1)">${icon('i-minus')}</button><b id="qv">1</b><button class="plus" onclick="changeQty(1)">${icon('i-plus')}</button></div><button class="cta" onclick="addFromProduct()">Tambah ke Keranjang</button></div></div>`;state.product.selected=v?.id||null}
+async function product(){const x=state.product;if(!x)return go('store');const p=x.p, vars=x.vars||[];const v=vars[0];root.innerHTML=`<div class="app" style="padding-bottom:92px"><section class="productHero"><img ${photoAttrs(p)}><button class="back" onclick="go('store')">${icon('i-left')}</button></section><div class="detail"><h1>${esc(p.name)}</h1><div class="muted">mulai dari</div><div class="price" style="font-size:25px">${rp(v?.price??p.base_price)}</div><p class="muted">${esc(p.description||'Produk pilihan Cireng Indi.')}</p></div><div class="option"><h2>Pilihan Produk <span>Wajib, pilih 1</span></h2>${vars.map((q,i)=>`<div class="optrow" onclick="selVariant('${q.id}')"><div class="grow"><b>${esc(q.name)}</b><div class="price" style="font-size:14px">${rp(q.price)}</div></div><div class="radio ${i===0?'on':''}" data-v="${q.id}"></div></div>`).join('')}</div><div class="option"><h2>Catatan <span>Opsional</span></h2><textarea id="pnote" rows="3" placeholder="Contoh: sambal dipisah"></textarea></div><div class="pointsHint">${icon('i-star')} Kamu berpotensi mendapatkan point dari transaksi ini.</div><div class="stickyAction"><div class="qty"><button onclick="changeQty(-1)">${icon('i-minus')}</button><b id="qv">1</b><button class="plus" onclick="changeQty(1)">${icon('i-plus')}</button></div><button class="cta" onclick="addFromProduct()">Tambah ke Keranjang</button></div></div>`;state.product.selected=v?.id||null}
 function selVariant(id){state.product.selected=id;document.querySelectorAll('.radio[data-v]').forEach(e=>e.classList.toggle('on',e.dataset.v===id))}function changeQty(d){state.qty=Math.max(1,Math.min(20,state.qty+d));qv.textContent=state.qty}
 async function quickAdd(id){if(!id)return toast('Varian belum tersedia.');if(pendingCartActions.has(id))return;pendingCartActions.add(id);try{const c=state.cartSnapshot||await api('cart');const e=(c.items||[]).find(x=>x.variant_id===id);await api('cart_set',{variant_id:id,quantity:Number(e?.quantity||0)+1});state.cartSnapshot=null;toast('Ditambahkan ke keranjang.');void cartBar()}catch(e){fail(e)}finally{pendingCartActions.delete(id)}}
 async function addFromProduct(){const id=state.product?.selected;if(!id)return toast('Pilih varian.');if(pendingCartActions.has(id))return;pendingCartActions.add(id);try{const c=state.cartSnapshot||await api('cart');const e=(c.items||[]).find(x=>x.variant_id===id);await api('cart_set',{variant_id:id,quantity:Number(e?.quantity||0)+state.qty});state.cartSnapshot=null;showSheet()}catch(e){fail(e)}finally{pendingCartActions.delete(id)}}
-function showSheet(){const p=state.product.p;document.body.insertAdjacentHTML('beforeend',`<div id="sheet" class="sheetBg" onclick="if(event.target===this)this.remove()"><div class="sheet"><div class="grab"></div><h2>Berhasil ditambahkan</h2><div class="added"><img src="${esc(pic(p))}"><div class="grow"><b>${esc(p.name)}</b><div class="success">Masuk ke keranjang</div></div></div><div class="sheetActions"><button class="primary" onclick="sheet.remove();go('cart')">Cek Keranjang</button><button class="secondary" onclick="sheet.remove();go('store')">Lanjut Belanja</button></div></div></div>`)}
+function showSheet(){const p=state.product.p;document.body.insertAdjacentHTML('beforeend',`<div id="sheet" class="sheetBg" onclick="if(event.target===this)this.remove()"><div class="sheet"><div class="grab"></div><h2>Berhasil ditambahkan</h2><div class="added"><img ${photoAttrs(p)}><div class="grow"><b>${esc(p.name)}</b><div class="success">Masuk ke keranjang</div></div></div><div class="sheetActions"><button class="primary" onclick="sheet.remove();go('cart')">Cek Keranjang</button><button class="secondary" onclick="sheet.remove();go('store')">Lanjut Belanja</button></div></div></div>`)}
 async function cartBar(){try{const c=await api('cart');state.cartSnapshot=c;if(state.route!=='store')return;document.querySelector('.app > .cartbar')?.remove();const n=(c.items||[]).reduce((a,x)=>a+Number(x.quantity||0),0);if(n){document.querySelector('.app')?.insertAdjacentHTML('beforeend',`<div class="cartbar" onclick="go('cart')"><div class="grow">${icon('i-bag','sm')} Cek Keranjang <span class="count">${n}</span></div><b>${rp(c.subtotal)}</b>${icon('i-right')}</div>`)}}catch(e){}}
 async function addresses(){loading(true);try{const d=await api('addresses');const a=d.addresses||[];if(state.route!=='addresses')return;root.innerHTML=`<div class="app">${uiTop('Pilih Lokasi Pengiriman','store')}<div class="search">${icon('i-search')}<input placeholder="Cari lokasi"></div><div class="tabs"><button class="active">Terakhir</button><button>Tersimpan</button></div><div class="address"><div class="circle">${icon('i-location')}</div><div class="grow"><b>Lokasimu saat ini</b><p>Gunakan lokasi perangkat untuk pengiriman</p></div></div>${a.map(x=>`<div class="address" onclick="defaultAddr('${x.id}')"><div class="circle">${icon('i-pin')}</div><div class="grow"><b>${esc(x.label||'Alamat')}</b><p>${esc(x.address_line)}, ${esc(x.city)}, ${esc(x.province)}</p></div>${icon('i-right')}</div>`).join('')}<div class="section"><button class="outline" style="width:100%" onclick="addAddressForm()">Tambah Alamat</button></div></div>`}finally{loading(false)}}
 function addAddressForm(){root.innerHTML=`<div class="app">${uiTop('Tambah Alamat','addresses')}<div class="section"><div class="form"><label>Label</label><input id="alabel" placeholder="Rumah / Kantor"><label>Nama penerima</label><input id="aname"><label>No. HP</label><input id="aphone" inputmode="tel"><label>Alamat lengkap</label><textarea id="aline" rows="3"></textarea><label>Kota/Kabupaten</label><input id="acity"><label>Provinsi</label><input id="aprov"><label>Kode pos</label><input id="apost"><button class="fullbtn" onclick="saveAddress()">Simpan Alamat</button></div></div></div>`}
