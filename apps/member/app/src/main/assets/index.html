@@ -614,6 +614,65 @@ html,body{background:#fff9f2!important}
  .ciCheckoutSwitch,.ciCheckoutSwitch:after{transition:none}
 }
 
+
+
+/* Kemitraan Cireng Indi: content verified against cirengindi.com (Oct 2026).
+   Normal root scroll + unified Android system bar spacing stay intact. */
+.ciPartnerPage{padding:15px 16px calc(28px + var(--ci-gesture-clearance,14px));background:linear-gradient(165deg,#fffaf3 0%,#fff8f0 62%,#ffffff 100%);color:#38261d}
+.ciPartnerPage h2,.ciPartnerPage h3,.ciPartnerPage p{margin:0}
+.ciPartnerHero{position:relative;overflow:hidden;border:1px solid #e8d3bd;border-radius:22px;background:#fffcf6;box-shadow:0 10px 27px #6942220c}
+.ciPartnerHeroMedia{height:156px;background:linear-gradient(120deg,#f7e9d7,#e4c09d);position:relative;overflow:hidden}
+.ciPartnerHeroMedia img{width:100%;height:100%;object-fit:cover;display:block}
+.ciPartnerHeroMedia:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(64,35,19,.27),transparent 60%)}
+.ciPartnerHeroText{padding:18px 17px 19px}
+.ciPartnerEyebrow{font-size:10px;letter-spacing:.5px;font-weight:800;text-transform:uppercase;color:#9c5433;display:inline-flex;align-items:center;gap:6px;border-radius:99px;background:#fbede0;padding:7px 11px}
+.ciPartnerHero h2{font-size:clamp(21px,5.4vw,26px);letter-spacing:-.65px;line-height:1.2;margin:12px 0 9px;font-weight:850;color:#332119}
+.ciPartnerHero p{font-size:13px;line-height:1.58;color:#806c5c}
+.ciPartnerStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:17px 0}
+.ciPartnerStat{padding:11px 12px;background:#fff4e7;border:1px solid #f1deca;border-radius:13px;min-width:0}
+.ciPartnerStat b{display:block;color:#965033;font-size:17px}
+.ciPartnerStat span{display:block;color:#816c5d;font-size:10.5px;margin-top:3px}
+.ciPartnerButton{width:100%;min-height:44px;padding:11px 14px;border:0;border-radius:13px;display:flex;gap:9px;align-items:center;justify-content:center;background:#985039;color:#fff;font-size:13px;font-weight:850;text-decoration:none;touch-action:manipulation}
+.ciPartnerButton .icon{width:17px;height:17px}
+.ciPartnerWAmark{width:23px;height:23px;flex:0 0 23px;display:inline-grid;place-items:center;border-radius:50%;color:#965033;background:white;font-size:10px;font-weight:900}
+.ciPartnerSection{margin-top:23px}
+.ciPartnerSectionHeading{font-size:18px!important;font-weight:850;letter-spacing:-.4px;color:#35231c;margin:0 0 6px!important}
+.ciPartnerSectionIntro{font-size:12px;line-height:1.5;color:#85756b;margin:0 0 13px!important}
+.ciPartnerFeatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ciPartnerFeature{padding:15px 12px;min-width:0;border-radius:17px;background:#fff;border:1px solid #efdfd0;box-shadow:0 4px 12px #78513609}
+.ciPartnerFeatureIcon{display:grid;place-items:center;width:37px;height:37px;border-radius:12px;background:#faede0;color:#9b5236;margin-bottom:10px}
+.ciPartnerFeatureIcon .icon{width:19px;height:19px}
+.ciPartnerFeature b{font-size:12.5px;display:block;line-height:1.3;margin-bottom:5px;color:#38261c}
+.ciPartnerFeature p{font-size:11.5px;line-height:1.45;color:#827166}
+.ciPartnerChoices{display:grid;gap:10px}
+.ciPartnerChoice{display:flex;align-items:flex-start;gap:11px;padding:14px;border-radius:17px;border:1px solid #e9dccf;background:#fffdfa}
+.ciPartnerChoiceIcon{flex:0 0 38px;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#f8eadc;color:#955031}
+.ciPartnerChoiceIcon .icon{width:20px;height:20px}
+.ciPartnerChoice b{font-size:13px;color:#35251b}
+.ciPartnerChoice p{font-size:11.5px;line-height:1.55;color:#7d6d63;margin-top:4px}
+.ciPartnerTags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.ciPartnerTags span{font-size:10px;font-weight:650;padding:5px 8px;background:#f9eee3;border-radius:99px;color:#96523a}
+.ciPartnerNotice{margin-top:15px;padding:13px;border-radius:13px;display:flex;align-items:flex-start;gap:9px;background:#fff1d8;border:1px solid #f4ddb8;color:#77533b;font-size:11.5px;line-height:1.5}
+.ciPartnerNotice .icon{width:18px;height:18px;flex:none;color:#ae7636}
+.ciPartnerContact{padding:17px;border-radius:19px;border:1px solid #e7d6c6;background:#fff;box-shadow:0 5px 18px #6942220a}
+.ciPartnerContact h3{font-size:16px;color:#332118}
+.ciPartnerContact p{color:#807064;line-height:1.5;font-size:11.5px;margin:6px 0 13px}
+.ciPartnerContact .ciPartnerButton{margin-top:9px}
+.ciPartnerButtonSecondary{border:1.5px solid #985039;background:white;color:#985039}
+.ciPartnerLink{width:100%;border:0;background:transparent;color:#955035;padding:10px 4px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:800}
+.ciPartnerLink .icon{width:17px;height:17px}
+.ciPartnerFootInfo{display:grid;gap:8px;margin-top:12px}
+.ciPartnerFootInfo>div{display:flex;align-items:flex-start;gap:8px;color:#806d60;font-size:11px;line-height:1.55}
+.ciPartnerFootInfo .icon{width:16px;height:16px;flex:none;color:#a56041;margin-top:1px}
+.ciPartnerPage button:focus-visible{outline:2px solid #985039;outline-offset:3px}
+@media(max-width:370px){
+ .ciPartnerPage{padding-inline:12px}
+ .ciPartnerHeroMedia{height:138px}
+ .ciPartnerHeroText{padding:15px 14px}
+ .ciPartnerFeature{padding:12px 10px}
+ .ciPartnerButton{font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -1463,8 +1522,50 @@ function useVoucher(id){
  go('store');
 }
 function partner(){
- root.innerHTML=shell(uiTop('Kemitraan Cireng Indi','home')+
- '<div class="section"><div class="voucherCard"><span class="voucherTag">Cireng Indi • Tanah Grogot</span><h3>Untuk Cafe, Reseller & Partner Usaha</h3><p>Program kemitraan meliputi pilihan produk, kebutuhan pasokan, harga mitra, dan kerja sama sesuai kesepakatan.</p><p>Harga dan komposisi paket dikonfirmasi langsung melalui Cireng Indi. Tidak ada harga paket yang ditetapkan sepihak di aplikasi.</p><button class="cta" style="width:100%;margin-top:12px" onclick="Native.openUrl(\'https://cirengindi.com\')">Lihat Program Kemitraan</button></div></div>','home');
+  // Public company details checked against the official https://cirengindi.com website.
+  // Partner-specific prices/terms are NOT published there; never invent them.
+  const waPartner='https://wa.me/6282254710903?text=Halo%20Cireng%20Indi%2C%20saya%20ingin%20mengetahui%20program%20kemitraan.';
+  const waAlternative='https://wa.me/6281346264433';
+  const waEvents='https://wa.me/6282254710903?text=Halo%20Cireng%20Indi%2C%20saya%20ingin%20konsultasi%20pesanan%20untuk%20acara.';
+  root.innerHTML=shell(uiTop('Kemitraan Cireng Indi','home')+
+  '<main class="ciPartnerPage" aria-label="Program kemitraan Cireng Indi">'+
+  '<section class="ciPartnerHero">'+
+   '<div class="ciPartnerHeroMedia"><img src="assets/banner_reseller.webp" alt="Program kerja sama dan reseller Cireng Indi" decoding="async" loading="eager"></div>'+
+   '<div class="ciPartnerHeroText">'+
+    '<span class="ciPartnerEyebrow">Cireng Indi · Tanah Grogot</span>'+
+    '<h2>Bertumbuh bersama Cireng Indi</h2>'+
+    '<p>Buka peluang usaha melalui kemitraan produk frozen homemade, camilan, dan jamu dari Cireng Indi. Skema kerja sama disesuaikan melalui konsultasi langsung.</p>'+
+    '<div class="ciPartnerStats"><div class="ciPartnerStat"><b>Sejak 2015</b><span>Homemade dari Tanah Grogot</span></div><div class="ciPartnerStat"><b>31 produk</b><span>Ragam produk Cireng Indi</span></div></div>'+
+    '<button type="button" class="ciPartnerButton" onclick="Native.openUrl(\''+waPartner+'\')"><span class="ciPartnerWAmark" aria-hidden="true">WA</span> Tanya Kemitraan via WhatsApp '+icon('i-right','sm')+'</button>'+
+   '</div>'+
+  '</section>'+
+  '<section class="ciPartnerSection" aria-labelledby="partnerBenefitsTitle">'+
+   '<h2 class="ciPartnerSectionHeading" id="partnerBenefitsTitle">Program Kemitraan</h2>'+
+   '<p class="ciPartnerSectionIntro">Informasi dan fasilitas yang dapat dibahas langsung bersama Cireng Indi.</p>'+
+   '<div class="ciPartnerFeatures">'+
+    '<article class="ciPartnerFeature"><span class="ciPartnerFeatureIcon">'+icon('i-cash')+'</span><b>Harga Mitra</b><p>Diskusikan harga dan kebutuhan pembelian sesuai jenis usaha.</p></article>'+
+    '<article class="ciPartnerFeature"><span class="ciPartnerFeatureIcon">'+icon('i-bag')+'</span><b>Produk Pilihan</b><p>Pilih menu yang sesuai dengan pelanggan dan konsep usahamu.</p></article>'+
+    '<article class="ciPartnerFeature"><span class="ciPartnerFeatureIcon">'+icon('i-truck')+'</span><b>Pengadaan</b><p>Konsultasikan jumlah pesanan, pasokan dan ketersediaan.</p></article>'+
+    '<article class="ciPartnerFeature"><span class="ciPartnerFeatureIcon">'+icon('i-users')+'</span><b>Dukungan Informasi</b><p>Tanyakan detail produk dan pilihan kerja sama kepada tim.</p></article>'+
+   '</div>'+
+  '</section>'+
+  '<section class="ciPartnerSection" aria-labelledby="partnerServicesTitle">'+
+   '<h2 class="ciPartnerSectionHeading" id="partnerServicesTitle">Pilihan Kerja Sama</h2>'+
+   '<div class="ciPartnerChoices">'+
+    '<article class="ciPartnerChoice"><span class="ciPartnerChoiceIcon">'+icon('i-store')+'</span><div><b>Reseller, Kafe & Mitra Usaha</b><p>Jajaki kerja sama pasokan dan penjualan produk Cireng Indi untuk kebutuhan bisnis.</p><div class="ciPartnerTags"><span>Harga mitra</span><span>Produk pilihan</span><span>Pengadaan</span></div></div></article>'+
+    '<article class="ciPartnerChoice"><span class="ciPartnerChoiceIcon">'+icon('i-gift')+'</span><div><b>Pesanan Acara & Komunitas</b><p>Konsultasikan pilihan menu dan jumlah untuk pernikahan, ulang tahun, arisan, acara kantor, komunitas, dan syukuran.</p><div class="ciPartnerTags"><span>Pernikahan</span><span>Arisan</span><span>Kantor</span><span>Komunitas</span></div><button type="button" class="ciPartnerLink" style="justify-content:flex-start" onclick="Native.openUrl(\''+waEvents+'\')">Konsultasi Pesanan '+icon('i-right','sm')+'</button></div></article>'+
+   '</div>'+
+   '<div class="ciPartnerNotice">'+icon('i-clock')+'<span>Harga mitra, jumlah minimum, komposisi paket, jadwal, dan ketentuan kerja sama dikonfirmasi langsung dengan Cireng Indi. Tidak ada harga yang ditetapkan sepihak.</span></div>'+
+  '</section>'+
+  '<section class="ciPartnerSection" aria-labelledby="partnerContactTitle">'+
+   '<div class="ciPartnerContact"><h3 id="partnerContactTitle">Hubungi Cireng Indi</h3><p>Siap diskusi peluang kemitraan atau kebutuhan acara? Hubungi kontak resmi dari website Cireng Indi.</p>'+
+    '<button type="button" class="ciPartnerButton" onclick="Native.openUrl(\''+waPartner+'\')"><span class="ciPartnerWAmark" aria-hidden="true">WA</span> Chat WhatsApp · 0822 5471 0903</button>'+
+    '<button type="button" class="ciPartnerButton ciPartnerButtonSecondary" onclick="Native.openUrl(\''+waAlternative+'\')">WhatsApp Alternatif · 0813 4626 4433 '+icon('i-right','sm')+'</button>'+
+    '<div class="ciPartnerFootInfo"><div>'+icon('i-pin')+'<span>Jl. Khaliluddin, Gg. Nusa Indah 4, Tanah Grogot, Kabupaten Paser, Kalimantan Timur</span></div><div>'+icon('i-clock')+'<span>Jam operasional 10.00–19.30</span></div></div>'+
+    '<button type="button" class="ciPartnerLink" onclick="Native.openUrl(\'https://cirengindi.com/\')">Lihat di Website Resmi '+icon('i-right','sm')+'</button>'+
+   '</div>'+
+  '</section>'+
+  '</main>','home');
 }
 
 async function rewards(){loading(true);try{const d=await api('rewards');if(state.route!=='rewards')return;root.innerHTML=`<div class="app">${uiTop('Member & Point','home')}<div class="member" style="margin:14px 18px 0"><h2>${Number(d.points||0)} Point</h2><div style="height:8px;background:#eee;border-radius:99px"><div style="height:8px;width:35%;background:var(--brand);border-radius:99px"></div></div><p style="font-size:12px;color:var(--muted)">Gunakan point untuk menukar reward Cireng Indi.</p></div><div class="section"><h2>Tukar Point</h2><div class="grid2">${(d.rewards||[]).map(r=>`<div class="feature" style="min-height:160px"><div class="circle">${icon('i-gift')}</div><b>${esc(r.product_name)}</b><span>${esc(r.variant_name||'')}</span><div class="price">${r.points_cost} Point</div><button class="outline" style="margin-top:10px" onclick="redeem('${r.id}')">Tukar</button></div>`).join('')}</div></div></div>`}finally{loading(false)}}async function redeem(id){loading(true);try{await api('reward_redeem',{id});toast('Reward berhasil diajukan.');await rewards()}catch(e){fail(e)}finally{loading(false)}}
