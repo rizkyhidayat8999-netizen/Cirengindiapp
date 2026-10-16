@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -39,6 +40,8 @@ public final class MainActivity extends Activity {
         s.setUserAgentString(s.getUserAgentString() + " CirengIndiOwner/1.0");
 
         webView.addJavascriptInterface(new NativeBridge(this, store), "Native");
+        // Enable confirmation/password prompts used in owner operations.
+        webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
