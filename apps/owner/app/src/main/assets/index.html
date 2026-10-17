@@ -263,7 +263,48 @@ const rp=n=>"Rp"+Number(n||0).toLocaleString("id-ID");
 function busy(v){/* No blocking spinner */}
 let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600)}
 function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
-function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
+function saveSession(s){
+ const old=state.session||{};
+ state.session={...s,_ciScreens:old._ciScreens||{},_ciDashboard:old._ciDashboard||null};
+ Native.saveSession(JSON.stringify(state.session));
+}
+
+/* Previously rendered pages are encrypted by the Android Keystore session store.
+   Never persist Owner data in plaintext browser localStorage. */
+const OWNER_VIEW_KEYS=['dashboard','orders','products','members','settings','operations','rewards','vouchers'];
+function restoreOwnerViews(session){
+ const screens=session?._ciScreens;
+ if(screens&&typeof screens==='object'){
+  for(const page of OWNER_VIEW_KEYS){
+   const html=screens[page];
+   if(typeof html==='string'&&html.length<180000&&html.includes('class="app"')&&html.includes('class="nav"'))instantViews.set(page,html);
+  }
+ }
+ if(session?._ciDashboard&&typeof session._ciDashboard==='object')state.cache.dashboard=session._ciDashboard;
+}
+function persistOwnerView(page){
+ if(!OWNER_VIEW_KEYS.includes(page)||state.page!==page||!state.session?.access_token)return;
+ const html=root.innerHTML;
+ if(!html.includes('class="app"')||html.includes('instantPreview'))return;
+ instantViews.set(page,html);
+ if(html.length>180000)return;
+ const views={...(state.session._ciScreens||{})};
+ delete views[page];views[page]=html;
+ let total=Object.values(views).reduce((n,v)=>n+(typeof v==='string'?v.length:0),0);
+ for(const oldest of Object.keys(views)){
+  if(total<=350000)break;
+  if(oldest===page)continue;
+  total-=views[oldest].length;delete views[oldest];
+ }
+ state.session._ciScreens=views;
+ try{Native.saveSession(JSON.stringify(state.session))}catch(e){}
+}
+function saveOwnerDashboardSnapshot(d){
+ if(!state.session?.access_token)return;
+ state.session._ciDashboard={...d,latest_orders:(d.latest_orders||[]).slice(0,6)};
+ try{Native.saveSession(JSON.stringify(state.session))}catch(e){}
+}
+
 function clearSession(){state.session=null;state.cache={};instantViews.clear();pendingOwnerActions.clear();stockPending.clear();rewardPending.clear();Native.clearSession()}
 
 async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.error_code||d.error_description||d.msg||d.message||d.error||((typeof d.code==='string'&&!/^\d+$/.test(d.code))?d.code:null)||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
@@ -528,7 +569,7 @@ async function go(p){
  previewPage(p);
  try{
   if(p==='dashboard')await dashboard();else if(p==='orders')await orders();else if(p==='products')await products();else if(p==='members')await members();else if(p==='rewards')await rewards();else if(p==='vouchers')await vouchers();else if(p==='operations')await operations();else if(p==='settings')await settings();
-  if(key===navId&&state.page===p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(p,root.innerHTML);
+  if(key===navId&&state.page===p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))persistOwnerView(p);
  }catch(e){if(key===navId)fail(e)}
 }
 
@@ -552,12 +593,13 @@ function renderDashboard(d){
   ];
   const latest=(d.latest_orders||[]).map(orderCard).join("")||'<div class="empty">Belum ada pesanan.</div>';
   root.innerHTML=shell(`<section class="section">${ownerPageIntro("Ringkasan Hari Ini","Pantau perkembangan toko Anda hari ini",true)}<div class="grid">${stats.map(x=>ownerMetric(...x)).join("")}</div></section><section class="section"><div class="ci-section-title"><div><h2>Pesanan Terbaru</h2><p class="muted">Pesanan masuk terbaru dari pelanggan</p></div><button type="button" class="ci-view-all" onclick="go('orders')">Lihat semua ›</button></div>${latest}</section>`,"dashboard");
- instantViews.set('dashboard',root.innerHTML);
+ persistOwnerView('dashboard');
 }
 async function dashboard(){
  try{
   const d=await ownerApi('dashboard');
   state.cache.dashboard=d;
+  saveOwnerDashboardSnapshot(d);
   renderDashboard(d);
  }catch(e){if(state.page==='dashboard')fail(e)}
 }
@@ -670,12 +712,15 @@ async function flushQuantity(id,kind){
    job.saved=value;
   }
   map.delete(id);
+  if(state.page==='products'&&kind==='stock')persistOwnerView('products');
+  if(state.page==='rewards'&&kind==='reward')persistOwnerView('rewards');
  }catch(e){
   const rows=reward?(state.cache.rewards?.rewards||[]):(state.cache.products?.variants||[]);
   const variant=rows.find(x=>x.id===id);
   if(variant)variant.stock=job.saved;
   paintQuantity(id,job.saved,kind);
-  if(state.page==='products'&&kind==='stock')instantViews.set('products',root.innerHTML);
+  if(state.page==='products'&&kind==='stock')persistOwnerView('products');
+  if(state.page==='rewards'&&kind==='reward')persistOwnerView('rewards');
   map.delete(id);
   toast('Stok gagal disimpan. Nilai terakhir dipulihkan.');
  }finally{job.running=false;}
@@ -822,7 +867,7 @@ async function settings(){
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
 
-(async()=>{state.session=getSession();if(state.session?.access_token){previewPage('dashboard');try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}catch(e){clearSession();renderLogin(errorText(e.message))}}else renderLogin()})();
+(async()=>{state.session=getSession();if(state.session?.access_token){restoreOwnerViews(state.session);previewPage('dashboard');try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}catch(e){clearSession();renderLogin(errorText(e.message))}}else renderLogin()})();
 </script>
 </body>
 </html>
