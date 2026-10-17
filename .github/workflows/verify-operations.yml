@@ -150,7 +150,7 @@ jobs:
           const bankSQL=fs.readFileSync('supabase/migrations/20261016_two_bank_checkout.sql','utf8');
           for(const s of ['ci_checkout_with_bank','bank_snapshot','7306336217','457901008978533'])if(!bankSQL.includes(s))throw Error('Two-bank migration missing '+s);
           if(!owner.includes('raw.githubusercontent.com'))throw Error('Owner remote theme configuration missing');
-          if(!owner.includes("onclick=\"registerOwner()\""))throw Error('Missing owner activation');
+          if(!owner.includes("ciOwnerFinalLogin")||owner.includes("Buka Preview UI Owner"))throw Error('Owner must use production login without demo preview');
           const m=member.match(/const SB='([^']+)', KEY='([^']+)'/);
           if(!m)throw Error('Missing mobile backend config');
           const [,base,key]=m;
