@@ -1807,13 +1807,26 @@ function pic(p){
  return 'assets/'+localPic(p?.name);
 }
 
-/* HD MEMBER PHOTOS — real website originals already bundled in the APK.
-   No 208px embedded thumbnails, remote replacement, or scroll observers.
-   Keep one stable local source from first paint for all 31 product SKUs. */
+/* HD MEMBER PHOTOS — original 900x900 WebP images for every product.
+   Native APK 2.1+ bundles the images and loads them offline without flicker.
+   Older installed APKs get the SAME immutable originals directly from GitHub
+   instead of falling back to their old 208px thumbnails. Images are not swapped
+   after paint: each SKU resolves to one deterministic source for that APK. */
+const CI_HD_PHOTOS_BASE='https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/567daa9b15636e9d26e673cb1b9699109ec21abe/apps/member/app/src/main/assets/assets/';
+function ciNativeHasHdPhotos(){
+ try{
+  if(typeof Native==='undefined'||typeof Native.appVersion!=='function')return false;
+  const version=String(Native.appVersion()).match(/^(\d+)\\.(\d+)/);
+  if(!version)return false;
+  const major=Number(version[1]),minor=Number(version[2]);
+  return major>2||(major===2&&minor>=1);
+ }catch(_){return false}
+}
+const CI_HD_PACKAGED=ciNativeHasHdPhotos();
 function stablePhotoSource(id,productName){
  if(Number.isInteger(id)&&id>=1&&id<=31){
-  // All 31 higher-resolution product originals are part of the installed APK.
-  return 'assets/official_'+String(id).padStart(2,'0')+'.webp';
+  const filename='official_'+String(id).padStart(2,'0')+'.webp';
+  return CI_HD_PACKAGED?'assets/'+filename:CI_HD_PHOTOS_BASE+filename;
  }
  return 'assets/'+localPic(productName);
 }
