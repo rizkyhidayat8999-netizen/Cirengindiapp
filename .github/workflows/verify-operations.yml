@@ -59,6 +59,15 @@ jobs:
             ['https://tbviryuimoxgapubdjio.supabase.co/auth/v1/verify?token='+recoveryHash+'&type=signup',false]
           ])if(Boolean(parseRecovery(url))!==expected)
             throw Error('Recovery parser failed allowed/blocked test');
+          // Supabase-generated 6-digit recovery OTP is verified by GoTrue.
+          // The OTP email template itself must display {{ .Token }}.
+          const otpTemplate=fs.readFileSync('supabase/auth-templates/recovery-otp.html','utf8');
+          if(!backend.includes("verifyOtp({email,token:otp,type:'recovery'})") ||
+             !backend.includes("if(proofs!==1)return err('RESET_LINK_INVALID')") ||
+             !member.includes('id="recoveryOtp"') ||
+             !member.includes('credential={email,otp}') ||
+             !otpTemplate.includes('{{ .Token }}'))
+            throw Error('Member OTP recovery requires server verifyOtp, UI and branded mail template');
           if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
           if(owner.includes('/auth/v1/signup'))throw Error('Do not duplicate Owner account creation when account already exists');
           if(!owner.includes('Verifikasi Owner'))throw Error('Missing secure owner activation guidance');
@@ -115,6 +124,12 @@ jobs:
             });
             if(invalidReset.status!==400||invalidReset.body.error!=='RESET_LINK_INVALID')
               throw Error('Production Member auth is missing secure in-app recovery: '+JSON.stringify(invalidReset));
+            const malformedOtp=await resetAuth({
+              action:'complete_password_reset',
+              email:'nobody@example.invalid',otp:'12',password:'ExamplePassword123'
+            });
+            if(malformedOtp.status!==400||malformedOtp.body.error!=='RESET_OTP_INVALID')
+              throw Error('Production Member OTP verification is not deployed or malformed codes are accepted: '+JSON.stringify(malformedOtp));
             const boot=await call('cirengindi-mobile-api','bootstrap');
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
