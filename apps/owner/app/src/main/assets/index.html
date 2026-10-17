@@ -658,7 +658,7 @@ async function vouchers(){
  }catch(e){if(state.page==='vouchers')fail(e)}
 }
 function renderOwnerVouchers(data){
- root.innerHTML=shell('<div class="section">${ownerPageIntro("Voucher Member","Terbitkan dan kelola voucher pelanggan")}'
+ root.innerHTML=shell('<div class="section">'+ownerPageIntro("Voucher Member","Terbitkan dan kelola voucher pelanggan")
  +'<div class="card"><h3>Buat Voucher</h3><label>Judul voucher</label><input id="vTitle" placeholder="Contoh: Promo Cireng Indi" maxlength="100">'
  +'<label>Kode unik</label><input id="vCode" placeholder="CIRENG10" maxlength="30" autocomplete="off">'
  +'<div class="row"><div class="grow"><label>Tipe diskon</label><select id="vType"><option value="fixed">Nominal Rupiah</option><option value="percent">Persentase</option></select></div><div class="grow"><label>Nilai diskon</label><input id="vValue" type="number" min="1" placeholder="10000"></div></div>'
@@ -704,7 +704,13 @@ async function toggleVoucher(id,active){
 async function settings(){
  busy(true);try{
   const me=await ownerApi("me");
-  if(state.page!=='settings')return;root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('vouchers')"><div class="row">${icon("i-cash")}<div class="grow"><b>Voucher Member</b><div class="muted">Buat diskon dan berikan voucher kepada member</div></div><b>›</b></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
+  if(state.page!=="settings")return;
+  const links=[
+   ["vouchers","i-cash","Voucher Member","Buat dan bagikan voucher pelanggan"],
+   ["rewards","i-box","Reward & Penukaran","Persediaan hadiah dan persetujuan penukaran"],
+   ["operations","i-settings","Rekening, Banner & Kurir","Kontrol operasional toko"]
+  ];
+  root.innerHTML=shell(`<section class="section">${ownerPageIntro("Lainnya","Akun dan pengaturan operasional")}<div class="card ci-profile-card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} · ${esc(me.email||"")}</div></div></div></div>${links.map(v=>`<button type="button" class="card ci-menu-card" onclick="go('${v[0]}')"><span class="ci-menu-icon">${icon(v[1])}</span><span class="grow"><b>${v[2]}</b><span class="muted" style="display:block">${v[3]}</span></span><span class="ci-menu-arrow" aria-hidden="true">›</span></button>`).join("")}</section><section class="section"><h2>Tentang Aplikasi</h2><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Keamanan</span><b>Session terenkripsi</b></div><button class="btn danger" type="button" style="width:100%;margin-top:16px" onclick="logout()">${icon("i-logout")} Keluar Akun</button></section>`,"settings");
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
