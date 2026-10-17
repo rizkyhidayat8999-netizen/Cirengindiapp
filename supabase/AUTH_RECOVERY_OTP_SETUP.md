@@ -34,3 +34,33 @@ Penjelasan Supabase: https://supabase.com/docs/guides/auth/auth-email-templates
 
 Jangan menempatkan Management API PAT, SMTP password, service-role key, atau kode
 OTP pengguna di repository atau dalam isi template.
+
+
+## Pemulihan email khusus Owner
+
+Aplikasi **Owner** sekarang juga mendukung OTP 6 digit pada
+**Lupa Password Owner**. Alurnya:
+- Email Owner yang sudah terdaftar → email Recovery Supabase →
+  kode enam digit → password baru → login lagi.
+- OTP diverifikasi langsung di Supabase Auth. Hasil verifikasi
+  dicek melalui \`cirengindi-owner-api\` aksi \`me\`, dan hanya
+  \`staff.role === 'owner'\` dengan \`staff.active === true\`
+  yang bisa melanjutkan perubahan password.
+- Token sementara **tidak** disimpan menjadi sesi login Owner;
+  pengguna masuk kembali setelah password berubah.
+- Pilihan salin-tempel tautan tersedia untuk email Recovery lama
+  yang masih berisi tautan (termasuk pengalihan localhost).
+- Tidak ada pendaftaran Owner otomatis ataupun penghapusan
+  proses verifikasi email awal Owner.
+
+**Konfigurasi email satu kali berlaku untuk Member dan Owner:**
+masih menggunakan template Supabase **Reset Password** yang sama,
+sehingga cukup mengganti kontennya sekali ke
+\`supabase/auth-templates/recovery-otp.html\` (pakai \`{{ .Token }}\`).
+Template **Confirm Signup** jangan diubah agar aktivasi Owner
+yang lama tidak terganggu.
+
+Cek Owner menggunakan email Owner yang berhak mengelola usaha.
+Jangan lakukan pengujian dengan password atau OTP pelanggan sungguhan.
+Pengiriman OTP belum dinyatakan aktif sebelum perubahan template
+disimpan di Supabase dan satu email uji berhasil diterima.
