@@ -181,7 +181,7 @@ async function authApi(b,req){const a=b.action;if(a==='register'){
  }
  if(a==='forgot_password'){
  const email=String(b.email||'').trim().toLowerCase();
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return err('EMAIL_REQUIRED');
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return err('EMAIL_REQUIRED');
  const p=check(await admin.from('member_profiles').select('email').ilike('email',email).maybeSingle());
  if(p){
    const reset=await client.auth.resetPasswordForEmail(email,{redirectTo:'https://cirengindi.com/reset-password'});
