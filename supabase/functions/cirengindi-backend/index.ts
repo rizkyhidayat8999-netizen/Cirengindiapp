@@ -60,28 +60,71 @@ async function paymentSettings(){
    bank_name:current.bank_name||'',account_number:current.account_number||'',account_holder:current.account_holder||''};
 }
 
-async function authApi(b){const a=b.action;if(a==='register'){
+// SHA-256 with the service secret avoids persisting plaintext email/IP in throttling keys.
+async function memberRegistrationRateKey(value){
+ const buffer=new TextEncoder().encode('member-registration|'+SERVICE+'|'+value);
+ const hash=await crypto.subtle.digest('SHA-256',buffer);
+ return Array.from(new Uint8Array(hash),x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function memberRegistrationAllowed(value,action,maxAttempts,windowSeconds){
+ const key=await memberRegistrationRateKey(value);
+ const rate=await admin.rpc('ci_member_registration_rate_check',{
+   p_key_hash:key,p_action:action,p_max_attempts:maxAttempts,p_window_seconds:windowSeconds
+ });
+ if(rate.error)throw new Error('REGISTRATION_UNAVAILABLE');
+ return rate.data===true;
+}
+
+async function authApi(b,req){const a=b.action;if(a==='register'){
  const username=String(b.username||'').trim().toLowerCase(),email=String(b.email||'').trim().toLowerCase(),name=String(b.fullName||'').trim(),password=String(b.password||'');
  if(!/^[a-z0-9._]{3,24}$/.test(username)||!/^\S+@\S+\.\S+$/.test(email)||name.length<2)return err('INVALID_INPUT');
  if(password.length<8||!/[a-z]/i.test(password)||!/[0-9]/.test(password))return err('WEAK_PASSWORD');
+ // Registration is intentionally password-based and works without email confirmation.
+ // Public createUser requests are limited before reaching the service-role Auth API.
+ const address=(req?.headers.get('cf-connecting-ip')||req?.headers.get('x-real-ip')
+   ||req?.headers.get('x-forwarded-for')?.split(',')[0]||'').trim().slice(0,100);
+ if(address&&!(await memberRegistrationAllowed(address,'member_register_ip',15,600)))
+   return err('REGISTRATION_RATE_LIMIT',429);
+ if(!(await memberRegistrationAllowed(email,'member_register_email',3,3600)))
+   return err('REGISTRATION_RATE_LIMIT',429);
  if((await list('member_profiles','user_id',{eq:{username}})).length)return err('USERNAME_TAKEN');
  if((await list('member_profiles','user_id',{eq:{email}})).length)return err('EMAIL_TAKEN');
  const referral=String(b.referral||b.referralCode||'').trim().toUpperCase();
  const inviter=referral?check(await admin.from('member_profiles').select('user_id').eq('referral_code',referral).maybeSingle()):null;
  if(referral&&!inviter)return err('INVALID_REFERRAL_CODE');
- const created=await client.auth.signUp({email,password,options:{data:{full_name:name},emailRedirectTo:'https://cirengindi.com/reset-password'}});
+ // Only the Member endpoint uses auto-confirmation. Owner signup remains unchanged.
+ // GoTrue Admin createUser does not dispatch an email confirmation link.
+ const created=await admin.auth.admin.createUser({
+  email,password,email_confirm:true,user_metadata:{full_name:name}
+ });
  if(created.error){
   const reason=String(created.error.code||created.error.message||'').toLowerCase();
-  if(reason.includes('rate_limit')||reason.includes('rate limit')||created.error.status===429)return err('EMAIL_SERVICE_RATE_LIMIT',429);
-  if(reason.includes('email_address_not_authorized'))return err('EMAIL_SERVICE_NOT_CONFIGURED',503);
-  if(reason.includes('already_registered')||reason.includes('already registered'))return err('EMAIL_TAKEN',409);
+  if(reason.includes('already')||reason.includes('exists')||reason.includes('duplicate'))
+    return err('EMAIL_TAKEN',409);
+  if(reason.includes('rate_limit')||created.error.status===429)
+    return err('REGISTRATION_RATE_LIMIT',429);
   return err('REGISTRATION_UNAVAILABLE',503);
  }
- const id=created.data.user.id;
- const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase(),referred_by:inviter?.user_id!==id?inviter?.user_id||null:null};
- const ins=await admin.from('member_profiles').insert(profile).select('*').single();if(ins.error){return err(ins.error.message)};
- if(!created.data.session)return reply({member:ins.data,pendingVerification:true});
- return reply({member:ins.data,session:created.data.session});
+ const id=created.data?.user?.id;
+ if(!id)return err('REGISTRATION_UNAVAILABLE',503);
+ const profile={user_id:id,username,email,full_name:name,phone:b.phone||null,
+   referral_code:('CI'+id.replaceAll('-','').slice(0,9)).toUpperCase(),
+   referred_by:inviter?.user_id!==id?inviter?.user_id||null:null};
+ const ins=await admin.from('member_profiles').insert(profile).select('*').single();
+ if(ins.error){
+  // Roll back a partial registration so the email does not become unusable.
+  const removed=await admin.auth.admin.deleteUser(id);
+  if(removed.error)console.error('Member signup rollback failed for auth user',removed.error.code||'UNKNOWN');
+  if(ins.error.code==='23505'&&String(ins.error.message||'').includes('username'))return err('USERNAME_TAKEN',409);
+  if(ins.error.code==='23505')return err('EMAIL_TAKEN',409);
+  return err('REGISTRATION_UNAVAILABLE',503);
+ }
+ const logged=await client.auth.signInWithPassword({email,password});
+ if(logged.error||!logged.data?.session?.access_token){
+  // Account was created, but token delivery failed. User can still log in normally.
+  return reply({member:ins.data,loginRequired:true});
+ }
+ return reply({member:ins.data,session:logged.data.session});
  }
  if(a==='login'){
  const username=String(b.username||'').trim().toLowerCase();
@@ -376,7 +419,7 @@ Deno.serve(async req=>{
  try{
   const endpoint=new URL(req.url).pathname.split('/').filter(Boolean).at(-1);
   const b=await req.json();if(typeof b!=='object'||!b)return err('INVALID_REQUEST');
-  if(endpoint==='member-auth')return await authApi(b);
+  if(endpoint==='member-auth')return await authApi(b,req);
   if(endpoint==='cirengindi-mobile-api')return await mobile(req,b);
   if(endpoint==='cirengindi-owner-api')return await owner(req,b);
   return err('UNKNOWN_ENDPOINT',404);
