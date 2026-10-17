@@ -246,7 +246,7 @@ jobs:
               if(!fs.existsSync(legacyRoot+asset))throw Error('Missing local fallback photo '+asset);
             }
             if(!member.includes('function stablePhotoSource(')||
-               !member.includes("return 'assets/official_'")||
+               !member.includes("return CI_HD_PACKAGED?'assets/'+filename:CI_HD_PHOTOS_BASE+filename;")||
                !member.includes("AI_CIRENG_PHOTO_URL='data:image/webp;base64,")||
                !member.includes("AI_PARTNER_PHOTO_URL='data:image/webp;base64,")||
                member.includes('upgradeImageWhenReady')||
