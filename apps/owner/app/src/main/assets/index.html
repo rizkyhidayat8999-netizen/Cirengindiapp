@@ -632,6 +632,17 @@ function paintQuantity(id,count,kind){
  const attr=kind==='reward'?'rewardStockNumber':'stockNumber';
  const selector=kind==='reward'?'[data-reward-stock-number]':'[data-stock-number]';
  document.querySelectorAll(selector).forEach(el=>{if(el.dataset[attr]===id)el.textContent=String(count)});
+ // Keep the cached HTML in sync even if Owner navigates while the save is in flight.
+ const page=kind==='reward'?'rewards':'products';
+ const cached=instantViews.get(page);
+ if(cached){
+  const marker=(kind==='reward'?'data-reward-stock-number="':'data-stock-number="')+id+'">';
+  const index=cached.indexOf(marker);
+  if(index!==-1){
+   const from=index+marker.length,end=cached.indexOf('</b>',from);
+   if(end!==-1)instantViews.set(page,cached.slice(0,from)+String(count)+cached.slice(end));
+  }
+ }
 }
 function optimisticQuantity(id,delta,kind){
  if(delta!==1&&delta!==-1)return;
