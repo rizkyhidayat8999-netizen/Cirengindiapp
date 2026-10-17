@@ -1165,6 +1165,15 @@ html,body{background:#fff9f2!important}
 .auth .ciRecoveryForm .auth-subactions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .auth .ciRecoveryForm .auth-feedback:not(:empty){margin:10px 0}
 
+
+/* Email OTP recovery: 6-digit code and safe legacy link fallback. */
+.auth .ciRecoveryForm #recoveryOtp{font-size:21px!important;letter-spacing:5px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.auth .ciRecoveryForm .ciOtpHelp{display:block;color:#806d61;font-size:11px;margin:5px 0 13px;line-height:1.5}
+.auth .ciRecoveryForm .ciLegacyRecovery{margin:8px 0 15px;border:1px solid #ebd9c8;border-radius:12px;background:#fffaf4;padding:12px}
+.auth .ciRecoveryForm .ciLegacyRecovery summary{cursor:pointer;color:#965039;font-size:12px;font-weight:750;line-height:1.35}
+.auth .ciRecoveryForm .ciLegacyRecovery[open] summary{margin-bottom:10px}
+.auth .ciRecoveryForm .ciLegacyRecovery textarea{width:100%}
+
 </style>
 </head>
 <body>
@@ -1293,8 +1302,30 @@ async function api(action,payload={},secure=true,retry=true){let s=state.session
 function fail(e){const m=String(e?.message||e);if(m==='AUTH_REQUIRED'||m.includes('JWT')){sessionClear();renderAuth('login');toast('Sesi berakhir. Silakan masuk lagi.');return}const map={INVALID_CREDENTIALS:'Username atau password salah.',USERNAME_TAKEN:'Username sudah digunakan.',EMAIL_TAKEN:'Email sudah digunakan.',WEAK_PASSWORD:'Password minimal 8 karakter dan mengandung huruf serta angka.',CART_EMPTY:'Keranjang masih kosong.',INSUFFICIENT_STOCK:'Stok tidak mencukupi.',INSUFFICIENT_POINTS:'Point belum cukup.'};toast(map[m]||({'INVALID_REFERRAL_CODE':'Kode referral tidak dikenal.','VOUCHER_UNAVAILABLE':'Voucher sudah tidak berlaku.','VOUCHER_ALREADY_USED':'Voucher sudah digunakan.','VOUCHER_MIN_SPEND':'Belanja belum mencapai minimum voucher.','VOUCHER_FULFILLMENT_MISMATCH':'Voucher tidak berlaku untuk metode pengiriman ini.','VOUCHER_LIMIT_REACHED':'Kuota voucher habis.'}[m])||m.replaceAll('_',' '))}
 function shell(content,active='home'){const nav=[['home','i-home','Home'],['store','i-bag','Pesan'],['orders','i-receipt','Pesanan'],['profile','i-user','Akun']];return `<div class="app">${content}</div><nav class="bottomnav" aria-label="Navigasi utama">${nav.map(n=>`<button type="button" class="${active===n[0]?'active':''}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join('')}</nav>`}
 function uiTop(title,back='home'){return `<header class="top"><button class="back" onclick="go('${back}')">${icon('i-left')}</button><h1>${esc(title)}</h1><img class="topBrand" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></header>`}
-function renderAuth(tab='login'){state.route='auth';let f='';if(tab==='login')f=`<div class="form"><label>Username</label><input id="luser" autocomplete="username"><label for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password"><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Lupa password?</button></div><button class="fullbtn" onclick="doLogin()">Masuk</button></div>`;if(tab==='register')f=`<div class="form"><div id="authStatus" class="auth-feedback" role="alert" aria-live="polite"></div><label>Nama lengkap</label><input id="rname"><label>Username</label><input id="ruser"><label>Email</label><input id="remail" type="email"><label>No. HP (opsional)</label><input id="rphone" inputmode="tel"><label>Kode referral (opsional)</label><input id="rref"><label>Password</label><input id="rpass" type="password"><label>Ulangi password</label><input id="rpass2" type="password"><button class="fullbtn" onclick="doRegister()">Daftar</button><div class="notice">Akun langsung aktif setelah pendaftaran. Tidak perlu verifikasi email. Gunakan email yang benar untuk pemulihan password.</div></div>`;if(tab==='forgot')f=`<div class="form"><div class="auth-recovery-title">Atur ulang password</div><p class="notice">Masukkan email yang terdaftar. Link pemulihan akan dikirim ke email tersebut. Setelah menerima email, cukup salin tautannya dan tempel langsung di aplikasi.</p><label for="femail">Alamat email</label><input id="femail" type="email" inputmode="email" autocomplete="email" placeholder="contoh@email.com"><button class="fullbtn" onclick="doForgot()">Kirim Email Pemulihan</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('reset')">Sudah punya tautan email?</button><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;
-if(tab==='reset')f=`<div class="form ciRecoveryForm"><div class="auth-recovery-title">Buat password baru</div><p class="notice">Buka email pemulihan. Tekan lama tautan Reset Password lalu pilih <b>Salin alamat link</b>. Tempel di bawah, tanpa membukanya di browser. Langkah ini tidak memerlukan localhost.</p><label for="recoveryLink">Tautan dari email</label><textarea id="recoveryLink" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Tempel tautan pemulihan dari email di sini"></textarea><label for="newRecoveryPassword">Password baru</label><input id="newRecoveryPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter, huruf dan angka"><label for="confirmRecoveryPassword">Ulangi password baru</label><input id="confirmRecoveryPassword" type="password" autocomplete="new-password"><div class="auth-feedback" id="resetStatus" role="alert" aria-live="polite"></div><button class="fullbtn" id="saveRecoveryPassword" type="button" onclick="completeRecovery()">Simpan Password Baru</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Kirim ulang email</button><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;root.innerHTML=`<section class="auth ${tab==='register'?'auth--register':''}"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Cireng Indi</h1><p class="lead">Camilan & frozen food pilihan keluarga</p>${tab==='forgot'||tab==='reset'?'':`<div class="authTabs"><button type="button" class="${tab==='login'?'active':''}" onclick="renderAuth('login')">Masuk</button><button type="button" class="${tab==='register'?'active':''}" onclick="renderAuth('register')">Daftar</button></div>`}${f}</div></section>`}
+function renderAuth(tab='login'){state.route='auth';let f='';if(tab==='login')f=`<div class="form"><label>Username</label><input id="luser" autocomplete="username"><label for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password"><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Lupa password?</button></div><button class="fullbtn" onclick="doLogin()">Masuk</button></div>`;if(tab==='register')f=`<div class="form"><div id="authStatus" class="auth-feedback" role="alert" aria-live="polite"></div><label>Nama lengkap</label><input id="rname"><label>Username</label><input id="ruser"><label>Email</label><input id="remail" type="email"><label>No. HP (opsional)</label><input id="rphone" inputmode="tel"><label>Kode referral (opsional)</label><input id="rref"><label>Password</label><input id="rpass" type="password"><label>Ulangi password</label><input id="rpass2" type="password"><button class="fullbtn" onclick="doRegister()">Daftar</button><div class="notice">Akun langsung aktif setelah pendaftaran. Tidak perlu verifikasi email. Gunakan email yang benar untuk pemulihan password.</div></div>`;if(tab==='forgot')f=`<div class="form"><div class="auth-recovery-title">Atur ulang password</div><p class="notice">Masukkan email yang terdaftar. Kami akan mengirim email pemulihan. Gunakan kode OTP 6 digit jika tersedia, atau tautan pemulihan sebagai alternatif.</p><label for="femail">Alamat email</label><input id="femail" type="email" inputmode="email" autocomplete="email" value="${esc(state.recoveryEmail||'')}" placeholder="contoh@email.com"><button class="fullbtn" onclick="doForgot()">Kirim Email Pemulihan</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('reset')">Sudah punya tautan email?</button><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;
+if(tab==='reset')f=`<div class="form ciRecoveryForm">
+ <div class="auth-recovery-title">Buat password baru</div>
+ <p class="notice">Masukkan <b>kode OTP 6 digit</b> dari email pemulihan Cireng Indi. Jika email masih berisi tautan, gunakan pilihan tautan di bawah.</p>
+ <label for="resetEmail">Email terdaftar</label>
+ <input id="resetEmail" type="email" inputmode="email" autocomplete="email" value="${esc(state.recoveryEmail||'')}" placeholder="Email akun Cireng Indi">
+ <label for="recoveryOtp">Kode OTP dari email</label>
+ <input id="recoveryOtp" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6" placeholder="6 digit kode OTP" aria-describedby="otpHelp">
+ <small id="otpHelp" class="ciOtpHelp">Kode hanya berlaku sementara. Jangan berikan kode kepada siapa pun.</small>
+ <details class="ciLegacyRecovery"><summary>Gunakan tautan dari email sebagai alternatif</summary>
+  <p class="notice">Jika email berisi tombol Reset Password, salin alamat tautannya dan tempel di bawah tanpa membukanya.</p>
+  <label for="recoveryLink">Tautan pemulihan</label>
+  <textarea id="recoveryLink" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Tempel tautan dari email"></textarea>
+ </details>
+ <label for="newRecoveryPassword">Password baru</label>
+ <input id="newRecoveryPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter, huruf dan angka">
+ <label for="confirmRecoveryPassword">Ulangi password baru</label>
+ <input id="confirmRecoveryPassword" type="password" autocomplete="new-password">
+ <div class="auth-feedback" id="resetStatus" role="alert" aria-live="polite"></div>
+ <button class="fullbtn" id="saveRecoveryPassword" type="button" onclick="completeRecovery()">Simpan Password Baru</button>
+ <div class="auth-subactions">
+  <button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Kirim ulang email</button>
+  <button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button>
+ </div></div>`;root.innerHTML=`<section class="auth ${tab==='register'?'auth--register':''}"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Cireng Indi</h1><p class="lead">Camilan & frozen food pilihan keluarga</p>${tab==='forgot'||tab==='reset'?'':`<div class="authTabs"><button type="button" class="${tab==='login'?'active':''}" onclick="renderAuth('login')">Masuk</button><button type="button" class="${tab==='register'?'active':''}" onclick="renderAuth('register')">Daftar</button></div>`}${f}</div></section>`}
 async function doLogin(){const username=luser.value.trim(),password=lpass.value;if(!username||!password)return toast('Lengkapi username dan password.');if(state.authenticating)return;state.authenticating=true;try{const d=await auth({action:'login',username,password});sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id,username:d.member?.username||username,fullName:d.member?.full_name||''});state.boot=null;await go('home')}catch(e){fail(e)}finally{state.authenticating=false}}
 function registrationError(message){const box=document.getElementById('authStatus');if(box){box.textContent=message;box.scrollIntoView({block:'center'});}else toast(message)}
 async function doRegister(){
@@ -1331,8 +1362,9 @@ async function doForgot(){
  if(button){button.disabled=true;button.textContent='Mengirim…'}
  try{
   await auth({action:'forgot_password',email});
+  state.recoveryEmail=email;
   renderAuth('reset');
-  toast('Jika email terdaftar, tautan pemulihan telah dikirim. Salin tautan dari email ke formulir ini.');
+  toast('Jika email terdaftar, email pemulihan dikirim. Masukkan kode OTP atau gunakan tautan dari email.');
  }catch(e){
   const code=String(e?.message||e).toLowerCase();
   if(code.includes('rate_limit'))toast('Permintaan email terlalu sering. Coba beberapa menit lagi.');
@@ -1365,30 +1397,42 @@ function recoveryTokenFromLink(raw){
  return null;
 }
 async function completeRecovery(){
- const link=document.getElementById('recoveryLink')?.value||'';
+ const email=document.getElementById('resetEmail')?.value.trim().toLowerCase()||'';
+ const otp=document.getElementById('recoveryOtp')?.value.trim()||'';
+ const link=document.getElementById('recoveryLink')?.value.trim()||'';
  const password=document.getElementById('newRecoveryPassword')?.value||'';
  const again=document.getElementById('confirmRecoveryPassword')?.value||'';
  const status=document.getElementById('resetStatus');
  const showError=msg=>{if(status)status.textContent=msg;else toast(msg)};
- const credential=recoveryTokenFromLink(link);
- if(!credential)return showError('Tautan tidak valid. Tempel alamat tautan asli dari email pemulihan, bukan alamat halaman error.');
+ let credential=null;
+ if(otp){
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showError('Isi email yang menerima OTP.');
+  if(!/^\d{6}$/.test(otp))return showError('Kode OTP harus terdiri dari 6 angka.');
+  credential={email,otp};
+ }else{
+  credential=recoveryTokenFromLink(link);
+  if(!credential)return showError('Masukkan kode OTP 6 digit, atau tempel tautan pemulihan dari email.');
+ }
  if(password.length<8||password.length>128||!/[a-z]/i.test(password)||!/[0-9]/.test(password))
   return showError('Password harus 8–128 karakter dan mengandung huruf serta angka.');
  if(password!==again)return showError('Konfirmasi password belum sama.');
  if(state.passwordResetting)return;
  state.passwordResetting=true;
  const btn=document.getElementById('saveRecoveryPassword');
- if(btn){btn.disabled=true;btn.textContent='Menyimpan…'}
+ if(btn){btn.disabled=true;btn.textContent='Memverifikasi…'}
  if(status)status.textContent='';
  try{
   await auth({action:'complete_password_reset',password,...credential});
-  const current=state.session||sessionRead();
-  if(current){sessionClear();state.me=null;state.boot=null}
+  state.recoveryEmail='';
+  if(state.session||sessionRead()){sessionClear();state.me=null;state.boot=null}
   renderAuth('login');
   toast('Password berhasil diperbarui. Silakan masuk dengan password baru.');
  }catch(e){
   const code=String(e?.message||e).toUpperCase();
-  showError(code.includes('EXPIRED')||code.includes('INVALID')?'Tautan sudah kedaluwarsa atau pernah dipakai. Kirim ulang email pemulihan.':'Reset password belum berhasil. Coba beberapa saat lagi.');
+  if(code.includes('OTP_INVALID'))showError('Kode OTP salah, sudah digunakan, atau kedaluwarsa. Periksa email atau minta kode baru.');
+  else if(code.includes('EXPIRED')||code.includes('LINK_INVALID'))
+   showError('Tautan sudah kedaluwarsa atau pernah digunakan. Kirim ulang email.');
+  else showError('Reset password belum berhasil. Coba beberapa saat lagi.');
  }finally{
   state.passwordResetting=false;
   if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan Password Baru'}
