@@ -265,7 +265,7 @@ let tt;function toast(m){const t=document.getElementById("toast");t.textContent=
 function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
 function saveSession(s){
  const old=state.session||{};
- state.session={...s,_ciScreens:old._ciScreens||{},_ciDashboard:old._ciDashboard||null};
+ state.session={...s,_ciScreens:old._ciScreens||{},_ciDashboard:old._ciDashboard||null,_ciPayloads:old._ciPayloads||{}};
  Native.saveSession(JSON.stringify(state.session));
 }
 
@@ -281,6 +281,13 @@ function restoreOwnerViews(session){
   }
  }
  if(session?._ciDashboard&&typeof session._ciDashboard==='object')state.cache.dashboard=session._ciDashboard;
+ const payloads=session?._ciPayloads;
+ if(payloads&&typeof payloads==='object'){
+  if(Array.isArray(payloads.products?.variants)&&Array.isArray(payloads.products?.products))state.cache.products=payloads.products;
+  if(Array.isArray(payloads.rewards?.rewards))state.cache.rewards=payloads.rewards;
+  if(payloads.operations&&typeof payloads.operations==='object')state.cache.operations=payloads.operations;
+  if(payloads.vouchers&&typeof payloads.vouchers==='object')state.cache.vouchers=payloads.vouchers;
+ }
 }
 function persistOwnerView(page){
  if(!OWNER_VIEW_KEYS.includes(page)||state.page!==page||!state.session?.access_token)return;
@@ -297,6 +304,24 @@ function persistOwnerView(page){
   total-=views[oldest].length;delete views[oldest];
  }
  state.session._ciScreens=views;
+ // Stock operations must have local source data before network fetch completes.
+ if(['products','rewards','operations','vouchers'].includes(page)){
+  const data=state.cache[page];
+  if(data&&typeof data==='object'){
+   const payloads={...(state.session._ciPayloads||{})};
+   try{
+    const candidate=JSON.stringify(data);
+    if(candidate.length<105000)payloads[page]=data;
+    let total=Object.values(payloads).reduce((n,v)=>n+JSON.stringify(v).length,0);
+    for(const oldest of Object.keys(payloads)){
+     if(total<=170000)break;
+     if(oldest===page)continue;
+     total-=JSON.stringify(payloads[oldest]).length;delete payloads[oldest];
+    }
+    state.session._ciPayloads=payloads;
+   }catch(e){}
+  }
+ }
  try{Native.saveSession(JSON.stringify(state.session))}catch(e){}
 }
 function saveOwnerDashboardSnapshot(d){
