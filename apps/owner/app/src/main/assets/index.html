@@ -81,6 +81,21 @@ html,body{background:linear-gradient(145deg,#fffaf6,#fff4e7)}
 
 #ownerAuthStatus:empty{display:none}
 #ownerAuthStatus:not(:empty){border:1px solid #e6b69e;background:#fff5ec;color:#733b2c;padding:11px;border-radius:12px;margin:6px 0;text-align:left;line-height:1.5}
+
+/* Owner email recovery, isolated from Member and main dashboard. */
+.login .ciOwnerRecovery{max-width:480px}
+.login .ciOwnerRecovery h1{font-size:24px;line-height:1.3}
+.login .ciOwnerRecovery p{font-size:12.5px;line-height:1.55}
+.login .ciOwnerRecovery input{font-size:14px}
+.login .ciOwnerRecovery #ownerResetOtp{font-size:21px;font-weight:800;letter-spacing:5px;text-align:center;font-variant-numeric:tabular-nums}
+.login .ciOwnerOtpHelp{display:block;margin-top:7px;font-size:11px;line-height:1.45;color:#806c5e}
+.login .ciOwnerRecovery textarea{resize:vertical;display:block;width:100%;min-height:80px;padding:11px;border:1px solid #d9ccc5;border-radius:12px;font:inherit;font-size:12px;line-height:1.5;background:#fffcf7;color:#37251f}
+.login .ciOwnerRecoveryLink{margin-top:15px;background:#fff7ed;border:1px solid #e9d8c8;border-radius:14px;padding:12px}
+.login .ciOwnerRecoveryLink summary{font-weight:750;font-size:12px;color:#85432d;cursor:pointer}
+.login .ciOwnerRecoveryNav{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-top:13px}
+.login .ciOwnerRecovery #ownerRecoveryStatus:not(:empty){padding:11px;border-radius:11px;background:#fff0e8;border:1px solid #e5b99f;color:#763e2a;margin-top:13px;font-size:12px;line-height:1.5}
+.login .ciOwnerRecovery .full:disabled{opacity:.65}
+@media(max-width:370px){.login .ciOwnerRecovery h1{font-size:21px}}
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
@@ -153,7 +168,7 @@ function shell(body,active){
  return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Panduan Verifikasi Owner</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><button type="button" class="auth-text-action" onclick="renderOwnerForgot()">Lupa Password? Reset melalui Email</button></div><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Panduan Verifikasi Owner</button></div></section>`
 }
 function registerOwner(){
  const email='indicireng@gmail.com';
@@ -167,6 +182,161 @@ function registerOwner(){
  <p class="auth-password-info">Pengiriman email dibatasi oleh penyedia. Jika diminta menunggu, jangan mendaftar atau mengirim berulang kali.</p>
  <button type="button" class="btn secondary" style="width:100%;margin-top:12px" onclick="renderLogin()">Kembali ke Login</button>
  </div></section>`;
+}
+
+
+/* Recovery runs through Supabase Auth's one-time recovery OTP. This isolated
+ * flow NEVER stores the recovery session in the Owner session store.
+ * The token must also pass an actual owner role check before updating password.
+ */
+const ownerRecovery={email:'',inProgress:false};
+function renderOwnerForgot(){
+ const email=ownerRecovery.email||'';
+ root.innerHTML='<section class="login"><div class="loginbox ciOwnerRecovery">'+
+  '<div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div>'+
+  '<h1>Lupa Password Owner</h1>'+
+  '<p>Masukkan email akun Owner yang terdaftar. Kami akan mengirimkan kode pemulihan melalui email.</p>'+
+  '<label for="ownerRecoveryEmail">Email Owner</label>'+
+  '<input id="ownerRecoveryEmail" type="email" autocomplete="email" inputmode="email" value="'+esc(email)+'" placeholder="Email akun Owner">'+
+  '<div id="ownerRecoveryStatus" role="alert" aria-live="polite"></div>'+
+  '<button type="button" class="full" id="sendOwnerRecovery" onclick="sendOwnerRecovery()">Kirim Kode OTP</button>'+
+  '<div class="ciOwnerRecoveryNav"><button type="button" class="auth-text-action" onclick="renderOwnerReset()">Sudah menerima kode?</button>'+
+  '<button type="button" class="auth-text-action" onclick="renderLogin()">Kembali ke Masuk</button></div>'+
+  '<p class="auth-password-info">Pengiriman email dibatasi untuk keamanan akun. Jangan kirim berulang kali jika belum menerima email.</p>'+
+ '</div></section>';
+}
+function renderOwnerReset(prefill=''){
+ root.innerHTML='<section class="login"><div class="loginbox ciOwnerRecovery">'+
+  '<div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div>'+
+  '<h1>Buat Password Baru</h1>'+
+  '<p>Masukkan kode OTP 6 digit dari email pemulihan Owner, lalu tentukan password baru.</p>'+
+  '<label for="ownerResetEmail">Email Owner</label>'+
+  '<input id="ownerResetEmail" type="email" autocomplete="email" inputmode="email" value="'+esc(ownerRecovery.email||'')+'" placeholder="Email akun Owner">'+
+  '<label for="ownerResetOtp">Kode OTP 6 digit</label>'+
+  '<input id="ownerResetOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="000000" aria-describedby="ownerOtpHelp">'+
+  '<small class="ciOwnerOtpHelp" id="ownerOtpHelp">Kode hanya berlaku sementara dan tidak boleh diberikan kepada orang lain.</small>'+
+  '<details class="ciOwnerRecoveryLink"><summary>Jika email masih berisi tautan, gunakan tautan pemulihan</summary>'+
+  '<label for="ownerRecoveryLink">Tautan dari email</label>'+
+  '<textarea id="ownerRecoveryLink" rows="3" spellcheck="false" autocomplete="off" placeholder="Tempel alamat tautan Reset Password"></textarea>'+
+  '</details>'+
+  '<label for="ownerNewPassword">Password baru</label>'+
+  '<input id="ownerNewPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter, huruf dan angka">'+
+  '<label for="ownerConfirmPassword">Ulangi password baru</label>'+
+  '<input id="ownerConfirmPassword" type="password" autocomplete="new-password" placeholder="Ketik ulang password">'+
+  '<div id="ownerRecoveryStatus" role="alert" aria-live="polite"></div>'+
+  '<button type="button" id="ownerConfirmRecovery" class="full" onclick="completeOwnerRecovery()">Verifikasi & Simpan Password</button>'+
+  '<div class="ciOwnerRecoveryNav"><button type="button" class="auth-text-action" onclick="renderOwnerForgot()">Kirim ulang kode</button>'+
+  '<button type="button" class="auth-text-action" onclick="renderLogin()">Kembali ke Masuk</button></div>'+
+ '</div></section>';
+ if(prefill){const target=document.getElementById('ownerRecoveryLink');if(target){target.value=prefill;target.closest('details').open=true}}
+}
+function ownerRecoveryMessage(message){
+ const el=document.getElementById('ownerRecoveryStatus');
+ if(el)el.textContent=message;else toast(message);
+}
+async function sendOwnerRecovery(){
+ const email=(document.getElementById('ownerRecoveryEmail')?.value||'').trim().toLowerCase();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return ownerRecoveryMessage('Isi alamat email Owner yang valid.');
+ if(!reserveAction('owner-send-recovery'))return;
+ const button=document.getElementById('sendOwnerRecovery');
+ if(button){button.disabled=true;button.textContent='Mengirim email…'}
+ ownerRecoveryMessage('');
+ try{
+  // An explicit website redirect avoids shipping development localhost URLs.
+  // Recovery links still work via manual paste if the email template is older.
+  await parse(await fetch(SUPABASE_URL+'/auth/v1/recover?redirect_to='+encodeURIComponent('https://cirengindi.com/'),{
+   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email})
+  }));
+  ownerRecovery.email=email;
+  renderOwnerReset();
+  toast('Jika email terdaftar, email pemulihan telah dikirim. Masukkan kode OTP dari email.');
+ }catch(e){
+  const message=String(e?.message||e).toLowerCase();
+  ownerRecoveryMessage(message.includes('rate')?'Terlalu banyak permintaan email. Tunggu beberapa menit lalu coba lagi.':'Email belum dapat dikirim. Periksa koneksi atau konfigurasi email Supabase.');
+ }finally{
+  releaseAction('owner-send-recovery');
+  if(button?.isConnected){button.disabled=false;button.textContent='Kirim Kode OTP'}
+ }
+}
+function ownerRecoveryTokenFromLink(text){
+ const raw=String(text||'').trim();
+ if(raw.length<20||raw.length>8192)return null;
+ let url;
+ try{url=new URL(raw)}catch(_){return null}
+ const host=url.hostname.toLowerCase();
+ if(!['tbviryuimoxgapubdjio.supabase.co','cirengindi.com','www.cirengindi.com','localhost','127.0.0.1'].includes(host))
+  return null;
+ if(url.protocol!=='https:'&&url.protocol!=='http:')return null;
+ const hash=new URLSearchParams(url.hash.replace(/^#/,''));
+ const type=url.searchParams.get('type')||hash.get('type');
+ if(type&&type!=='recovery')return null;
+ const token=url.searchParams.get('token_hash')||url.searchParams.get('token')||hash.get('token_hash');
+ if(token&&/^[A-Za-z0-9._~-]{24,512}$/.test(token))return {token_hash:token};
+ const accessToken=hash.get('access_token');
+ if(accessToken&&accessToken.length>=64&&accessToken.length<=8192)
+  return {access_token:accessToken};
+ return null;
+}
+async function completeOwnerRecovery(){
+ const email=(document.getElementById('ownerResetEmail')?.value||'').trim().toLowerCase();
+ const otp=(document.getElementById('ownerResetOtp')?.value||'').trim();
+ const link=(document.getElementById('ownerRecoveryLink')?.value||'').trim();
+ const password=document.getElementById('ownerNewPassword')?.value||'';
+ const confirmation=document.getElementById('ownerConfirmPassword')?.value||'';
+ if(password.length<8||password.length>128||!/[a-z]/i.test(password)||!/[0-9]/.test(password))
+  return ownerRecoveryMessage('Password harus 8–128 karakter dan mengandung huruf serta angka.');
+ if(password!==confirmation)return ownerRecoveryMessage('Konfirmasi password belum sama.');
+ let proof=null;
+ if(otp){
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^\d{6}$/.test(otp))
+   return ownerRecoveryMessage('Isi email dan kode OTP 6 angka yang benar.');
+  proof={email,token:otp,type:'recovery'};
+ }else{
+  const legacy=ownerRecoveryTokenFromLink(link);
+  if(!legacy)return ownerRecoveryMessage('Masukkan kode OTP 6 angka atau tautan pemulihan yang sah dari email.');
+  if(legacy.access_token)proof={access_token:legacy.access_token};
+  else proof={token_hash:legacy.token_hash,type:'recovery'};
+ }
+ if(!reserveAction('owner-reset-password'))return;
+ const button=document.getElementById('ownerConfirmRecovery');
+ if(button){button.disabled=true;button.textContent='Memverifikasi…'}
+ ownerRecoveryMessage('');
+ try{
+  // GoTrue validates a single-use recovery token and returns a scoped session.
+  // Do not store the recovery token in local storage / Android secure session.
+  let token=proof.access_token||'';
+  if(!token){
+   const verified=await parse(await fetch(SUPABASE_URL+'/auth/v1/verify',{
+    method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(proof)
+   }));
+   token=verified.access_token||verified.session?.access_token||'';
+  }
+  if(!token)throw new Error('RESET_TOKEN_EXPIRED');
+  // Explicit Owner role check BEFORE changing password. Member or Staff credentials
+  // cannot be used to change password through this Owner-only flow.
+  const identity=await parse(await fetch(SUPABASE_URL+'/functions/v1/cirengindi-owner-api',{
+   method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},
+   body:JSON.stringify({action:'me'})
+  }));
+  if(identity.staff?.role!=='owner'||identity.staff?.active!==true)
+   throw new Error('OWNER_REQUIRED');
+  const changed=await parse(await fetch(SUPABASE_URL+'/auth/v1/user',{
+   method:'PUT',headers:{apikey:KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},
+   body:JSON.stringify({password})
+  }));
+  if(!changed||changed.error)throw new Error('PASSWORD_RESET_UNAVAILABLE');
+  ownerRecovery.email='';
+  renderLogin('Password Owner berhasil diperbarui. Silakan masuk menggunakan password baru.');
+ }catch(e){
+  const code=String(e?.message||e).toUpperCase();
+  if(code.includes('OWNER_REQUIRED')||code.includes('STAFF_REQUIRED')||code.includes('AUTH_REQUIRED'))
+   ownerRecoveryMessage('Kode pemulihan hanya bisa digunakan untuk akun Owner yang sudah terverifikasi dan aktif.');
+  else if(code.includes('RATE'))ownerRecoveryMessage('Terlalu banyak percobaan. Tunggu sebentar, lalu kirim kode baru.');
+  else ownerRecoveryMessage('Kode OTP atau tautan salah, sudah terpakai, atau kedaluwarsa. Minta email pemulihan baru.');
+ }finally{
+  releaseAction('owner-reset-password');
+  if(button?.isConnected){button.disabled=false;button.textContent='Verifikasi & Simpan Password'}
+ }
 }
 
 async function resendOwnerVerification(button){
