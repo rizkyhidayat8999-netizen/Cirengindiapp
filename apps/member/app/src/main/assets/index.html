@@ -1174,6 +1174,18 @@ html,body{background:#fff9f2!important}
 .auth .ciRecoveryForm .ciLegacyRecovery[open] summary{margin-bottom:10px}
 .auth .ciRecoveryForm .ciLegacyRecovery textarea{width:100%}
 
+
+/* Full prices per variant; no plus-price deltas and no faded Add state. */
+.ciProductOptions .ciVariantRight{gap:12px}
+.ciProductOptions .ciVariantFullPrice{min-width:87px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;font-weight:750;color:#7f402b;white-space:nowrap}
+.ciProductOptions .ciVariant.selected .ciVariantFullPrice{font-weight:850;color:#985039}
+.ciProductOptions .ciVariant[disabled] .ciVariantFullPrice{color:#86776c}
+.ciProductOptions .ciVariantName{flex:1;min-width:0}
+.ciProductBottom .ciAddToCart:not([disabled]){opacity:1!important;filter:none!important}
+.ciSheet .ciSheetAddStatus:empty{display:none}
+.ciSheet .ciSheetAddStatus.is-error{display:block;color:#a74433;font-weight:750}
+@media(max-width:365px){.ciProductOptions .ciVariantFullPrice{min-width:76px;font-size:12.5px}.ciProductOptions .ciVariantRight{gap:8px}}
+
 </style>
 </head>
 <body>
@@ -1886,13 +1898,13 @@ function setCat(id){
  void store();
 }
 async function openP(id){const b=await boot();const p=(b.products||[]).find(x=>x.id===id);if(!p)return;state.product={p,vars:(b.variants||[]).filter(v=>v.product_id===id)};state.qty=1;await go('product')}
-function productOptionsMarkup(vars,minPrice,selectedId){
+function productOptionsMarkup(vars,selectedId){
  return vars.map(v=>{
   const available=v.active!==false&&Number(v.stock||0)>0;
-  const delta=Math.max(0,Number(v.price||0)-Number(minPrice||0));
+  const fullPrice=Number(v.price);
   return '<button type="button" class="ciVariant '+(selectedId===v.id?'selected':'')+'" data-variant="'+esc(v.id)+'" onclick="selVariant(\''+esc(v.id)+'\')" '+(available?'':'disabled')+' aria-pressed="'+(selectedId===v.id)+'">'+
    '<span class="ciVariantName">'+esc(v.name)+'</span>'+
-   '<span class="ciVariantRight">'+(delta>0?'<small>+'+rp(delta)+'</small>':'')+
+   '<span class="ciVariantRight"><strong class="ciVariantFullPrice">'+rp(Number.isFinite(fullPrice)?fullPrice:0)+'</strong>'+
    (available?'<i class="ciVariantRadio" aria-hidden="true"></i>':'<small>Habis</small>')+'</span></button>';
  }).join('');
 }
@@ -1918,11 +1930,11 @@ async function product(){
  '<div class="ciProductHero"><img '+photoAttrs(p)+' alt="'+esc(p.name)+'">'+
  '<button type="button" class="ciProductBack" onclick="go(\'store\')" aria-label="Kembali ke menu">'+icon('i-left')+'</button></div>'+
  '<section class="ciProductIntro"><span class="ciProductTag">'+esc(productCategoryText(p))+'</span>'+
- '<h1>'+esc(p.name)+'</h1><p class="ciStartLabel">Mulai dari</p><div class="ciStartingPrice">'+rp(minPrice)+'</div>'+
+ '<h1>'+esc(p.name)+'</h1><p class="ciStartLabel">Harga varian yang dipilih</p><div class="ciStartingPrice" id="ciSelectedVariantPrice">'+rp(Number(selected?.price??minPrice))+'</div>'+
  '<p class="ciProductDesc">'+esc(p.description||'Produk pilihan Cireng Indi, dibuat untuk dinikmati bersama keluarga.')+'</p></section>'+
  '<section class="ciProductOptions" aria-labelledby="ciVariantHeading">'+
  '<div class="ciOptionTitle"><h2 id="ciVariantHeading">'+(vars.length>1?'Pilih Varian Produk':'Pilihan Produk')+'</h2><span>Wajib, pilih 1</span></div>'+
- '<div class="ciVariantList" role="group" aria-label="Varian dan ukuran produk">'+productOptionsMarkup(vars,minPrice,x.selected)+'</div></section>'+
+ '<div class="ciVariantList" role="group" aria-label="Varian dan ukuran produk">'+productOptionsMarkup(vars,x.selected)+'</div></section>'+
  '<div class="ciProductPoints">'+icon('i-star','sm')+' Poin reward mengikuti ketentuan transaksi.</div>'+
  '<section class="ciProductRecommendations"><h2>Lebih cocok dinikmati bersama ini</h2><div class="ciRelatedScroll">'+rec.map(q=>{
   const v=variantFor(q,state.boot);
@@ -1943,6 +1955,7 @@ function updateProductSelection(){
  const qv=document.getElementById('qv');if(qv)qv.textContent=String(state.qty);
  const btn=document.getElementById('ciAddButton');
  if(btn)btn.textContent='Tambah – '+rp(Number(selected.price||0)*state.qty);
+ const display=document.getElementById('ciSelectedVariantPrice');if(display)display.textContent=rp(Number(selected.price||0));
  document.querySelectorAll('.ciVariant').forEach(el=>{
   const selectedNow=el.dataset.variant===selected.id;
   el.classList.toggle('selected',selectedNow);
@@ -1969,45 +1982,76 @@ function quickAddOrSelect(productId){
  return quickAdd(variants[0].id);
 }
 async function quickAdd(id){if(!id)return toast('Varian belum tersedia.');if(pendingCartActions.has(id))return;pendingCartActions.add(id);try{const c=state.cartSnapshot||await api('cart');const e=(c.items||[]).find(x=>x.variant_id===id);await api('cart_set',{variant_id:id,quantity:Number(e?.quantity||0)+1});state.cartSnapshot=null;toast('Ditambahkan ke keranjang.');void cartBar()}catch(e){fail(e)}finally{pendingCartActions.delete(id)}}
+
+/* Show the selected item instantly without blocking the page or claiming success
+   until the cart API responds. */
+let ciProductAddSerial=0;
 async function addFromProduct(){
  const id=state.product?.selected;
- if(!id)return toast('Pilih varian.');
+ if(!id)return toast('Pilih varian produk.');
  if(pendingCartActions.has(id))return;
- const v=state.product.vars.find(v=>v.id===id);
- if(!v||Number(v.stock||0)<=0)return toast('Stok pilihan ini sedang habis.');
+ const v=state.product.vars.find(x=>x.id===id);
+ if(!v||v.active===false||Number(v.stock||0)<=0)return toast('Stok pilihan ini sedang habis.');
+ const quantity=Math.max(1,Number(state.qty)||1);
+ const selected={id,variant:v,product:state.product.p,quantity,serial:++ciProductAddSerial};
  pendingCartActions.add(id);
- const button=document.getElementById('ciAddButton');
- if(button)button.disabled=true;
+ showSheet(selected); // no spinner, disabled Add button, or repainting the product page
  try{
-  const c=state.cartSnapshot||await api('cart');
-  const e=(c.items||[]).find(x=>x.variant_id===id);
-  const desired=Number(e?.quantity||0)+Number(state.qty||1);
-  if(desired>Number(v.stock))return toast('Jumlah melebihi stok yang tersedia.');
-  await api('cart_set',{variant_id:id,quantity:desired});
-  state.cartSnapshot=null;
-  showSheet();
- }catch(e){fail(e)}
- finally{pendingCartActions.delete(id);if(button)button.disabled=false}
+  const before=state.cartSnapshot||await api('cart');
+  const line=(before.items||[]).find(x=>x.variant_id===id);
+  const desired=Number(line?.quantity||0)+quantity;
+  if(desired>Number(v.stock)){
+   completeProductSheet(selected,false,'Jumlah melebihi stok yang tersedia.');
+   toast('Jumlah melebihi stok yang tersedia.');
+   return false;
+  }
+  const cart=await api('cart_set',{variant_id:id,quantity:desired});
+  state.cartSnapshot=cart;
+  completeProductSheet(selected,true,'Berhasil masuk ke keranjang!');
+  if(state.route==='store')renderCartDock(cart);
+  return true;
+ }catch(error){
+  completeProductSheet(selected,false,'Produk belum berhasil ditambahkan. Coba lagi.');
+  const reason=String(error?.message||'').toUpperCase();
+  toast(reason.includes('STOCK')?'Stok tidak mencukupi.':'Gagal menambahkan produk. Periksa koneksi lalu coba lagi.');
+  return false;
+ }finally{pendingCartActions.delete(id)}
 }
-function showSheet(){
- const p=state.product.p;
- const v=state.product.vars.find(x=>x.id===state.product.selected);
+function completeProductSheet(item,ok,message){
+ const sheet=document.getElementById('sheet');
+ if(!sheet||sheet.dataset.addSerial!==String(item.serial))return;
+ sheet.dataset.addResult=ok?'success':'error';
+ const status=sheet.querySelector('.ciSheetAddStatus');
+ if(status){status.textContent=message;status.classList.toggle('is-error',!ok)}
+ const primary=sheet.querySelector('.ciSheetPrimary');
+ if(primary)primary.textContent=ok?'Cek Keranjang':'Coba Lagi';
+ if(ok&&sheet.dataset.openCartAfter==='1'){closeProductSheet();void go('cart')}
+}
+function openCartAfterProductAdd(){
+ const sheet=document.getElementById('sheet');
+ if(!sheet)return void go('cart');
+ if(sheet.dataset.addResult==='success'){closeProductSheet();return void go('cart')}
+ if(sheet.dataset.addResult==='error'){closeProductSheet();return void addFromProduct()}
+ sheet.dataset.openCartAfter='1'; // navigation occurs once the server confirms
+}
+function showSheet(item){
+ const p=item.product,v=item.variant;
  document.getElementById('sheet')?.remove();
- const suggestions=(state.boot?.products||[]).filter(x=>x.id!==p.id&&x.active!==false)
+ const recommendations=(state.boot?.products||[]).filter(x=>x.id!==p.id&&x.active!==false)
   .sort((a,b)=>Number(!!b.best_seller)-Number(!!a.best_seller)||Number(a.sort_order)-Number(b.sort_order)).slice(0,6);
- const cards=suggestions.map(q=>{
+ const cards=recommendations.map(q=>{
   const first=variantFor(q,state.boot);
   return '<div class="ciSheetRec"><img '+photoAttrs(q)+'><div><b>'+esc(q.name)+'</b><strong>Mulai '+rp(first?.price??q.base_price)+'</strong></div>'+
-  '<button type="button" aria-label="Tambahkan '+esc(q.name)+'" onclick="sheetAddSuggestion(\''+esc(q.id)+'\')">'+icon('i-plus')+'</button></div>';
+   '<button type="button" aria-label="Tambahkan '+esc(q.name)+'" onclick="sheetAddSuggestion(\''+esc(q.id)+'\')">'+icon('i-plus')+'</button></div>';
  }).join('');
  document.body.insertAdjacentHTML('beforeend',
-  '<div id="sheet" class="sheetBg ciSheetOverlay" role="presentation" onclick="if(event.target===this)closeProductSheet()">'+
+  '<div id="sheet" class="sheetBg ciSheetOverlay" role="presentation" data-add-result="pending" data-add-serial="'+item.serial+'" onclick="if(event.target===this)closeProductSheet()">'+
   '<section class="sheet ciSheet" role="dialog" aria-modal="true" aria-labelledby="ciSheetHeading">'+
   '<div class="grab"></div><h2 id="ciSheetHeading">Lengkapi Belanjamu</h2>'+
-  '<div class="ciAddedProduct"><img '+photoAttrs(p)+'><div><b>'+esc(p.name)+'</b><p>'+esc(v?.name||'')+' · '+state.qty+' item</p>'+
-  '<span>Berhasil masuk ke keranjang!</span></div><small>'+state.qty+'</small></div>'+
+  '<div class="ciAddedProduct"><img '+photoAttrs(p)+'><div><b>'+esc(p.name)+'</b><p>'+esc(v.name||'')+' · '+item.quantity+' item · '+rp(Number(v.price||0)*item.quantity)+'</p>'+
+  '<span class="ciSheetAddStatus" aria-live="polite"></span></div><small>'+item.quantity+'</small></div>'+
   '<h3>Lebih cocok dinikmati bersama ini</h3><div class="ciSheetRelated">'+cards+'</div>'+
-  '<div class="ciSheetActions"><button type="button" class="ciSheetPrimary" onclick="closeProductSheet();go(\'cart\')">Cek Keranjang</button>'+
+  '<div class="ciSheetActions"><button type="button" class="ciSheetPrimary" onclick="openCartAfterProductAdd()">Cek Keranjang</button>'+
   '<button type="button" class="ciSheetSecondary" onclick="closeProductSheet();go(\'store\')">Lanjut Belanja</button></div>'+
   '</section></div>');
 }
