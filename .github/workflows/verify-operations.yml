@@ -152,11 +152,11 @@ jobs:
               throw Error('Member photos must be fixed offline sources with no image replacement after loading');
             // Every product thumbnail must now be a deterministic embedded real-photo tile.
             // This avoids local APK fallback photos with black/blurred sidebars.
-            const fixedPhotos=member.match(/data:image\\/webp;base64,/g)||[];
+            const fixedPhotos=member.match(/data:image\/webp;base64,/g)||[];
             const normalized=member.slice(member.indexOf('/* CI_NORMALIZED_PHOTO_START */'),
                 member.indexOf('/* CI_NORMALIZED_PHOTO_END */'));
             if(!member.includes('const source=CI_NORMALIZED_PHOTOS[id]||stablePhotoSource(id,resolved?.name);') ||
-               (normalized.match(/data:image\\/webp;base64,/g)||[]).length!==31 ||
+               (normalized.match(/data:image\/webp;base64,/g)||[]).length!==31 ||
                !member.includes('transform:none!important') ||
                Buffer.byteLength(member,'utf8')>512*1024)
               throw Error('All 31 product photos must use fixed offline cream studio tiles; no zoom or replacements');
