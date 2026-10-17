@@ -69,6 +69,38 @@ jobs:
              !otpTemplate.includes('{{ .Token }}'))
             throw Error('Member OTP recovery requires server verifyOtp, UI and branded mail template');
           if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
+          // Owner email recovery: public proof is verified by GoTrue first; staff/owner role
+          // is confirmed before any password mutation and no recovery session is saved.
+          for(const v of [
+            'function renderOwnerForgot()', 'function renderOwnerReset(',
+            'async function sendOwnerRecovery()', 'async function completeOwnerRecovery()',
+            '/auth/v1/recover', '/auth/v1/verify', '/auth/v1/user',
+            "identity.staff?.role!=='owner'", 'id="ownerResetOtp"',
+            'function ownerRecoveryTokenFromLink('
+          ])if(!owner.includes(v))throw Error('Owner OTP recovery is missing '+v);
+          const ownerRecoveryStart=owner.indexOf('async function completeOwnerRecovery()');
+          const ownerRecoveryEnd=owner.indexOf('async function resendOwnerVerification(',ownerRecoveryStart);
+          const recoverySrc=owner.slice(ownerRecoveryStart,ownerRecoveryEnd);
+          if(!recoverySrc.includes("type:'recovery'") ||
+             !recoverySrc.includes("identity.staff?.role!=='owner'") ||
+             recoverySrc.includes('saveSession(') ||
+             recoverySrc.indexOf("identity.staff?.role!=='owner'")>
+               recoverySrc.indexOf("'/auth/v1/user'"))
+            throw Error('Owner OTP flow must gate verified Owner before user password mutation');
+          const pStart=owner.indexOf('function ownerRecoveryTokenFromLink(');
+          const pEnd=owner.indexOf('async function completeOwnerRecovery()',pStart);
+          if(pStart<0||pEnd<=pStart)throw Error('Owner recovery link parser missing');
+          const parseOwnerRecovery=new Function(owner.slice(pStart,pEnd)+
+            'return ownerRecoveryTokenFromLink;')();
+          const ownerHash='a'.repeat(64);
+          for(const [link,valid] of [
+            ['https://tbviryuimoxgapubdjio.supabase.co/auth/v1/verify?token='+ownerHash+'&type=recovery',true],
+            ['https://cirengindi.com/reset-password?token_hash='+ownerHash+'&type=recovery',true],
+            ['https://evil.example/reset-password?token='+ownerHash+'&type=recovery',false],
+            ['https://tbviryuimoxgapubdjio.supabase.co/auth/v1/verify?token='+ownerHash+'&type=signup',false],
+            ['http://localhost:3000',false]
+          ])if(Boolean(parseOwnerRecovery(link))!==valid)
+            throw Error('Owner recovery link trust policy regression');
           if(owner.includes('/auth/v1/signup'))throw Error('Do not duplicate Owner account creation when account already exists');
           if(!owner.includes('Verifikasi Owner'))throw Error('Missing secure owner activation guidance');
           // UI must never block taps behind a full-screen waiting overlay.
