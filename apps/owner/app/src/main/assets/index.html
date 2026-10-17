@@ -338,12 +338,17 @@ async function loginAuth(email,password){
   method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})
  }))
 }
+let refreshInFlight=null;
 async function refresh(){
- const s=state.session||getSession();if(!s?.refresh_token)throw new Error("AUTH_REQUIRED");
- const d=await parse(await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=refresh_token",{
-  method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})
- }));
- saveSession(d);return d
+ if(refreshInFlight)return refreshInFlight;
+ refreshInFlight=(async()=>{
+  const s=state.session||getSession();if(!s?.refresh_token)throw new Error("AUTH_REQUIRED");
+  const d=await parse(await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=refresh_token",{
+   method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})
+  }));
+  saveSession(d);return d;
+ })();
+ try{return await refreshInFlight}finally{refreshInFlight=null}
 }
 async function ownerApi(action,payload={},retry=true){
  let s=state.session||getSession();state.session=s;if(!s?.access_token)throw new Error("AUTH_REQUIRED");
@@ -589,6 +594,7 @@ function errorText(m){
 function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
 async function go(p){
  const previous=state.page;
+ if(previous===p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))return;
  if(previous!==p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(previous,root.innerHTML);
  state.page=p;const key=++navId;
  previewPage(p);
@@ -892,7 +898,25 @@ async function settings(){
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
 
-(async()=>{state.session=getSession();if(state.session?.access_token){restoreOwnerViews(state.session);previewPage('dashboard');try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}catch(e){clearSession();renderLogin(errorText(e.message))}}else renderLogin()})();
+(async()=>{
+ state.session=getSession();
+ if(!state.session?.access_token){renderLogin();return}
+ restoreOwnerViews(state.session);
+ // Paint the last authorized snapshot immediately. Network verifies and updates in parallel.
+ previewPage('dashboard');
+ const results=await Promise.allSettled([ownerApi('me'),ownerApi('dashboard')]);
+ if(results[0].status==='fulfilled'){
+  if(results[1].status==='fulfilled'){
+   const d=results[1].value;state.cache.dashboard=d;
+   saveOwnerDashboardSnapshot(d);renderDashboard(d);
+  }else toast('Dashboard memakai data terakhir. Periksa koneksi untuk pembaruan.');
+ }else{
+  const e=results[0].reason,code=String(e?.message||e).toUpperCase();
+  if(e?.status===401||e?.status===403||code.includes('AUTH_REQUIRED')||code.includes('STAFF_REQUIRED')||code.includes('JWT')){
+   clearSession();renderLogin('Sesi Owner tidak berlaku. Silakan masuk kembali.');
+  }else toast('Jaringan sedang bermasalah. Data terakhir tetap tersedia.');
+ }
+})();
 </script>
 </body>
 </html>
