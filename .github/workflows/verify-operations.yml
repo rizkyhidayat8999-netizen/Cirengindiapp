@@ -133,6 +133,57 @@ jobs:
             const boot=await call('cirengindi-mobile-api','bootstrap');
             if(boot.status!==200)throw Error('Bootstrap failed '+boot.status+': '+JSON.stringify(boot.data));
             for(const [n,cnt] of [['products',31],['variants',42],['couriers',3]])if(boot.data[n]?.length!==cnt)throw Error('Unexpected '+n+' count: '+boot.data[n]?.length);
+            // Product detail must print the FULL variant price from live catalog,
+            // not an additional charge relative to the cheapest variant.
+            const jsMember=member.match(/<script>([\s\S]*?)<\/script>/)[1];
+            const part=(start,end)=>{
+              const a=jsMember.indexOf(start),b=jsMember.indexOf(end,a);
+              if(a<0||b<=a)throw Error('Missing member detail function '+start);
+              return jsMember.slice(a,b);
+            };
+            const priceFunction=new Function('rp','esc',part('function productOptionsMarkup(','function productCategoryText(')+'return productOptionsMarkup;')(
+              value=>'Rp'+Number(value).toLocaleString('id-ID'),x=>String(x)
+            );
+            const cirengProduct=boot.data.products.find(p=>p.name==='Cireng');
+            const cirengVariants=boot.data.variants.filter(v=>v.product_id===cirengProduct?.id);
+            if(!cirengProduct||cirengVariants.length<2)throw Error('Missing Cireng size variants');
+            const variantUI=priceFunction(cirengVariants,cirengVariants[0].id);
+            for(const variant of cirengVariants){
+              const full='Rp'+Number(variant.price).toLocaleString('id-ID');
+              if(!variantUI.includes(full))throw Error('Variant '+variant.name+' missing real '+full);
+            }
+            if(variantUI.includes('+Rp')||!variantUI.includes('ciVariantFullPrice')||
+               !member.includes('id="ciSelectedVariantPrice"'))
+              throw Error('Member must use absolute prices and update the chosen variant header');
+            // Fast add: paint the confirmation immediately; never disable/fade the
+            // add button or show a network spinner. Success requires API confirmation.
+            const addSource=part('async function addFromProduct(){','function completeProductSheet(');
+            if(addSource.includes('button.disabled=true')||addSource.indexOf('showSheet(selected);')<0||
+               addSource.indexOf('showSheet(selected);')>addSource.indexOf("await api('cart_set'"))
+              throw Error('Product Add must immediately paint without blocking');
+            const events=[];
+            let resolveAdd;
+            const awaiting=new Promise(resolve=>resolveAdd=resolve);
+            const stateMock={product:{p:cirengProduct,vars:cirengVariants,selected:cirengVariants[0].id},
+              qty:2,cartSnapshot:{items:[],subtotal:0},route:'product'};
+            const locks=new Set();
+            const add=new Function('state','pendingCartActions','api','showSheet','completeProductSheet','renderCartDock','toast',
+              'let ciProductAddSerial=0;'+addSource+'return addFromProduct;')(
+              stateMock,locks,
+              async (action,payload)=>{events.push({action,payload});return awaiting},
+              item=>events.push({type:'sheet',item}),
+              (item,ok)=>events.push({type:'finished',ok}),
+              ()=>{},()=>{}
+            );
+            const task=add();
+            if(events[0]?.type!=='sheet'||events[1]?.action!=='cart_set'||
+               events.some(x=>x.type==='finished'))
+              throw Error('Add did not render instantly or declared success before confirmation');
+            resolveAdd({items:[{variant_id:cirengVariants[0].id,quantity:2}],
+              subtotal:Number(cirengVariants[0].price)*2});
+            if(await task!==true||!events.find(x=>x.type==='finished'&&x.ok)||
+               locks.size!==0||!stateMock.cartSnapshot.items.length)
+              throw Error('Confirmed add-to-cart did not resolve safely');
             // Regression: API response must already be sorted ascending for the Member view.
             // Sorting a copy before checking would miss the old Rengginang-first bug.
             const serverCategoryOrder=(boot.data.categories||[]).map(c=>c.name);
