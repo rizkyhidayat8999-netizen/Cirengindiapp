@@ -83,7 +83,7 @@ jobs:
              !member.includes("api('change_password',{current_password:current,password})")||
              !member.includes('function changeMemberPassword()'))
             throw Error('Member password update needs verified existing password and settings UI');
-          if(!backend.includes(String.raw`/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`))
+          if(!backend.includes(String.raw`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`))
             throw Error('Forgot password email format validation broken');
           if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
           // Owner email recovery: public proof is verified by GoTrue first; staff/owner role
