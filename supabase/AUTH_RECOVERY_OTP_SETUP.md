@@ -1,5 +1,43 @@
 # OTP pemulihan password Member Cireng Indi
 
+## Alamat email resmi Cireng Indi
+
+Alamat **kontak bantuan pemulihan** di aplikasi Member dan isi template email
+adalah **indicireng@gmail.com**. Ini bukan email penerima untuk seluruh akun:
+setiap pelanggan harus menerima kode di alamat yang didaftarkan pada akunnya.
+Jangan mengganti `member_profiles.email` milik pelanggan dengan alamat usaha.
+
+Log email Supabase saat pemeriksaan 17 Oktober 2026 menunjukkan
+`mail_from=noreply@mail.app.supabase.io`, bukan email Gmail usaha.
+Mengganti tulisan di HTML template **tidak** mengubah pengirim SMTP.
+
+Untuk membuat **From: Cireng Indi <indicireng@gmail.com>** secara sungguhan,
+konfigurasi melalui dashboard Supabase, bukan database SQL:
+
+1. Di akun Google `indicireng@gmail.com`, aktifkan verifikasi dua langkah dan
+   buat **App Password** khusus SMTP (jika akun mengizinkan).
+2. Buka [Supabase Auth → SMTP](https://supabase.com/dashboard/project/tbviryuimoxgapubdjio/auth/smtp).
+   Aktifkan custom SMTP dan isikan:
+   - Host: `smtp.gmail.com`
+   - Port: `465` dengan TLS, atau `587` dengan STARTTLS (sesuaikan UI)
+   - Username: `indicireng@gmail.com`
+   - Password: **App Password Google**, bukan password Gmail biasa
+   - Sender email: `indicireng@gmail.com`
+   - Sender name: `Cireng Indi`
+3. Periksa pengaturan batas pengiriman email dan template **Reset Password**;
+   pastikan bagian HTML memakai `{{ .Token }}` untuk OTP enam digit.
+4. Uji reset dengan alamat Member uji yang benar-benar terdaftar dan bisa dibuka.
+
+**Jangan kirim App Password, kode OTP, atau password akun di chat, GitHub,
+ataupun log.** Pengaturan SMTP tersebut memerlukan akses pemilik Gmail dan
+hak admin Supabase. Selama belum disimpan, aplikasi tidak boleh mengklaim
+email OTP sudah berasal dari `indicireng@gmail.com`.
+
+Untuk Member yang masih login dan tahu password lama, tersedia jalur
+**Akun → Pengaturan → Ubah Password** tanpa email. Server memverifikasi
+password lama sebelum menyimpan password baru; jalur itu tidak mengubah
+akun Owner atau alamat email pelanggan.
+
 Backend `member-auth` dan halaman Member sudah menerima OTP email **6 digit**
 melalui Supabase GoTrue `verifyOtp({email,token,type:'recovery'})`.
 Akun baru Member **tidak** memerlukan verifikasi email. Owner tidak diubah.
