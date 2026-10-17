@@ -499,7 +499,7 @@ function ownerStatusLabel(code){return ({pending:"Menunggu",processing:"Diproses
 async function dashboard(){
  busy(true);try{
   const d=await ownerApi("dashboard");
-  if(state.page!=="dashboard")return;
+  if(state.page!=='dashboard')return;
   const stats=[
    ["i-order","Pesanan hari ini",Number(d.today_orders||0),"Semua status","orders","cream"],
    ["i-cash","Omzet selesai",rp(d.today_completed_revenue),"Hari ini","orders","green"],
