@@ -136,21 +136,32 @@ async function authApi(b,req){const a=b.action;if(a==='register'){
  }
 
  if(a==='complete_password_reset'){
-  // Never reset an account from an email address or username alone.
-  // Only a one-time recovery token OR a verified recovery session can authorize it.
+  // Password recovery requires verified proof of email ownership. The six-digit
+  // OTP is generated and delivered by Supabase Auth's recovery mailer, not by
+  // this service. Supports legacy recovery links until all emails show the OTP.
   const password=String(b.password||'');
   if(password.length<8||password.length>128||!/[a-z]/i.test(password)||!/[0-9]/.test(password))
     return err('WEAK_PASSWORD');
   const tokenHash=String(b.tokenHash||'').trim();
   const accessToken=String(b.accessToken||'').trim();
-  if(Boolean(tokenHash)===Boolean(accessToken))return err('RESET_LINK_INVALID');
+  const otp=String(b.otp||'').trim();
+  const email=String(b.email||'').trim().toLowerCase();
+  const proofs=[Boolean(otp),Boolean(tokenHash),Boolean(accessToken)].filter(Boolean).length;
+  if(proofs!==1)return err('RESET_LINK_INVALID');
   let verifiedUser=null;
-  if(tokenHash){
+  if(otp){
+   if(!/^\d{6}$/.test(otp)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+     return err('RESET_OTP_INVALID',400);
+   // A new client is created for each request: recovery sessions are never shared.
+   const recoveryClient=createClient(SB_URL,PUBLIC,{auth:{autoRefreshToken:false,persistSession:false}});
+   const verified=await recoveryClient.auth.verifyOtp({email,token:otp,type:'recovery'});
+   if(verified.error||!verified.data?.user?.id ||
+      String(verified.data.user.email||'').toLowerCase()!==email)
+     return err('RESET_OTP_INVALID',400);
+   verifiedUser=verified.data.user;
+  }else if(tokenHash){
    if(!/^[A-Za-z0-9._~-]{24,512}$/.test(tokenHash))return err('RESET_LINK_INVALID');
-   // Isolated auth client prevents recovery sessions leaking between requests.
-   const recoveryClient=createClient(SB_URL,PUBLIC,{
-    auth:{autoRefreshToken:false,persistSession:false}
-   });
+   const recoveryClient=createClient(SB_URL,PUBLIC,{auth:{autoRefreshToken:false,persistSession:false}});
    const verified=await recoveryClient.auth.verifyOtp({token_hash:tokenHash,type:'recovery'});
    if(verified.error||!verified.data?.user?.id)return err('RESET_LINK_EXPIRED',400);
    verifiedUser=verified.data.user;
@@ -160,7 +171,7 @@ async function authApi(b,req){const a=b.action;if(a==='register'){
    if(result.error||!result.data?.user?.id)return err('RESET_LINK_EXPIRED',400);
    verifiedUser=result.data.user;
   }
-  // Do not allow Member password reset links to change Owner/staff accounts.
+  // A recovery code cannot elevate an Owner or another Auth user into Member.
   const registered=check(await admin.from('member_profiles')
    .select('user_id,status').eq('user_id',verifiedUser.id).maybeSingle());
   if(!registered||registered.status!=='active')return err('RESET_LINK_INVALID');
