@@ -68,6 +68,23 @@ jobs:
              !member.includes('credential={email,otp}') ||
              !otpTemplate.includes('{{ .Token }}'))
             throw Error('Member OTP recovery requires server verifyOtp, UI and branded mail template');
+          // Recovery mail business contact must not replace customers' account emails.
+          if(!member.includes("CI_SUPPORT_EMAIL='indicireng@gmail.com'")||
+             !member.includes('Bantuan Cireng Indi: <strong>indicireng@gmail.com</strong>')||
+             !otpTemplate.includes('indicireng@gmail.com'))
+            throw Error('Official Cireng Indi recovery contact address missing');
+          // Signed-in Member password change must require existing-password proof.
+          const passwordChange=backend.slice(backend.indexOf("if(a==='change_password')"),
+            backend.indexOf("if(a==='logout')"));
+          if(!passwordChange.includes('CURRENT_PASSWORD_REQUIRED')||
+             !passwordChange.includes('INVALID_CURRENT_PASSWORD')||
+             !passwordChange.includes('proofClient.auth.signInWithPassword')||
+             !passwordChange.includes('verification.data?.user?.id!==uid')||
+             !member.includes("api('change_password',{current_password:current,password})")||
+             !member.includes('function changeMemberPassword()'))
+            throw Error('Member password update needs verified existing password and settings UI');
+          if(!backend.includes(String.raw`/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`))
+            throw Error('Forgot password email format validation broken');
           if(!member.includes('auth--register'))throw Error('Registration form must use scroll-safe layout');
           // Owner email recovery: public proof is verified by GoTrue first; staff/owner role
           // is confirmed before any password mutation and no recovery session is saved.
