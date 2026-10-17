@@ -1816,7 +1816,7 @@ const CI_HD_PHOTOS_BASE='https://raw.githubusercontent.com/rizkyhidayat8999-neti
 function ciNativeHasHdPhotos(){
  try{
   if(typeof Native==='undefined'||typeof Native.appVersion!=='function')return false;
-  const version=String(Native.appVersion()).match(/^(\d+)\\.(\d+)/);
+  const version=String(Native.appVersion()).match(/^(\d+)\.(\d+)/);
   if(!version)return false;
   const major=Number(version[1]),minor=Number(version[2]);
   return major>2||(major===2&&minor>=1);
