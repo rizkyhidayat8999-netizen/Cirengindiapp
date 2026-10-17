@@ -704,7 +704,7 @@ async function toggleVoucher(id,active){
 async function settings(){
  busy(true);try{
   const me=await ownerApi("me");
-  if(state.page!=="settings")return;
+  if(state.page!=='settings')return;
   const links=[
    ["vouchers","i-cash","Voucher Member","Buat dan bagikan voucher pelanggan"],
    ["rewards","i-box","Reward & Penukaran","Persediaan hadiah dan persetujuan penukaran"],
