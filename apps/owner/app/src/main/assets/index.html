@@ -194,6 +194,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
  .order-item .row:has(select){flex-wrap:wrap}
 }
 
+
+/* One consistent owner design system, fixed navigation and no blank navigation state. */
+.ci-instant-placeholder{min-height:90px;padding:22px 16px;color:#8a776a;font-size:12px;line-height:1.5;border-radius:16px;border:1px dashed #e6d3c1;background:#fffaf2}
+.ci-product-card .ci-variant{border-top:1px solid #efe2d7;padding-top:12px;margin-top:12px}
+[data-stock-number],[data-reward-stock-number]{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.stock button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+.nav{position:fixed!important;transform:translateX(-50%)!important;transition:none!important}
+.nav button{touch-action:manipulation}
+.loading,.loading.show,.spin{display:none!important;animation:none!important}
+@media(max-width:380px){.ci-product-card .ci-variant{flex-wrap:wrap}.ci-product-card .ci-variant .grow{flex-basis:100%}}
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
@@ -222,10 +232,30 @@ const instantViews=new Map();const pendingOwnerActions=new Set();let navId=0;
 function reserveAction(key){if(pendingOwnerActions.has(key))return false;pendingOwnerActions.add(key);return true}
 function releaseAction(key){pendingOwnerActions.delete(key)}
 function previewPage(page){
- const old=instantViews.get(page);
- if(old){root.innerHTML=old;return;}
- const titles={dashboard:'Dashboard',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',vouchers:'Voucher Member',operations:'Pengaturan Operasional',settings:'Lainnya'};
- root.innerHTML=shell(`<div class="section instantPreview"><h2>${esc(titles[page]||'Cireng Indi Owner')}</h2></div>`,['rewards','operations'].includes(page)?'settings':page);
+ const previous=instantViews.get(page);
+ if(previous){root.innerHTML=previous;return;}
+ if(page==='dashboard'&&state.cache.dashboard){renderDashboard(state.cache.dashboard);return;}
+ const labels={dashboard:'Ringkasan Hari Ini',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',vouchers:'Voucher Member',operations:'Pengaturan Operasional',settings:'Lainnya'};
+ const subtitles={dashboard:'Pantau perkembangan toko Anda hari ini',orders:'Kelola pesanan, pembayaran dan kurir',products:'Kelola katalog dan stok',members:'Pelanggan dan saldo point',rewards:'Kelola hadiah dan penukaran',vouchers:'Terbitkan voucher pelanggan',operations:'Rekening, kurir dan banner',settings:'Akun dan pengaturan operasional'};
+ const selected=['rewards','operations','vouchers'].includes(page)?'settings':page;
+ let body='';
+ if(page==='dashboard'){
+  const fields=[['i-order','Pesanan hari ini','orders','cream'],['i-cash','Omzet selesai','orders','green'],['i-order','Perlu diproses','orders','peach'],['i-box','Stok menipis','products','violet'],['i-box','Produk aktif','products','blue'],['i-users','Member aktif','members','yellow']];
+  body='<section class="section">'+ownerPageIntro(labels.dashboard,subtitles.dashboard,true)+'<div class="grid">'+fields.map(x=>ownerMetric(x[0],x[1],'—','',x[2],x[3])).join('')+'</div></section><section class="section"><div class="ci-section-title"><div><h2>Pesanan Terbaru</h2><p class="muted">Pesanan masuk terbaru dari pelanggan</p></div><button class="ci-view-all" onclick="go('+"'orders'"+')">Lihat semua ›</button></div><div class="ci-instant-placeholder">Pesanan terbaru tersedia pada bagian ini.</div></section>';
+ }else{
+  let contents='';
+  if(page==='products'&&state.cache.products){
+   const ps=state.cache.products.products||[];
+   contents='<div class="ci-instant-placeholder">'+ps.length+' produk di katalog. Ketuk produk untuk mengelola stok.</div>';
+  }else if(page==='orders'&&state.cache.orders){
+   contents='<div class="ci-instant-placeholder">'+state.cache.orders.length+' pesanan tersedia. Pilih pesanan untuk melihat rinciannya.</div>';
+  }else{
+   const hints={products:'Daftar produk tampil di bagian ini.',orders:'Daftar pesanan tampil di bagian ini.',members:'Daftar pelanggan tampil di bagian ini.',settings:'Pengaturan toko tersedia di bagian ini.'};
+   contents='<div class="ci-instant-placeholder">'+(hints[page]||'Informasi toko tersedia di bagian ini.')+'</div>';
+  }
+  body='<section class="section">'+ownerPageIntro(labels[page]||'Cireng Indi Owner',subtitles[page]||'Kelola operasional toko')+contents+'</section>';
+ }
+ root.innerHTML=shell(body,selected);
 }
 const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -510,11 +540,9 @@ function ownerMetric(symbol,label,num,hint,target,tone){
  return `<button type="button" class="metric metric--${tone}" onclick="go('${target}')" aria-label="${esc(label)}: ${esc(num)}"><span class="ci-metric-icon">${icon(symbol)}</span><span class="ci-metric-copy"><span class="label">${esc(label)}</span><strong>${esc(num)}</strong><span class="hint">${esc(hint)}</span></span><span class="ci-metric-arrow" aria-hidden="true">›</span></button>`;
 }
 function ownerStatusLabel(code){return ({pending:"Menunggu",processing:"Diproses",ready_for_pickup:"Siap Diambil",shipped:"Dikirim",completed:"Selesai",cancelled:"Dibatalkan"})[code]||String(code||"-")}
-async function dashboard(){
- busy(true);try{
-  const d=await ownerApi("dashboard");
-  if(state.page!=='dashboard')return;
-  const stats=[
+function renderDashboard(d){
+ if(state.page!=='dashboard')return;
+ const stats=[
    ["i-order","Pesanan hari ini",Number(d.today_orders||0),"Semua status","orders","cream"],
    ["i-cash","Omzet selesai",rp(d.today_completed_revenue),"Hari ini","orders","green"],
    ["i-order","Perlu diproses",Number(d.pending_processing||0),"Pending + proses","orders","peach"],
@@ -524,7 +552,14 @@ async function dashboard(){
   ];
   const latest=(d.latest_orders||[]).map(orderCard).join("")||'<div class="empty">Belum ada pesanan.</div>';
   root.innerHTML=shell(`<section class="section">${ownerPageIntro("Ringkasan Hari Ini","Pantau perkembangan toko Anda hari ini",true)}<div class="grid">${stats.map(x=>ownerMetric(...x)).join("")}</div></section><section class="section"><div class="ci-section-title"><div><h2>Pesanan Terbaru</h2><p class="muted">Pesanan masuk terbaru dari pelanggan</p></div><button type="button" class="ci-view-all" onclick="go('orders')">Lihat semua ›</button></div>${latest}</section>`,"dashboard");
- }catch(e){fail(e)}finally{busy(false)}
+ instantViews.set('dashboard',root.innerHTML);
+}
+async function dashboard(){
+ try{
+  const d=await ownerApi('dashboard');
+  state.cache.dashboard=d;
+  renderDashboard(d);
+ }catch(e){if(state.page==='dashboard')fail(e)}
 }
 function orderCard(o){
  return `<div class="card ci-order-summary"><div class="row"><div class="grow"><b>${esc(o.order_number||"Pesanan")}</b><div class="muted">${new Date(o.created_at).toLocaleString("id-ID")}</div></div><span class="badge ${esc(o.status)}">${esc(ownerStatusLabel(o.status))}</span></div><div class="row ci-order-total"><div class="grow"><div class="muted">Total Pesanan</div><div class="money">${rp(o.total)}</div></div><button type="button" class="btn" onclick="go('orders')">Buka ›</button></div></div>`;
