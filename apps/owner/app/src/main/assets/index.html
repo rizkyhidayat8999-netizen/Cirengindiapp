@@ -180,6 +180,20 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 @media(min-width:460px){.metric{min-height:123px;flex-direction:row;gap:12px;align-items:center}.metric .ci-metric-icon{width:49px;height:49px;flex:0 0 49px;border-radius:17px;margin:0}.metric .ci-metric-copy{padding-right:12px}.metric .ci-metric-arrow{top:50%;transform:translateY(-50%)}}
 @media(max-width:365px){.pagebody{padding:0 11px}.top{margin:0 11px 13px}.section{padding:15px 11px}.grid{gap:8px}.metric{min-height:132px;padding:10px}.metric strong{font-size:21px}.ci-heading h2{font-size:19px}.ci-today{font-size:9px;padding:6px}.nav{width:calc(100% - 20px)}.nav button{font-size:9px}}
 
+
+/* Final responsive form and dense-list refinements. */
+.ci-operations input[type="checkbox"],#vAll{width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px;accent-color:#935038}
+.ci-operations label:has(input[type="checkbox"]){font-size:12px;line-height:1.45}
+.section .row:has(>select){flex-wrap:wrap}
+.ci-member-card .row{align-items:flex-start}
+.ci-menu-card .grow .muted{overflow-wrap:anywhere}
+@media(max-width:385px){
+ .ci-product-card .ci-variant{flex-wrap:wrap;gap:9px}
+ .ci-product-card .ci-variant .grow{flex-basis:100%}
+ .ci-product-card .ci-variant .stock{margin-right:auto}
+ .order-item .row:has(select){flex-wrap:wrap}
+}
+
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
@@ -520,7 +534,7 @@ async function orders(){
  busy(true);try{
   const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
   const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
-  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Pesanan & Pembayaran","Pantau status, bukti pembayaran, dan kurir")}<div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button type="button" data-status-choice="${x}" class="${(state.ownerStatus||'')===x?'is-active':''}" onclick="filterOrderStatus('${x}')">${x?ownerStatusLabel(x):'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
+  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Pesanan & Pembayaran","Pantau status, bukti pembayaran, dan kurir")}<div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button type="button" data-status-choice="${x}" class="${(state.ownerStatus||'')===x?'is-active':''}" onclick="filterOrderStatus('${x}')">${x?ownerStatusLabel(x):'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" value="${esc(state.ownerSearch||'')}" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');applyOwnerOrderFilters();
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
