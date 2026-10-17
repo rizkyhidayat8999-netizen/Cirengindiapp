@@ -234,7 +234,7 @@ function busy(v){/* No blocking spinner */}
 let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600)}
 function getSession(){try{const s=Native.getSession();return s?JSON.parse(s):null}catch(e){return null}}
 function saveSession(s){state.session=s;Native.saveSession(JSON.stringify(s))}
-function clearSession(){state.session=null;instantViews.clear();pendingOwnerActions.clear();Native.clearSession()}
+function clearSession(){state.session=null;state.cache={};instantViews.clear();pendingOwnerActions.clear();stockPending.clear();rewardPending.clear();Native.clearSession()}
 
 async function parse(r){const tx=await r.text();let d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(!r.ok){const reason=d.error_code||d.error_description||d.msg||d.message||d.error||((typeof d.code==='string'&&!/^\d+$/.test(d.code))?d.code:null)||('HTTP_'+r.status);const error=new Error(String(reason));error.status=r.status;throw error;}return d}
 async function loginAuth(email,password){
@@ -583,13 +583,59 @@ async function assignCourier(id){
 async function products(){
  busy(true);try{
   const d=await ownerApi("products"),ps=d.products||[],vs=d.variants||[];
+  (d.variants||[]).forEach(x=>{const j=stockPending.get(x.id);if(j)x.stock=j.wanted});
   state.cache.products=d;
-  const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row" class="ci-variant"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',${Math.max(0,Number(v.stock)-1)})">−</button><b>${v.stock}</b><button onclick="stock('${v.id}',${Number(v.stock)+1})">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
+  const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row ci-variant" data-variant-id="${esc(v.id)}"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',-1)">−</button><b data-stock-number="${esc(v.id)}">${Number(v.stock)||0}</b><button onclick="stock('${v.id}',1)">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
   if(state.page!=='products')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Produk & Stok","Kelola harga, varian, dan persediaan")}<div class="search"><input type="search" placeholder="Cari produk…" aria-label="Cari produk" oninput="filterOwnerProducts(this.value)"></div><div id="ownerProductList">${html||'<div class="empty">Produk belum tersedia.</div>'}</div></div>`,"products")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function filterOwnerProducts(q){const search=String(q||"").trim().toLowerCase();document.querySelectorAll(".owner-product-item").forEach(el=>el.classList.toggle("hidden",!el.dataset.q.includes(search)))}
-async function stock(id,n){busy(true);try{await ownerApi("set_stock",{id,stock:n});await products()}catch(e){fail(e)}finally{busy(false)}}
+
+// Local-first stock updates: synchronous UI response and serialized server writes.
+const stockPending=new Map(),rewardPending=new Map();
+function paintQuantity(id,count,kind){
+ const attr=kind==='reward'?'rewardStockNumber':'stockNumber';
+ const selector=kind==='reward'?'[data-reward-stock-number]':'[data-stock-number]';
+ document.querySelectorAll(selector).forEach(el=>{if(el.dataset[attr]===id)el.textContent=String(count)});
+}
+function optimisticQuantity(id,delta,kind){
+ if(delta!==1&&delta!==-1)return;
+ const reward=kind==='reward';
+ const rows=reward?(state.cache.rewards?.rewards||[]):(state.cache.products?.variants||[]);
+ const v=rows.find(x=>x.id===id);if(!v)return;
+ const map=reward?rewardPending:stockPending;
+ let job=map.get(id);
+ if(!job){const old=Math.max(0,Number(v.stock)||0);job={saved:old,wanted:old,running:false,timer:null};map.set(id,job);}
+ const count=Math.max(0,job.wanted+delta);
+ if(count===job.wanted)return;
+ job.wanted=count;v.stock=count;
+ paintQuantity(id,count,kind);
+ if(state.page==='products'&&kind==='stock')instantViews.set('products',root.innerHTML);
+ if(!job.running){clearTimeout(job.timer);job.timer=setTimeout(()=>flushQuantity(id,kind),125);}
+}
+async function flushQuantity(id,kind){
+ const reward=kind==='reward',map=reward?rewardPending:stockPending,job=map.get(id);
+ if(!job||job.running)return;
+ job.running=true;
+ try{
+  while(job.saved!==job.wanted){
+   const value=job.wanted;
+   await ownerApi(reward?'set_reward_stock':'set_stock',{id,stock:value});
+   job.saved=value;
+  }
+  map.delete(id);
+ }catch(e){
+  const rows=reward?(state.cache.rewards?.rewards||[]):(state.cache.products?.variants||[]);
+  const variant=rows.find(x=>x.id===id);
+  if(variant)variant.stock=job.saved;
+  paintQuantity(id,job.saved,kind);
+  if(state.page==='products'&&kind==='stock')instantViews.set('products',root.innerHTML);
+  map.delete(id);
+  toast('Stok gagal disimpan. Nilai terakhir dipulihkan.');
+ }finally{job.running=false;}
+}
+function stock(id,delta){optimisticQuantity(id,delta,'stock')}
+
 async function toggleProduct(id,on){busy(true);try{await ownerApi("set_product_active",{id,active:on});await products()}catch(e){fail(e)}finally{busy(false)}}
 async function editVariant(id){
  const v=(state.cache.products?.variants||[]).find(x=>x.id===id);if(!v)return;
@@ -613,10 +659,11 @@ function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-i
 async function rewards(){
  busy(true);try{
   const d=await ownerApi("rewards"),rs=d.rewards||[],reds=d.redemptions||[];
-  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Reward & Penukaran","Kelola hadiah dan permintaan penukaran")}<h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
+  (d.rewards||[]).forEach(x=>{const j=rewardPending.get(x.id);if(j)x.stock=j.wanted});state.cache.rewards=d;
+  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Reward & Penukaran","Kelola hadiah dan permintaan penukaran")}<h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',-1)">−</button><b data-reward-stock-number="${esc(r.id)}">${Number(r.stock)||0}</b><button onclick="rewardStock('${r.id}',1)">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
-async function rewardStock(id,n){busy(true);try{await ownerApi("set_reward_stock",{id,stock:n});await rewards()}catch(e){fail(e)}finally{busy(false)}}
+function rewardStock(id,delta){optimisticQuantity(id,delta,'reward')}
 async function redemptionStatus(id,status){if(!confirm("Ubah status reward menjadi "+status+"?"))return;busy(true);try{await ownerApi("set_redemption_status",{id,status});await rewards()}catch(e){fail(e)}finally{busy(false)}}
 
 async function operations(){
