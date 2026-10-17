@@ -520,15 +520,15 @@ async function orders(){
  busy(true);try{
   const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
   const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
-  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section"><h2>Pesanan & Pembayaran</h2><div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button onclick="filterOrderStatus('${x}')">${x||'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
+  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Pesanan & Pembayaran","Pantau status, bukti pembayaran, dan kurir")}<div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button type="button" data-status-choice="${x}" class="${(state.ownerStatus||'')===x?'is-active':''}" onclick="filterOrderStatus('${x}')">${x?ownerStatusLabel(x):'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
  const p=o.payment||{},next=o.status==='pending'?'processing':o.status==='processing'?(o.fulfillment_type==='pickup'?'ready_for_pickup':'shipped'):o.status==='ready_for_pickup'||o.status==='shipped'?'completed':null;
  const first=o.items?.[0],c=o.courier||{},cs=state.cache.couriers||[];
  const canContinue=p.method==='cod'||p.status==='paid';
- return `<div class="card order-item" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||'')+' '+o.status+' '+(first?.product_name||'')).toLowerCase())}">
-  <div class="row"><div class="grow"><b>${esc(o.order_number||o.id)}</b><div class="muted">${new Date(o.created_at).toLocaleString('id-ID')} • ${o.fulfillment_type==='pickup'?'Pick Up':'Delivery'}</div></div><span class="badge ${esc(o.status)}">${esc(o.status)}</span></div>
+ return `<div class="card order-item ci-order-summary" data-status="${esc(o.status)}" data-q="${esc(((o.order_number||'')+' '+o.status+' '+(first?.product_name||'')).toLowerCase())}">
+  <div class="row"><div class="grow"><b>${esc(o.order_number||o.id)}</b><div class="muted">${new Date(o.created_at).toLocaleString('id-ID')} • ${o.fulfillment_type==='pickup'?'Pick Up':'Delivery'}</div></div><span class="badge ${esc(o.status)}">${esc(ownerStatusLabel(o.status))}</span></div>
   ${first?`<div style="margin-top:10px"><b>${esc(first.product_name)}</b><div class="muted">${(o.items||[]).length} jenis produk</div></div>`:''}
   <div class="money" style="margin-top:10px">${rp(o.total)}</div>
   <div class="row" style="margin-top:12px"><div class="grow"><b>Pembayaran: ${p.method==='transfer'?'Transfer':'COD'}</b><div class="muted">Status: ${esc(p.status||'pending')}${p.review_note?' • '+esc(p.review_note):''}</div></div></div>
@@ -539,8 +539,13 @@ function orderManageCard(o){
   <div class="actions">${next&&canContinue?`<button class="btn" onclick="setOrderStatus('${o.id}','${next}')">${next==='processing'?'Proses':next==='ready_for_pickup'?'Siap Diambil':next==='shipped'?'Kirim':'Selesaikan'}</button>`:''}${next&&!canContinue?'<div class="muted">Menunggu bukti dan konfirmasi transfer.</div>':''}${['pending','processing'].includes(o.status)&&p.status!=='paid'&&p.status!=='submitted'?`<button class="btn danger" onclick="setOrderStatus('${o.id}','cancelled')">Batalkan</button>`:''}</div>
  </div>`;
 }
-function filterOrders(q){q=q.toLowerCase();document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!x.dataset.q.includes(q)))}
-function filterOrderStatus(s){document.querySelectorAll('.order-item').forEach(x=>x.classList.toggle('hidden',!!s&&x.dataset.status!==s))}
+function applyOwnerOrderFilters(){
+ const q=String(state.ownerSearch||"").trim().toLowerCase(),status=state.ownerStatus||"";
+ document.querySelectorAll(".order-item").forEach(card=>card.classList.toggle("hidden",!(card.dataset.q||"").includes(q)||(status&&card.dataset.status!==status)));
+ document.querySelectorAll("[data-status-choice]").forEach(b=>b.classList.toggle("is-active",b.dataset.statusChoice===status));
+}
+function filterOrders(q){state.ownerSearch=String(q||"");applyOwnerOrderFilters()}
+function filterOrderStatus(s){state.ownerStatus=s;applyOwnerOrderFilters()}
 async function setOrderStatus(id,status){
  if(!confirm('Ubah status pesanan menjadi '+status+'?'))return;
  if(!reserveAction('order:'+id))return;
@@ -565,10 +570,11 @@ async function products(){
  busy(true);try{
   const d=await ownerApi("products"),ps=d.products||[],vs=d.variants||[];
   state.cache.products=d;
-  const html=ps.map(p=>`<div class="card"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row" style="padding-top:12px;margin-top:12px;border-top:1px solid var(--line)"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',${Math.max(0,Number(v.stock)-1)})">−</button><b>${v.stock}</b><button onclick="stock('${v.id}',${Number(v.stock)+1})">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
-  if(state.page!=='products')return;root.innerHTML=shell(`<div class="section"><h2>Produk & Stok</h2>${html||'<div class="empty">Produk belum tersedia.</div>'}</div>`,"products")
+  const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row" class="ci-variant"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',${Math.max(0,Number(v.stock)-1)})">−</button><b>${v.stock}</b><button onclick="stock('${v.id}',${Number(v.stock)+1})">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
+  if(state.page!=='products')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Produk & Stok","Kelola harga, varian, dan persediaan")}<div class="search"><input type="search" placeholder="Cari produk…" aria-label="Cari produk" oninput="filterOwnerProducts(this.value)"></div><div id="ownerProductList">${html||'<div class="empty">Produk belum tersedia.</div>'}</div></div>`,"products")
  }catch(e){fail(e)}finally{busy(false)}
 }
+function filterOwnerProducts(q){const search=String(q||"").trim().toLowerCase();document.querySelectorAll(".owner-product-item").forEach(el=>el.classList.toggle("hidden",!el.dataset.q.includes(search)))}
 async function stock(id,n){busy(true);try{await ownerApi("set_stock",{id,stock:n});await products()}catch(e){fail(e)}finally{busy(false)}}
 async function toggleProduct(id,on){busy(true);try{await ownerApi("set_product_active",{id,active:on});await products()}catch(e){fail(e)}finally{busy(false)}}
 async function editVariant(id){
@@ -585,7 +591,7 @@ async function editVariant(id){
 async function members(){
  busy(true);try{
   const d=await ownerApi("members",{limit:200}),ms=d.members||[];
-  if(state.page!=='members')return;root.innerHTML=shell(`<div class="section"><h2>Member</h2><div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Classic")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
+  if(state.page!=='members')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Member","Pelanggan terdaftar dan saldo point")}<div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item ci-member-card" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Member")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
@@ -593,7 +599,7 @@ function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-i
 async function rewards(){
  busy(true);try{
   const d=await ownerApi("rewards"),rs=d.rewards||[],reds=d.redemptions||[];
-  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Reward & Penukaran</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div><h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
+  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Reward & Penukaran","Kelola hadiah dan permintaan penukaran")}<h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',${Math.max(0,Number(r.stock)-1)})">−</button><b>${r.stock}</b><button onclick="rewardStock('${r.id}',${Number(r.stock)+1})">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function rewardStock(id,n){busy(true);try{await ownerApi("set_reward_stock",{id,stock:n});await rewards()}catch(e){fail(e)}finally{busy(false)}}
@@ -603,15 +609,15 @@ async function operations(){
  busy(true);try{
   const d=await ownerApi('settings'),bs=d.banners||[],cs=d.couriers||[],bank=d.bank_transfer||{};
   state.cache.operations=d;
-  if(state.page!=='operations')return;root.innerHTML=shell(`<div class="section"><div class="row"><h2 class="grow">Pengaturan Operasional</h2><button class="btn secondary" onclick="go('settings')">Kembali</button></div>
+  if(state.page!=='operations')return;root.innerHTML=shell(`<div class="section ci-operations">${ownerPageIntro("Pengaturan Operasional","Kelola rekening, kurir, dan banner")}
    <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Data rekening resmi Intan Istiqomah. Pilih BSI atau BRI untuk mengisi form rekening aktif, lalu simpan. Member dapat memilih BSI atau BRI per pesanan. Rekening terpilih tersimpan dalam detail pembayaran.</div><div class="bankReference"><button type="button" onclick="fillBank('BSI')"><b>BSI</b><span>7306336217</span><span>Intan Istiqomah</span></button><button type="button" onclick="fillBank('BRI')"><b>BRI</b><span>457901008978533</span><span>Intan Istiqomah</span></button></div>
    <label>Bank</label><input id="bankname" style="width:100%;margin:6px 0 10px" value="${esc(bank.bank_name||'')}" placeholder="Nama Bank">
    <label>Nomor rekening</label><input id="banknumber" inputmode="numeric" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_number||'')}" placeholder="Nomor rekening asli">
    <label>Nama pemilik rekening</label><input id="bankholder" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_holder||'')}" placeholder="Atas nama">
    <label style="display:flex;align-items:center;gap:10px;margin-top:8px"><input id="bankenabled" type="checkbox" ${bank.enabled?'checked':''}>Aktifkan transfer bank</label>
    <button class="btn" style="margin-top:12px" onclick="saveBank()">Simpan Rekening</button></div>
-   <h3>Kurir Delivery</h3>${cs.map(c=>`<div class="card"><div class="row"><div class="grow"><b>${esc(c.name)}</b><div class="muted">Ongkir ${rp(c.flat_fee)} • WhatsApp ${esc(c.whatsapp||'-')}</div></div><button class="switch ${c.active?'on':''}" onclick="toggleCourier('${c.id}',${!c.active})"></button><button class="btn secondary" onclick="editCourier('${c.id}')">Edit</button></div></div>`).join('')}
-   <h3>Banner</h3>${bs.map(b=>`<div class="card"><div class="row"><div class="grow"><b>${esc(b.title)}</b><div class="muted">${esc(b.subtitle||'')}</div></div><button class="switch ${b.active?'on':''}" onclick="toggleBanner('${b.id}',${!b.active})"></button></div></div>`).join('')}
+   <h3 class="ci-group-title">Kurir Delivery</h3>${cs.map(c=>`<div class="card"><div class="row"><div class="grow"><b>${esc(c.name)}</b><div class="muted">Ongkir ${rp(c.flat_fee)} • WhatsApp ${esc(c.whatsapp||'-')}</div></div><button class="switch ${c.active?'on':''}" onclick="toggleCourier('${c.id}',${!c.active})"></button><button class="btn secondary" onclick="editCourier('${c.id}')">Edit</button></div></div>`).join('')}
+   <h3 class="ci-group-title">Banner & Promo</h3>${bs.map(b=>`<div class="card"><div class="row"><div class="grow"><b>${esc(b.title)}</b><div class="muted">${esc(b.subtitle||'')}</div></div><button class="switch ${b.active?'on':''}" onclick="toggleBanner('${b.id}',${!b.active})"></button></div></div>`).join('')}
   </div>`,'settings');
  }catch(e){fail(e)}finally{busy(false)}
 }
@@ -652,7 +658,7 @@ async function vouchers(){
  }catch(e){if(state.page==='vouchers')fail(e)}
 }
 function renderOwnerVouchers(data){
- root.innerHTML=shell('<div class="section"><div class="row"><h2 class="grow">Voucher Member</h2><button class="btn secondary" onclick="go(\'settings\')">Kembali</button></div>'
+ root.innerHTML=shell('<div class="section">${ownerPageIntro("Voucher Member","Terbitkan dan kelola voucher pelanggan")}'
  +'<div class="card"><h3>Buat Voucher</h3><label>Judul voucher</label><input id="vTitle" placeholder="Contoh: Promo Cireng Indi" maxlength="100">'
  +'<label>Kode unik</label><input id="vCode" placeholder="CIRENG10" maxlength="30" autocomplete="off">'
  +'<div class="row"><div class="grow"><label>Tipe diskon</label><select id="vType"><option value="fixed">Nominal Rupiah</option><option value="percent">Persentase</option></select></div><div class="grow"><label>Nilai diskon</label><input id="vValue" type="number" min="1" placeholder="10000"></div></div>'
@@ -661,7 +667,7 @@ function renderOwnerVouchers(data){
  +'<label>Masa berlaku sampai</label><input id="vExpiry" type="datetime-local">'
  +'<label class="row" style="gap:8px"><input id="vAll" type="checkbox" style="width:20px" ><span>Voucher tersedia untuk semua member</span></label>'
  +'<button class="full" onclick="createVoucher()">Terbitkan Voucher</button></div>'
- +'<h3>Voucher Diterbitkan</h3>'+(data.vouchers||[]).map(v=>ownerVoucherCard(v,data)).join('')
+ +'<h3 class="ci-group-title">Voucher Diterbitkan</h3>'+(data.vouchers||[]).map(v=>ownerVoucherCard(v,data)).join('')
  +'</div>','settings');
 }
 async function createVoucher(){
