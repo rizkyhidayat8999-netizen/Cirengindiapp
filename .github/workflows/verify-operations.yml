@@ -263,6 +263,19 @@ jobs:
                 member.includes('new MutationObserver(') ||
                 Buffer.byteLength(member,'utf8')>512*1024)
                throw Error('Member must display local HD originals without low-res embedded thumbnails');
+             // OTA runs on existing 1.1 APKs, whose bundled assets may predate
+             // official_01..31. Older APKs must receive the pinned HD URLs,
+             // while Android 2.1+ must resolve the same photos locally.
+             const hdStart=member.indexOf('const CI_HD_PHOTOS_BASE=');
+             const hdEnd=member.indexOf('function photoFallback(',hdStart);
+             if(hdStart<0||hdEnd<hdStart)throw Error('Member source-resolution routing missing');
+             const hdResolver=new Function('Native','localPic',member.slice(hdStart,hdEnd)+
+               "return stablePhotoSource(2,'Cireng Isi');");
+             const oldApk=hdResolver({appVersion:()=>'1.1.0-test'},()=> 'product_cireng_isi.webp');
+             const newApk=hdResolver({appVersion:()=>'2.1.0'},()=> 'product_cireng_isi.webp');
+             if(!oldApk.startsWith('https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/567daa9b15636e9d26e673cb1b9699109ec21abe/')||
+                !oldApk.endsWith('official_02.webp')||newApk!=='assets/official_02.webp')
+               throw Error('Old installed APK must receive immutable HD photos, new APK local originals');
              const memberGo=member.slice(member.indexOf('async function go(r)'),member.indexOf('const MEMBER_HERO_PROMOS',member.indexOf('async function go(r)')));
             if(!memberGo.includes('state.route=r;')||memberGo.includes('previewPage(r)'))
               throw Error('Member navigation must not flash a loading preview or stale HTML');
