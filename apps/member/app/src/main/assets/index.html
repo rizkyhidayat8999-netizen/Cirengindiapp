@@ -1157,6 +1157,14 @@ html,body{background:#fff9f2!important}
 .ciOrderItemMissing{font-size:12px;color:var(--muted)}
 @media(max-width:365px){.ciOrderDetailsIndicator{font-size:10px}.ciOrderProductInfo b{font-size:13px}}
 
+
+/* Password recovery entirely inside Member WebView, without localhost/browser. */
+.auth .ciRecoveryForm textarea{display:block;width:100%;min-height:84px;max-height:145px;resize:vertical;box-sizing:border-box;border:1px solid #e4d4c4;border-radius:12px;background:#fffdfa;color:#392a22;font:inherit;font-size:12px;line-height:1.45;padding:11px;overflow-wrap:anywhere}
+.auth .ciRecoveryForm label{display:block;margin:12px 0 6px}
+.auth .ciRecoveryForm .notice{font-size:12px;line-height:1.58;margin:4px 0 12px}
+.auth .ciRecoveryForm .auth-subactions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.auth .ciRecoveryForm .auth-feedback:not(:empty){margin:10px 0}
+
 </style>
 </head>
 <body>
@@ -1285,7 +1293,8 @@ async function api(action,payload={},secure=true,retry=true){let s=state.session
 function fail(e){const m=String(e?.message||e);if(m==='AUTH_REQUIRED'||m.includes('JWT')){sessionClear();renderAuth('login');toast('Sesi berakhir. Silakan masuk lagi.');return}const map={INVALID_CREDENTIALS:'Username atau password salah.',USERNAME_TAKEN:'Username sudah digunakan.',EMAIL_TAKEN:'Email sudah digunakan.',WEAK_PASSWORD:'Password minimal 8 karakter dan mengandung huruf serta angka.',CART_EMPTY:'Keranjang masih kosong.',INSUFFICIENT_STOCK:'Stok tidak mencukupi.',INSUFFICIENT_POINTS:'Point belum cukup.'};toast(map[m]||({'INVALID_REFERRAL_CODE':'Kode referral tidak dikenal.','VOUCHER_UNAVAILABLE':'Voucher sudah tidak berlaku.','VOUCHER_ALREADY_USED':'Voucher sudah digunakan.','VOUCHER_MIN_SPEND':'Belanja belum mencapai minimum voucher.','VOUCHER_FULFILLMENT_MISMATCH':'Voucher tidak berlaku untuk metode pengiriman ini.','VOUCHER_LIMIT_REACHED':'Kuota voucher habis.'}[m])||m.replaceAll('_',' '))}
 function shell(content,active='home'){const nav=[['home','i-home','Home'],['store','i-bag','Pesan'],['orders','i-receipt','Pesanan'],['profile','i-user','Akun']];return `<div class="app">${content}</div><nav class="bottomnav" aria-label="Navigasi utama">${nav.map(n=>`<button type="button" class="${active===n[0]?'active':''}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join('')}</nav>`}
 function uiTop(title,back='home'){return `<header class="top"><button class="back" onclick="go('${back}')">${icon('i-left')}</button><h1>${esc(title)}</h1><img class="topBrand" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></header>`}
-function renderAuth(tab='login'){state.route='auth';let f='';if(tab==='login')f=`<div class="form"><label>Username</label><input id="luser" autocomplete="username"><label for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password"><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Lupa password?</button></div><button class="fullbtn" onclick="doLogin()">Masuk</button></div>`;if(tab==='register')f=`<div class="form"><div id="authStatus" class="auth-feedback" role="alert" aria-live="polite"></div><label>Nama lengkap</label><input id="rname"><label>Username</label><input id="ruser"><label>Email</label><input id="remail" type="email"><label>No. HP (opsional)</label><input id="rphone" inputmode="tel"><label>Kode referral (opsional)</label><input id="rref"><label>Password</label><input id="rpass" type="password"><label>Ulangi password</label><input id="rpass2" type="password"><button class="fullbtn" onclick="doRegister()">Daftar</button><div class="notice">Alamat email perlu diverifikasi setelah pendaftaran sebelum akun bisa digunakan.</div></div>`;if(tab==='forgot')f=`<div class="form"><div class="auth-recovery-title">Atur ulang password</div><p class="notice">Masukkan email yang terhubung dengan akun. Kami akan mengirimkan tautan pemulihan jika email terdaftar.</p><label for="femail">Alamat email</label><input id="femail" type="email" inputmode="email" autocomplete="email" placeholder="contoh@email.com"><button class="fullbtn" onclick="doForgot()">Kirim Tautan Pemulihan</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;root.innerHTML=`<section class="auth ${tab==='register'?'auth--register':''}"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Cireng Indi</h1><p class="lead">Camilan & frozen food pilihan keluarga</p>${tab==='forgot'?'':`<div class="authTabs"><button type="button" class="${tab==='login'?'active':''}" onclick="renderAuth('login')">Masuk</button><button type="button" class="${tab==='register'?'active':''}" onclick="renderAuth('register')">Daftar</button></div>`}${f}</div></section>`}
+function renderAuth(tab='login'){state.route='auth';let f='';if(tab==='login')f=`<div class="form"><label>Username</label><input id="luser" autocomplete="username"><label for="lpass">Password</label><input id="lpass" type="password" autocomplete="current-password"><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Lupa password?</button></div><button class="fullbtn" onclick="doLogin()">Masuk</button></div>`;if(tab==='register')f=`<div class="form"><div id="authStatus" class="auth-feedback" role="alert" aria-live="polite"></div><label>Nama lengkap</label><input id="rname"><label>Username</label><input id="ruser"><label>Email</label><input id="remail" type="email"><label>No. HP (opsional)</label><input id="rphone" inputmode="tel"><label>Kode referral (opsional)</label><input id="rref"><label>Password</label><input id="rpass" type="password"><label>Ulangi password</label><input id="rpass2" type="password"><button class="fullbtn" onclick="doRegister()">Daftar</button><div class="notice">Akun langsung aktif setelah pendaftaran. Tidak perlu verifikasi email. Gunakan email yang benar untuk pemulihan password.</div></div>`;if(tab==='forgot')f=`<div class="form"><div class="auth-recovery-title">Atur ulang password</div><p class="notice">Masukkan email yang terdaftar. Link pemulihan akan dikirim ke email tersebut. Setelah menerima email, cukup salin tautannya dan tempel langsung di aplikasi.</p><label for="femail">Alamat email</label><input id="femail" type="email" inputmode="email" autocomplete="email" placeholder="contoh@email.com"><button class="fullbtn" onclick="doForgot()">Kirim Email Pemulihan</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('reset')">Sudah punya tautan email?</button><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;
+if(tab==='reset')f=`<div class="form ciRecoveryForm"><div class="auth-recovery-title">Buat password baru</div><p class="notice">Buka email pemulihan. Tekan lama tautan Reset Password lalu pilih <b>Salin alamat link</b>. Tempel di bawah, tanpa membukanya di browser. Langkah ini tidak memerlukan localhost.</p><label for="recoveryLink">Tautan dari email</label><textarea id="recoveryLink" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Tempel tautan pemulihan dari email di sini"></textarea><label for="newRecoveryPassword">Password baru</label><input id="newRecoveryPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter, huruf dan angka"><label for="confirmRecoveryPassword">Ulangi password baru</label><input id="confirmRecoveryPassword" type="password" autocomplete="new-password"><div class="auth-feedback" id="resetStatus" role="alert" aria-live="polite"></div><button class="fullbtn" id="saveRecoveryPassword" type="button" onclick="completeRecovery()">Simpan Password Baru</button><div class="auth-subactions"><button type="button" class="auth-text-action" onclick="renderAuth('forgot')">Kirim ulang email</button><button type="button" class="auth-text-action" onclick="renderAuth('login')">Kembali ke Masuk</button></div></div>`;root.innerHTML=`<section class="auth ${tab==='register'?'auth--register':''}"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Cireng Indi</h1><p class="lead">Camilan & frozen food pilihan keluarga</p>${tab==='forgot'?'':`<div class="authTabs"><button type="button" class="${tab==='login'?'active':''}" onclick="renderAuth('login')">Masuk</button><button type="button" class="${tab==='register'?'active':''}" onclick="renderAuth('register')">Daftar</button></div>`}${f}</div></section>`}
 async function doLogin(){const username=luser.value.trim(),password=lpass.value;if(!username||!password)return toast('Lengkapi username dan password.');if(state.authenticating)return;state.authenticating=true;try{const d=await auth({action:'login',username,password});sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id,username:d.member?.username||username,fullName:d.member?.full_name||''});state.boot=null;await go('home')}catch(e){fail(e)}finally{state.authenticating=false}}
 function registrationError(message){const box=document.getElementById('authStatus');if(box){box.textContent=message;box.scrollIntoView({block:'center'});}else toast(message)}
 async function doRegister(){
@@ -1301,19 +1310,90 @@ async function doRegister(){
  const msg=document.getElementById('authStatus');if(msg)msg.textContent='';
  try{
   const d=await auth({action:'register',fullName,username,email,password,phone:phone||undefined,referral:referralCode||undefined});
-  if(d.pendingVerification){renderAuth('login');toast('Pendaftaran diterima. Periksa email untuk verifikasi akun.');return}
+  if(d.loginRequired){renderAuth('login');toast('Akun berhasil dibuat tanpa verifikasi email. Silakan masuk.');return}
   if(!d.session?.access_token)throw new Error('REGISTRATION_INCOMPLETE');
   sessionSave({accessToken:d.session.access_token,refreshToken:d.session.refresh_token,memberId:d.member.user_id,username:d.member?.username||username,fullName:d.member?.full_name||fullName});state.boot=null;await go('home');
  }catch(e){
   const m=String(e?.message||e).toLowerCase();
-  if(/email.*rate.*limit|over_email_send_rate_limit|email_service_rate_limit|email_rate_limit|http_429/.test(m))registrationError('Pendaftaran belum berhasil karena layanan pengiriman email verifikasi sedang mencapai batas. Silakan coba nanti. Jangan menekan Daftar berulang kali.');
+  if(/email.*rate.*limit|over_email_send_rate_limit|email_service_rate_limit|email_rate_limit|http_429/.test(m))registrationError('Layanan autentikasi sedang membatasi permintaan. Coba beberapa menit lagi.');
   else if(m.includes('username_taken'))registrationError('Username sudah digunakan.');
   else if(m.includes('email_taken'))registrationError('Email sudah terdaftar. Silakan masuk atau pulihkan password.');
   else if(m.includes('email_service_not_configured')||m.includes('email_service_unavailable')||m.includes('registration_unavailable'))registrationError('Pendaftaran belum dapat diproses karena layanan autentikasi sedang bermasalah. Silakan coba nanti atau hubungi pengelola aplikasi.');
   else registrationError('Pendaftaran belum berhasil: '+String(e.message||e).replaceAll('_',' '));
  }finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Daftar'}}
 }
-async function doForgot(){const email=document.getElementById('femail')?.value.trim()||'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');loading(true);try{await auth({action:'forgot_password',email});renderAuth('login');toast('Jika email terdaftar, tautan pemulihan telah dikirim.')}catch(e){fail(e)}finally{loading(false)}}
+async function doForgot(){
+ const email=document.getElementById('femail')?.value.trim().toLowerCase()||'';
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Masukkan alamat email yang valid.');
+ if(state.forgotSending)return;
+ state.forgotSending=true;
+ const button=document.querySelector('.auth .fullbtn');
+ if(button){button.disabled=true;button.textContent='Mengirim…'}
+ try{
+  await auth({action:'forgot_password',email});
+  renderAuth('reset');
+  toast('Jika email terdaftar, tautan pemulihan telah dikirim. Salin tautan dari email ke formulir ini.');
+ }catch(e){
+  const code=String(e?.message||e).toLowerCase();
+  if(code.includes('rate_limit'))toast('Permintaan email terlalu sering. Coba beberapa menit lagi.');
+  else toast('Email belum dapat dikirim. Periksa koneksi, lalu coba kembali.');
+ }finally{
+  state.forgotSending=false;
+  if(button?.isConnected){button.disabled=false;button.textContent='Kirim Email Pemulihan'}
+ }
+}
+function recoveryTokenFromLink(raw){
+ const value=String(raw||'').trim();
+ if(value.length<20||value.length>8192)return null;
+ if(/^[a-f0-9]{40,128}$/i.test(value))return {tokenHash:value};
+ let url;
+ try{url=new URL(value)}catch(_){return null}
+ const host=String(url.hostname||'').toLowerCase();
+ const allowedHosts=['tbviryuimoxgapubdjio.supabase.co','cirengindi.com','www.cirengindi.com','localhost','127.0.0.1'];
+ if(url.protocol==='cirengindi:'){
+  if(host!=='reset-password')return null;
+ }else if(url.protocol!=='https:'&&url.protocol!=='http:')return null;
+ else if(!allowedHosts.includes(host))return null;
+ const query=url.searchParams,fragment=new URLSearchParams(url.hash.replace(/^#/,''));
+ const type=query.get('type')||fragment.get('type');
+ const hashed=query.get('token_hash')||query.get('token')||fragment.get('token_hash')||fragment.get('token');
+ if((type==='recovery'||type===null)&&hashed&&/^[A-Za-z0-9._~-]{24,512}$/.test(hashed))
+  return {tokenHash:hashed};
+ const access=fragment.get('access_token')||query.get('access_token');
+ if((type==='recovery'||type===null)&&access&&access.length>=64&&access.length<=8192)
+  return {accessToken:access};
+ return null;
+}
+async function completeRecovery(){
+ const link=document.getElementById('recoveryLink')?.value||'';
+ const password=document.getElementById('newRecoveryPassword')?.value||'';
+ const again=document.getElementById('confirmRecoveryPassword')?.value||'';
+ const status=document.getElementById('resetStatus');
+ const showError=msg=>{if(status)status.textContent=msg;else toast(msg)};
+ const credential=recoveryTokenFromLink(link);
+ if(!credential)return showError('Tautan tidak valid. Tempel alamat tautan asli dari email pemulihan, bukan alamat halaman error.');
+ if(password.length<8||password.length>128||!/[a-z]/i.test(password)||!/[0-9]/.test(password))
+  return showError('Password harus 8–128 karakter dan mengandung huruf serta angka.');
+ if(password!==again)return showError('Konfirmasi password belum sama.');
+ if(state.passwordResetting)return;
+ state.passwordResetting=true;
+ const btn=document.getElementById('saveRecoveryPassword');
+ if(btn){btn.disabled=true;btn.textContent='Menyimpan…'}
+ if(status)status.textContent='';
+ try{
+  await auth({action:'complete_password_reset',password,...credential});
+  const current=state.session||sessionRead();
+  if(current){sessionClear();state.me=null;state.boot=null}
+  renderAuth('login');
+  toast('Password berhasil diperbarui. Silakan masuk dengan password baru.');
+ }catch(e){
+  const code=String(e?.message||e).toUpperCase();
+  showError(code.includes('EXPIRED')||code.includes('INVALID')?'Tautan sudah kedaluwarsa atau pernah dipakai. Kirim ulang email pemulihan.':'Reset password belum berhasil. Coba beberapa saat lagi.');
+ }finally{
+  state.passwordResetting=false;
+  if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan Password Baru'}
+ }
+}
 let heroTimer=null;let heroIndex=0;let orderPollTimer=null;let orderPollBusy=false;function heroSlide(n){const slides=[...document.querySelectorAll('.heroSlides>.banner')];if(!slides.length)return;heroIndex=((n%slides.length)+slides.length)%slides.length;slides.forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('is-active',active);el.setAttribute('aria-hidden',String(!active))});document.querySelectorAll('.heroDots button').forEach((el,i)=>{const active=i===heroIndex;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))});}/* Fixed hero: changing banners requires deliberate customer interaction. */
 function startHero(){clearInterval(heroTimer);heroTimer=null;heroIndex=0}
 let heroTouchStartX=null,heroTouchStartY=null;
@@ -2646,7 +2726,12 @@ async function profile(){
 }
 
 function shareReferral(){const c=state.me?.profile?.referral_code;if(c)Native.shareText('Kode referral Cireng Indi saya: '+c);else toast('Kode referral belum tersedia.')}async function logout(){loading(true);try{try{await api('logout')}catch(e){}sessionClear();state.boot=null;renderAuth('login')}finally{loading(false)}}
-window.onNativeDeepLink=function(url){try{const u=new URL(url);const p=new URLSearchParams((u.hash||'').replace(/^#/,''));const a=p.get('access_token'),r=p.get('refresh_token');if(a){sessionSave({accessToken:a,refreshToken:r||'',memberId:''});root.innerHTML=`<section class="auth"><div class="authbox"><img class="authLogo" src="assets/logo_cireng_indi.png"><h1>Reset Password</h1><div class="form"><label>Password baru</label><input id="npw" type="password"><button class="fullbtn" onclick="changeRecovery()">Simpan Password</button></div></div></section>`}}catch(e){}};async function changeRecovery(){loading(true);try{await api('change_password',{password:npw.value});toast('Password berhasil diubah.');await logout()}catch(e){fail(e)}finally{loading(false)}}
+window.onNativeDeepLink=function(url){
+ if(!recoveryTokenFromLink(url))return;
+ renderAuth('reset');
+ const input=document.getElementById('recoveryLink');
+ if(input)input.value=String(url);
+};
 (async()=>{state.session=sessionRead();readPublicCatalog();if(state.session?.accessToken){try{await go('home');updateCatalogQuietly()}catch(e){fail(e)}}else{renderAuth('login');void freshCatalog().catch(()=>{})}})();
 // The brand frame finishes by 1 second, regardless of network activity.
 setTimeout(()=>document.getElementById('launchBrand')?.classList.add('hide'),840);
