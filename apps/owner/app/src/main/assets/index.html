@@ -233,7 +233,7 @@ function reserveAction(key){if(pendingOwnerActions.has(key))return false;pending
 function releaseAction(key){pendingOwnerActions.delete(key)}
 function previewPage(page){
  const previous=instantViews.get(page);
- if(previous){root.innerHTML=previous;return;}
+ if(previous){paintStoredOwner(previous,page);return;}
  if(page==='dashboard'&&state.cache.dashboard){renderDashboard(state.cache.dashboard);return;}
  const labels={dashboard:'Ringkasan Hari Ini',orders:'Pesanan & Pembayaran',products:'Produk & Stok',members:'Member',rewards:'Reward & Penukaran',vouchers:'Voucher Member',operations:'Pengaturan Operasional',settings:'Lainnya'};
  const subtitles={dashboard:'Pantau perkembangan toko Anda hari ini',orders:'Kelola pesanan, pembayaran dan kurir',products:'Kelola katalog dan stok',members:'Pelanggan dan saldo point',rewards:'Kelola hadiah dan penukaran',vouchers:'Terbitkan voucher pelanggan',operations:'Rekening, kurir dan banner',settings:'Akun dan pengaturan operasional'};
@@ -255,7 +255,7 @@ function previewPage(page){
   }
   body='<section class="section">'+ownerPageIntro(labels[page]||'Cireng Indi Owner',subtitles[page]||'Kelola operasional toko')+contents+'</section>';
  }
- root.innerHTML=shell(body,selected);
+ paintOwner(body,selected);
 }
 const icon=(id)=>`<svg class="icon"><use href="#${id}"></use></svg>`;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -366,6 +366,39 @@ function shell(body,active){
  const nav=[["dashboard","i-home","Dashboard"],["orders","i-order","Pesanan"],["products","i-box","Produk"],["members","i-users","Member"],["settings","i-settings","Lainnya"]];
  return `<div class="app"><header class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional &amp; manajemen</span></div><span class="ci-owner-label">OWNER</span></header><main class="pagebody">${body}</main><nav class="nav" aria-label="Navigasi Owner">${nav.map(n=>`<button type="button" class="${active===n[0]?"active":""}" aria-current="${active===n[0]?"page":"false"}" onclick="go('${n[0]}')">${icon(n[1])}<span>${n[2]}</span></button>`).join("")}</nav></div>`;
 }
+
+/* Preserve header and fixed nav DOM between pages; only change the page body. */
+let renderedOwnerPage='';
+function paintOwner(body,active){
+ const main=root.querySelector('.app .pagebody');
+ const nav=root.querySelector('.app .nav');
+ const changing=renderedOwnerPage!==state.page;
+ if(!main||!nav){
+  root.innerHTML=shell(body,active);
+  renderedOwnerPage=state.page;
+  return;
+ }
+ if(!changing&&main.contains(document.activeElement)&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))return;
+ const position=changing?0:window.scrollY;
+ main.innerHTML=body;
+ const navNames=['dashboard','orders','products','members','settings'];
+ nav.querySelectorAll('button').forEach((button,i)=>{
+  const current=navNames[i]===active;
+  button.classList.toggle('active',current);
+  button.setAttribute('aria-current',current?'page':'false');
+ });
+ renderedOwnerPage=state.page;
+ if(changing)window.scrollTo(0,0);
+ else if(position>0)window.scrollTo(0,position);
+}
+function paintStoredOwner(html,page){
+ const open='<main class="pagebody">';
+ const start=html.indexOf(open),end=html.indexOf('</main><nav',start);
+ if(start<0||end<0){root.innerHTML=html;renderedOwnerPage=page;return}
+ const tab=['rewards','operations','vouchers'].includes(page)?'settings':page;
+ paintOwner(html.slice(start+open.length,end),tab);
+}
+
 function renderLogin(msg=""){
  root.innerHTML=`<section class="login"><div class="loginbox ciOwnerFinalLogin">
  <div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Cireng Indi"></div>
@@ -623,7 +656,7 @@ function renderDashboard(d){
    ["i-users","Member aktif",Number(d.active_members||0),Number(d.pending_redemptions||0)+" reward menunggu","members","yellow"]
   ];
   const latest=(d.latest_orders||[]).map(orderCard).join("")||'<div class="empty">Belum ada pesanan.</div>';
-  root.innerHTML=shell(`<section class="section">${ownerPageIntro("Ringkasan Hari Ini","Pantau perkembangan toko Anda hari ini",true)}<div class="grid">${stats.map(x=>ownerMetric(...x)).join("")}</div></section><section class="section"><div class="ci-section-title"><div><h2>Pesanan Terbaru</h2><p class="muted">Pesanan masuk terbaru dari pelanggan</p></div><button type="button" class="ci-view-all" onclick="go('orders')">Lihat semua ›</button></div>${latest}</section>`,"dashboard");
+  paintOwner(`<section class="section">${ownerPageIntro("Ringkasan Hari Ini","Pantau perkembangan toko Anda hari ini",true)}<div class="grid">${stats.map(x=>ownerMetric(...x)).join("")}</div></section><section class="section"><div class="ci-section-title"><div><h2>Pesanan Terbaru</h2><p class="muted">Pesanan masuk terbaru dari pelanggan</p></div><button type="button" class="ci-view-all" onclick="go('orders')">Lihat semua ›</button></div>${latest}</section>`,"dashboard");
  persistOwnerView('dashboard');
 }
 async function dashboard(){
@@ -642,7 +675,7 @@ async function orders(){
  busy(true);try{
   const [d,settings]=await Promise.all([ownerApi('orders',{limit:150}),ownerApi('settings')]);
   const os=d.orders||[];state.cache.orders=os;state.cache.couriers=settings.couriers||[];
-  if(state.page!=='orders')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Pesanan & Pembayaran","Pantau status, bukti pembayaran, dan kurir")}<div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button type="button" data-status-choice="${x}" class="${(state.ownerStatus||'')===x?'is-active':''}" onclick="filterOrderStatus('${x}')">${x?ownerStatusLabel(x):'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" value="${esc(state.ownerSearch||'')}" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');applyOwnerOrderFilters();
+  if(state.page!=='orders')return;paintOwner(`<div class="section">${ownerPageIntro("Pesanan & Pembayaran","Pantau status, bukti pembayaran, dan kurir")}<div class="subnav">${['','pending','processing','ready_for_pickup','shipped','completed','cancelled'].map(x=>`<button type="button" data-status-choice="${x}" class="${(state.ownerStatus||'')===x?'is-active':''}" onclick="filterOrderStatus('${x}')">${x?ownerStatusLabel(x):'Semua'}</button>`).join('')}</div><div class="search"><input placeholder="Cari nomor pesanan" value="${esc(state.ownerSearch||'')}" oninput="filterOrders(this.value)"></div><div id="ordersList">${os.map(orderManageCard).join('')||'<div class="empty">Belum ada pesanan.</div>'}</div></div>`,'orders');applyOwnerOrderFilters();
  }catch(e){fail(e)}finally{busy(false)}
 }
 function orderManageCard(o){
@@ -694,7 +727,7 @@ async function products(){
   (d.variants||[]).forEach(x=>{const j=stockPending.get(x.id);if(j)x.stock=j.wanted});
   state.cache.products=d;
   const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row ci-variant" data-variant-id="${esc(v.id)}"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',-1)">−</button><b data-stock-number="${esc(v.id)}">${Number(v.stock)||0}</b><button onclick="stock('${v.id}',1)">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
-  if(state.page!=='products')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Produk & Stok","Kelola harga, varian, dan persediaan")}<div class="search"><input type="search" placeholder="Cari produk…" aria-label="Cari produk" oninput="filterOwnerProducts(this.value)"></div><div id="ownerProductList">${html||'<div class="empty">Produk belum tersedia.</div>'}</div></div>`,"products")
+  if(state.page!=='products')return;paintOwner(`<div class="section">${ownerPageIntro("Produk & Stok","Kelola harga, varian, dan persediaan")}<div class="search"><input type="search" placeholder="Cari produk…" aria-label="Cari produk" oninput="filterOwnerProducts(this.value)"></div><div id="ownerProductList">${html||'<div class="empty">Produk belum tersedia.</div>'}</div></div>`,"products")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function filterOwnerProducts(q){const search=String(q||"").trim().toLowerCase();document.querySelectorAll(".owner-product-item").forEach(el=>el.classList.toggle("hidden",!el.dataset.q.includes(search)))}
@@ -773,7 +806,7 @@ async function editVariant(id){
 async function members(){
  busy(true);try{
   const d=await ownerApi("members",{limit:200}),ms=d.members||[];
-  if(state.page!=='members')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Member","Pelanggan terdaftar dan saldo point")}<div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item ci-member-card" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Member")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
+  if(state.page!=='members')return;paintOwner(`<div class="section">${ownerPageIntro("Member","Pelanggan terdaftar dan saldo point")}<div class="search"><input placeholder="Cari member" oninput="filterMembers(this.value)"></div><div id="memberList">${ms.map(m=>`<div class="card member-item ci-member-card" data-q="${esc(((m.full_name||"")+" "+(m.username||"")+" "+(m.email||"")).toLowerCase())}"><div class="row"><div class="grow"><b>${esc(m.full_name||m.username||"Member")}</b><div class="muted">@${esc(m.username||"-")} • ${esc(m.email||"-")}</div><div class="muted">${esc(m.level||"Member")} • ${Number(m.points||0)} Point</div></div><span class="badge">${esc(m.status||"active")}</span></div></div>`).join("")||'<div class="empty">Belum ada member.</div>'}</div></div>`,"members")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function filterMembers(q){q=q.toLowerCase();document.querySelectorAll(".member-item").forEach(x=>x.classList.toggle("hidden",!x.dataset.q.includes(q)))}
@@ -782,7 +815,7 @@ async function rewards(){
  busy(true);try{
   const d=await ownerApi("rewards"),rs=d.rewards||[],reds=d.redemptions||[];
   (d.rewards||[]).forEach(x=>{const j=rewardPending.get(x.id);if(j)x.stock=j.wanted});state.cache.rewards=d;
-  if(state.page!=='rewards')return;root.innerHTML=shell(`<div class="section">${ownerPageIntro("Reward & Penukaran","Kelola hadiah dan permintaan penukaran")}<h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',-1)">−</button><b data-reward-stock-number="${esc(r.id)}">${Number(r.stock)||0}</b><button onclick="rewardStock('${r.id}',1)">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
+  if(state.page!=='rewards')return;paintOwner(`<div class="section">${ownerPageIntro("Reward & Penukaran","Kelola hadiah dan permintaan penukaran")}<h3>Reward</h3>${rs.map(r=>`<div class="card"><div class="row"><div class="grow"><b>${esc(r.product_name)}</b><div class="muted">${esc(r.variant_name||"")} • ${r.points_cost} Point</div></div><div class="stock"><button onclick="rewardStock('${r.id}',-1)">−</button><b data-reward-stock-number="${esc(r.id)}">${Number(r.stock)||0}</b><button onclick="rewardStock('${r.id}',1)">+</button></div></div></div>`).join("")}<h3>Menunggu Diproses</h3>${reds.filter(x=>x.status==="pending").map(x=>`<div class="card"><div class="row"><div class="grow"><b>${esc(x.reward?.product_name||"Reward")}</b><div class="muted">${x.points_spent} Point • ${new Date(x.created_at).toLocaleString("id-ID")}</div></div><span class="badge pending">pending</span></div><div class="actions"><button class="btn" onclick="redemptionStatus('${x.id}','fulfilled')">Selesai</button><button class="btn danger" onclick="redemptionStatus('${x.id}','cancelled')">Batalkan & refund point</button></div></div>`).join("")||'<div class="empty">Tidak ada penukaran pending.</div>'}</div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
 function rewardStock(id,delta){optimisticQuantity(id,delta,'reward')}
@@ -792,7 +825,7 @@ async function operations(){
  busy(true);try{
   const d=await ownerApi('settings'),bs=d.banners||[],cs=d.couriers||[],bank=d.bank_transfer||{};
   state.cache.operations=d;
-  if(state.page!=='operations')return;root.innerHTML=shell(`<div class="section ci-operations">${ownerPageIntro("Pengaturan Operasional","Kelola rekening, kurir, dan banner")}
+  if(state.page!=='operations')return;paintOwner(`<div class="section ci-operations">${ownerPageIntro("Pengaturan Operasional","Kelola rekening, kurir, dan banner")}
    <div class="card"><h3>Rekening Transfer Cireng Indi</h3><div class="muted">Data rekening resmi Intan Istiqomah. Pilih BSI atau BRI untuk mengisi form rekening aktif, lalu simpan. Member dapat memilih BSI atau BRI per pesanan. Rekening terpilih tersimpan dalam detail pembayaran.</div><div class="bankReference"><button type="button" onclick="fillBank('BSI')"><b>BSI</b><span>7306336217</span><span>Intan Istiqomah</span></button><button type="button" onclick="fillBank('BRI')"><b>BRI</b><span>457901008978533</span><span>Intan Istiqomah</span></button></div>
    <label>Bank</label><input id="bankname" style="width:100%;margin:6px 0 10px" value="${esc(bank.bank_name||'')}" placeholder="Nama Bank">
    <label>Nomor rekening</label><input id="banknumber" inputmode="numeric" style="width:100%;margin:6px 0 10px" value="${esc(bank.account_number||'')}" placeholder="Nomor rekening asli">
@@ -841,7 +874,7 @@ async function vouchers(){
  }catch(e){if(state.page==='vouchers')fail(e)}
 }
 function renderOwnerVouchers(data){
- root.innerHTML=shell('<div class="section">'+ownerPageIntro("Voucher Member","Terbitkan dan kelola voucher pelanggan")
+ paintOwner('<div class="section">'+ownerPageIntro("Voucher Member","Terbitkan dan kelola voucher pelanggan")
  +'<div class="card"><h3>Buat Voucher</h3><label>Judul voucher</label><input id="vTitle" placeholder="Contoh: Promo Cireng Indi" maxlength="100">'
  +'<label>Kode unik</label><input id="vCode" placeholder="CIRENG10" maxlength="30" autocomplete="off">'
  +'<div class="row"><div class="grow"><label>Tipe diskon</label><select id="vType"><option value="fixed">Nominal Rupiah</option><option value="percent">Persentase</option></select></div><div class="grow"><label>Nilai diskon</label><input id="vValue" type="number" min="1" placeholder="10000"></div></div>'
@@ -893,7 +926,7 @@ async function settings(){
    ["rewards","i-box","Reward & Penukaran","Persediaan hadiah dan persetujuan penukaran"],
    ["operations","i-settings","Rekening, Banner & Kurir","Kontrol operasional toko"]
   ];
-  root.innerHTML=shell(`<section class="section">${ownerPageIntro("Lainnya","Akun dan pengaturan operasional")}<div class="card ci-profile-card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} · ${esc(me.email||"")}</div></div></div></div>${links.map(v=>`<button type="button" class="card ci-menu-card" onclick="go('${v[0]}')"><span class="ci-menu-icon">${icon(v[1])}</span><span class="grow"><b>${v[2]}</b><span class="muted" style="display:block">${v[3]}</span></span><span class="ci-menu-arrow" aria-hidden="true">›</span></button>`).join("")}</section><section class="section"><h2>Tentang Aplikasi</h2><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Keamanan</span><b>Session terenkripsi</b></div><button class="btn danger" type="button" style="width:100%;margin-top:16px" onclick="logout()">${icon("i-logout")} Keluar Akun</button></section>`,"settings");
+  paintOwner(`<section class="section">${ownerPageIntro("Lainnya","Akun dan pengaturan operasional")}<div class="card ci-profile-card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} · ${esc(me.email||"")}</div></div></div></div>${links.map(v=>`<button type="button" class="card ci-menu-card" onclick="go('${v[0]}')"><span class="ci-menu-icon">${icon(v[1])}</span><span class="grow"><b>${v[2]}</b><span class="muted" style="display:block">${v[3]}</span></span><span class="ci-menu-arrow" aria-hidden="true">›</span></button>`).join("")}</section><section class="section"><h2>Tentang Aplikasi</h2><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Keamanan</span><b>Session terenkripsi</b></div><button class="btn danger" type="button" style="width:100%;margin-top:16px" onclick="logout()">${icon("i-logout")} Keluar Akun</button></section>`,"settings");
  }catch(e){fail(e)}finally{busy(false)}
 }
 async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
