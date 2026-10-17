@@ -180,7 +180,8 @@ async function authApi(b,req){const a=b.action;if(a==='register'){
   return reply({ok:true});
  }
  if(a==='forgot_password'){
- const email=String(b.email||'').trim();if(!email)return err('EMAIL_REQUIRED');
+ const email=String(b.email||'').trim().toLowerCase();
+ if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return err('EMAIL_REQUIRED');
  const p=check(await admin.from('member_profiles').select('email').ilike('email',email).maybeSingle());
  if(p){
    const reset=await client.auth.resetPasswordForEmail(email,{redirectTo:'https://cirengindi.com/reset-password'});
@@ -299,7 +300,26 @@ async function mobile(req,b){
   check(await admin.from('ci_point_ledger').insert({member_id:uid,delta:-r.points_cost,reason:'reward_redeemed',redemption_id:d.id}));return reply({redemption:d});
  }
  if(a==='change_password'){
-  if(typeof b.password!=='string'||b.password.length<8)return err('WEAK_PASSWORD');const x=await admin.auth.admin.updateUserById(uid,{password:b.password});if(x.error)throw x.error;return reply({ok:true});
+  // Verified Member session plus knowledge of the current password required:
+  // a bearer token alone must not silently change account credentials.
+  const currentPassword=String(b.current_password||'');
+  const newPassword=String(b.password||'');
+  if(newPassword.length<8||newPassword.length>128||
+     !/[a-z]/i.test(newPassword)||!/[0-9]/.test(newPassword))
+    return err('WEAK_PASSWORD');
+  if(!currentPassword||currentPassword.length>256)return err('CURRENT_PASSWORD_REQUIRED');
+  if(currentPassword===newPassword)return err('PASSWORD_UNCHANGED');
+  const proofClient=createClient(SB_URL,PUBLIC,{
+    auth:{autoRefreshToken:false,persistSession:false}
+  });
+  const verification=await proofClient.auth.signInWithPassword({
+    email:String(user.email||profile.email||''),password:currentPassword
+  });
+  if(verification.error||verification.data?.user?.id!==uid)
+    return err('INVALID_CURRENT_PASSWORD',400);
+  const updated=await admin.auth.admin.updateUserById(uid,{password:newPassword});
+  if(updated.error)return err('PASSWORD_UPDATE_UNAVAILABLE',503);
+  return reply({ok:true});
  }
  if(a==='logout')return reply({ok:true});
  return err('UNKNOWN_ACTION',404);
