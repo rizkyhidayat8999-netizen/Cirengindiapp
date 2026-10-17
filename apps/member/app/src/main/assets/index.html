@@ -1129,6 +1129,34 @@ html,body{background:#fff9f2!important}
 #root .ciStraightPlus::after{width:2px!important;height:18px!important}
 #root .ciStoreRecommend+.hscroll .pCard .add,#root .ciCatalogProduct>.add,#root .ciVividPopularScroll .pCard .add,#root .ciCheckoutSuggestion button{display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important;transform:none!important}
 
+
+/* The whole cart ribbon is one touch target, including icon, label, total and chevron. */
+#root > button.ciCartDock{display:flex!important;cursor:pointer!important;touch-action:manipulation!important}
+#root > button.ciCartDock > *,#root > button.ciCartDock > * *{pointer-events:none!important}
+#root > .ciCartFooter{cursor:pointer;touch-action:manipulation}
+#root > .ciCartFooter .ciCartSummary{pointer-events:none}
+#root > .ciCartFooter .ciCartCheckout{position:relative;z-index:1}
+/* Order summary expands in-place to expose real ci_order_items rows. */
+.ciOrderDetails{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px}
+.ciOrderDetails > summary{list-style:none;cursor:pointer;touch-action:manipulation;outline-offset:3px}
+.ciOrderDetails > summary::-webkit-details-marker{display:none}
+.ciOrderDetails > summary.orderProduct{display:flex;align-items:center;gap:12px;margin:0;padding:15px 0;border:0}
+.ciOrderProductInfo{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px;line-height:1.35}
+.ciOrderProductInfo b{font-size:14px;overflow-wrap:anywhere}
+.ciOrderProductInfo small{font-size:12px;color:var(--muted)}
+.ciOrderDetailsIndicator{display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:11px;font-weight:800;color:#91452e}
+.ciOrderDetailsIndicator .icon{height:16px;width:16px;transition:transform .15s ease}
+.ciOrderDetails[open] .ciOrderDetailsIndicator .icon{transform:rotate(90deg)}
+.ciOrderItemBreakdown{padding:0 0 15px}
+.ciOrderItemsHeading{font-size:12px;display:block;margin:0 0 5px;color:#633725}
+.ciOrderItemLine{display:flex;align-items:center;justify-content:space-between;gap:9px;border-top:1px dashed #e8d9cc;padding:10px 0}
+.ciOrderItemName{min-width:0;display:flex;flex-direction:column;gap:3px;line-height:1.4}
+.ciOrderItemName b{font-size:12px;color:#38251d;font-weight:750;overflow-wrap:anywhere}
+.ciOrderItemName small{font-size:11px;color:var(--muted)}
+.ciOrderItemLine strong{white-space:nowrap;font-size:12px;color:#81432f}
+.ciOrderItemMissing{font-size:12px;color:var(--muted)}
+@media(max-width:365px){.ciOrderDetailsIndicator{font-size:10px}.ciOrderProductInfo b{font-size:13px}}
+
 </style>
 </head>
 <body>
@@ -1535,7 +1563,7 @@ async function store(){
      onkeydown="if(event.key==='Enter')go('vouchers')">
      <div class="circle">${icon('i-gift')}</div>
      <div class="grow"><b>Voucher Eksklusif Member</b>
-       <span>Lihat diskon dan penawaran langsung dari Owner</span></div>${icon('i-right')}
+       <span>Lihat penawaran dari Cireng Indi</span></div>${icon('i-right')}
    </div>
    <div class="section ciStoreRecommend" style="padding-bottom:12px">
       <h2>Best Seller Cireng Indi</h2><p>Mulai dari menu Cireng favorit pelanggan</p>
@@ -1877,7 +1905,7 @@ function renderCartDock(cart){
  const nav=root.querySelector(':scope > .bottomnav');
  if(!nav)return;
  nav.insertAdjacentHTML('beforebegin',
-  '<button type="button" class="cartbar ciCartDock" aria-label="Cek keranjang berisi '+amount+' produk. Total '+rp(cart.subtotal||0)+'" onclick="go(\'cart\')">'+
+  '<button type="button" class="cartbar ciCartDock" aria-label="Cek keranjang berisi '+amount+' produk. Total '+rp(cart.subtotal||0)+'" onclick="go(\'cart\')" data-ci-action="open-cart">'+
    '<span class="ciCartDockLeft">'+icon('i-bag','sm')+'<span class="ciCartDockText">Cek Keranjang</span><span class="ciCartDockCount">'+amount+'</span></span>'+
    '<strong class="ciCartDockTotal">'+rp(cart.subtotal||0)+'</strong>'+icon('i-right','sm')+
   '</button>');
@@ -2088,9 +2116,9 @@ function renderCart(c){
    '<span class="ciCartBag" aria-hidden="true">'+icon('i-bag')+'<em>'+itemCount+'</em></span>'+
   '</header>'+
   '<main class="ciCartList">'+(itemCount?rows:'<section class="ciCartEmpty" role="status"><span class="ciCartEmptyIcon">'+icon('i-bag')+'</span><h2>Keranjangmu masih kosong</h2><p>Pilih menu favorit Cireng Indi untuk mulai berbelanja.</p><button type="button" onclick="go(\'store\')">Lihat Menu</button></section>')+'</main></div>'+
-  (itemCount?'<footer class="ciCartFooter" aria-label="Ringkasan keranjang">'+
+  (itemCount?'<footer class="ciCartFooter" role="button" tabindex="0" aria-label="Checkout keranjang" onclick="go(\'checkout\')" onkeydown="if(event.target===this&&(event.key===\'Enter\'||event.key===\' \')){event.preventDefault();go(\'checkout\')}">'+
     '<div class="ciCartSummary"><small>Subtotal</small><strong>'+rp(c.subtotal)+'</strong></div>'+
-    '<button type="button" class="ciCartCheckout" onclick="go(\'checkout\')">Lanjut Checkout '+icon('i-right')+'</button>'+
+    '<button type="button" class="ciCartCheckout" onclick="event.stopPropagation();go(\'checkout\')">Checkout '+icon('i-right')+'</button>'+
    '</footer>':'');
  const scroller=root.querySelector('.ciCartScreen');
  if(scroller){scroller.dataset.renderSignature=signature;scroller.scrollTop=previousScroll}
@@ -2403,12 +2431,24 @@ function orderTimeline(order){
 }
 
 function renderOrders(os){
- if(state.route!=='orders')return;root.innerHTML=shell(`${uiTop('Riwayat Pesanan','home')}<div class="section">${os.map(o=>{
+ if(state.route!=='orders')return;
+ const expandedOrderIds=new Set(Array.from(root.querySelectorAll('.ciOrderDetails[open]'),d=>d.dataset.orderId));
+ root.innerHTML=shell(`${uiTop('Riwayat Pesanan','home')}<div class="section">${os.map(o=>{
    const p=o.payment||{},courier=o.courier||{},wa=String(courier.whatsapp||'').replace(/[^0-9]/g,'');
    const payText=p.method==='transfer'?'Transfer Bank':'COD';
    const statusText={pending:'Menunggu pembayaran',submitted:'Bukti dikirim, menunggu Owner',paid:'Pembayaran dikonfirmasi',rejected:'Bukti ditolak',cancelled:'Dibatalkan'}[p.status]||'Menunggu';
    return `<div class="orderCard" style="margin-bottom:14px"><div class="orderTop"><div class="circle">${icon(o.fulfillment_type==='pickup'?'i-bag':'i-truck')}</div><div class="grow"><b>${esc(o.order_number||'Pesanan')}</b><div style="font-size:12px;color:var(--muted)">${new Date(o.created_at).toLocaleString('id-ID')} · ${o.fulfillment_type==='pickup'?'Pick Up':'Delivery'}</div></div><span class="tag ${o.status==='completed'?'done':''}">${esc(orderStatusText(o.status))}</span></div>
-   ${orderTimeline(o)}<div class="orderProduct"><img ${photoAttrs({name:o.items?.[0]?.product_name||'Cireng'})}><div><b>${esc(o.items?.[0]?.product_name||'Pesanan Cireng Indi')}</b><div style="color:var(--muted);font-size:12px">${(o.items||[]).length} jenis produk</div></div></div>
+   ${orderTimeline(o)}<details class="ciOrderDetails" data-order-id="${esc(o.id||'')}" ${expandedOrderIds.has(String(o.id||''))?'open':''}>
+    <summary class="orderProduct ciOrderProductSummary" aria-label="Lihat rincian ${(o.items||[]).length} jenis produk">
+      <img ${photoAttrs({name:o.items?.[0]?.product_name||'Cireng'})}>
+      <span class="ciOrderProductInfo"><b>${esc(o.items?.[0]?.product_name||'Pesanan Cireng Indi')}</b><small>${(o.items||[]).length} jenis produk</small></span>
+      <span class="ciOrderDetailsIndicator" aria-hidden="true">Rincian ${icon('i-right','sm')}</span>
+    </summary>
+    <div class="ciOrderItemBreakdown">
+      <b class="ciOrderItemsHeading">Rincian Pesanan</b>
+      ${(o.items||[]).map(item=>`<div class="ciOrderItemLine"><div class="ciOrderItemName"><b>${esc(item.product_name||'Produk Cireng Indi')}</b>${item.variant_name?'<small>'+esc(item.variant_name)+'</small>':''}<small>${Number(item.quantity||0)} × ${rp(Number(item.unit_price||0))}</small></div><strong>${rp(Number(item.line_total??Number(item.quantity||0)*Number(item.unit_price||0)))}</strong></div>`).join('')||'<p class="ciOrderItemMissing">Rincian produk belum tersedia.</p>'}
+    </div>
+   </details>
    <div style="padding:6px 0;font-size:13px"><b>${esc(payText)} — ${esc(statusText)}</b>${p.review_note?`<div style="color:#a7372e">Alasan: ${esc(p.review_note)}</div>`:''}</div>
    ${p.method==='transfer'&&p.bank_snapshot?`<div class="eta" style="margin:8px 0;padding:12px"><b>Transfer ke ${esc(p.bank_snapshot.bank_name||'Bank')}</b><div>Nomor: <b>${esc(p.bank_snapshot.account_number||'')}</b></div><div>Atas nama: <b>${esc(p.bank_snapshot.account_holder||'')}</b></div><div>Nominal pesanan: <b>${rp(o.total)}</b></div></div>`:''}
    ${o.fulfillment_type==='delivery'?`<div style="padding:7px 0;font-size:13px">${courier.name?`<b>Kurir: ${esc(courier.name)}</b>${wa?`<button class="outline" style="margin-left:8px" onclick="Native.openUrl('https://wa.me/${wa}')">${serviceLogo('whatsapp')} WhatsApp Kurir</button>`:''}`:'Kurir sedang ditentukan oleh Owner.'}</div>`:'<div style="font-size:12px;color:var(--muted)">Pengambilan langsung di outlet Tanah Grogot</div>'}
@@ -2583,7 +2623,7 @@ function memberSettings(){
  '<button class="menurow" style="width:100%;border:0;text-align:left;background:transparent" onclick="go(\'vouchers\')">'+icon('i-gift')+'<div class="grow">Voucher Saya</div>'+icon('i-right')+'</button>'+
  '<button class="menurow" style="width:100%;border:0;text-align:left;background:transparent" onclick="shareReferral()">'+icon('i-users')+'<div class="grow">Bagikan Kode Referral</div>'+icon('i-right')+'</button>'+
  '<button class="menurow" style="width:100%;border:0;text-align:left;background:transparent" onclick="Native.openUrl(\'https://cirengindi.com\')">'+icon('i-store')+'<div class="grow">Website Cireng Indi</div>'+icon('i-right')+'</button>'+
- '</div><p class="muted" style="font-size:12px;text-align:center">Cireng Indi Member • v'+esc(Native.appVersion())+'</p></div>','profile');
+ '</div></div>','profile');
 }
 
 function renderProfile(d){
@@ -2591,7 +2631,7 @@ function renderProfile(d){
  const p=d?.profile||{};
  const signature=JSON.stringify([p.username,p.full_name,p.email,p.phone,p.referral_code]);
  if(root.querySelector('.profile')?.dataset.renderSignature===signature)return;
- root.innerHTML=shell(`${uiTop('Akun','home')}<div class="profile"><div class="avatar">${icon('i-user','lg')}</div><div class="grow"><h2>${esc(p.full_name||p.username)}</h2><p>@${esc(p.username)}</p></div>${icon('i-right')}</div><div class="menuGroup"><div class="menurow" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><div class="grow"><b>Ajak Teman / Referral</b><div style="font-size:12px;color:var(--muted)">${esc(p.referral_code||'Bagikan kode referral')}</div></div>${icon('i-right')}</div><div class="menurow" onclick="go('addresses')">${icon('i-pin')}<div class="grow">Alamat Tersimpan</div>${icon('i-right')}</div><div class="menurow" onclick="go('rewards')">${icon('i-star')}<div class="grow">Point & Reward</div>${icon('i-right')}</div><div class="menurow" onclick="go('vouchers')">${icon('i-gift')}<div class="grow">Voucher Saya</div>${icon('i-right')}</div><div class="menurow" onclick="go('settings')">${icon('i-settings')}<div class="grow">Pengaturan</div>${icon('i-right')}</div><div class="menurow" onclick="logout()">${icon('i-logout')}<div class="grow">Keluar</div>${icon('i-right')}</div></div><div class="section"><p style="text-align:center;font-size:12px;color:var(--muted)">Cireng Indi v${esc(Native.appVersion())}</p></div>`, 'profile');
+ root.innerHTML=shell(`${uiTop('Akun','home')}<div class="profile"><div class="avatar">${icon('i-user','lg')}</div><div class="grow"><h2>${esc(p.full_name||p.username)}</h2><p>@${esc(p.username)}</p></div>${icon('i-right')}</div><div class="menuGroup"><div class="menurow" onclick="shareReferral()"><div class="circle">${icon('i-users')}</div><div class="grow"><b>Ajak Teman / Referral</b><div style="font-size:12px;color:var(--muted)">${esc(p.referral_code||'Bagikan kode referral')}</div></div>${icon('i-right')}</div><div class="menurow" onclick="go('addresses')">${icon('i-pin')}<div class="grow">Alamat Tersimpan</div>${icon('i-right')}</div><div class="menurow" onclick="go('rewards')">${icon('i-star')}<div class="grow">Point & Reward</div>${icon('i-right')}</div><div class="menurow" onclick="go('vouchers')">${icon('i-gift')}<div class="grow">Voucher Saya</div>${icon('i-right')}</div><div class="menurow" onclick="go('settings')">${icon('i-settings')}<div class="grow">Pengaturan</div>${icon('i-right')}</div><div class="menurow" onclick="logout()">${icon('i-logout')}<div class="grow">Keluar</div>${icon('i-right')}</div></div>`, 'profile');
  const card=root.querySelector('.profile');
  if(card)card.dataset.renderSignature=signature;
 }
