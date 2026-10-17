@@ -1107,6 +1107,20 @@ html,body{background:#fff9f2!important}
  box-shadow:inset 0 0 0 1px rgba(142,94,64,.09);
 }
 
+/* Standard image dimensions reserve thumbnail space before decoding,
+   including cart, checkout, related products and order history. */
+#root .ciCartItemPhoto,
+#root .ciCheckoutItem>img,
+#root .ciCheckoutSuggestion img,
+#root .ciRelatedCard img,
+#root .ciAddedProduct img,
+#root .ciSheetRec img{
+ background:#fbf2e7!important;
+ object-fit:cover!important;
+ object-position:center!important;
+ transition:none!important;
+ animation:none!important;
+}
 </style>
 </head>
 <body>
@@ -1674,13 +1688,13 @@ function photoAttrs(p){
  const id=officialImageId(resolved);
  const local=localPic(resolved?.name);
  const source=CI_NORMALIZED_PHOTOS[id]||stablePhotoSource(id,resolved?.name);
- return 'src="'+esc(source)+'" alt="'+esc(resolved?.name||'Produk Cireng Indi')+
+ return 'src="'+esc(source)+'" width="208" height="208" alt="'+esc(resolved?.name||'Produk Cireng Indi')+
   '" decoding="async" loading="eager"'+
   (id&&id!==1?' data-local-photo="'+esc(local)+'" onerror="photoFallback(this)"':'');
 }
 function productMediaFrame(product){
  return '<span class="ciFixedPhotoFrame ciPhotoStandard">'+
-  '<img '+photoAttrs(product)+' width="208" height="208" draggable="false"></span>';
+  '<img '+photoAttrs(product)+' draggable="false"></span>';
 }
 
 function pcard(p,b){
