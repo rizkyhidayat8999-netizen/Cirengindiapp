@@ -118,7 +118,7 @@ html,body{background:linear-gradient(145deg,#fffaf6,#fff4e7)}
 <script>
 const SUPABASE_URL="https://tbviryuimoxgapubdjio.supabase.co";
 const KEY="sb_publishable_DxP6XDJP2XfZAC45pAniHQ_1WJqC4Fr";
-const state={session:null,page:"dashboard",cache:{}};
+const state={session:null,page:"dashboard",cache:{},uiPreview:false};
 const root=document.getElementById("root");
 const instantViews=new Map();const pendingOwnerActions=new Set();let navId=0;
 function reserveAction(key){if(pendingOwnerActions.has(key))return false;pendingOwnerActions.add(key);return true}
@@ -152,6 +152,7 @@ async function refresh(){
  saveSession(d);return d
 }
 async function ownerApi(action,payload={},retry=true){
+ if(state.uiPreview)throw new Error("PREVIEW_READ_ONLY");
  let s=state.session||getSession();state.session=s;if(!s?.access_token)throw new Error("AUTH_REQUIRED");
  const r=await fetch(SUPABASE_URL+"/functions/v1/cirengindi-owner-api",{
   method:"POST",
@@ -168,7 +169,7 @@ function shell(body,active){
  return `<div class="app"><div class="top"><div class="logo"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><div class="grow"><b>Cireng Indi Owner</b><span>Operasional & manajemen</span></div></div>${body}<nav class="nav">${nav.map(n=>`<button class="${active===n[0]?"active":""}" onclick="go('${n[0]}')">${icon(n[1])}${n[2]}</button>`).join("")}</nav></div>`
 }
 function renderLogin(msg=""){
- root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><button type="button" class="auth-text-action" onclick="renderOwnerForgot()">Lupa Password? Reset melalui Email</button></div><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Panduan Verifikasi Owner</button></div></section>`
+ root.innerHTML=`<section class="login"><div class="loginbox"><div class="loginbrand"><img class="officialLogo" src="assets/logo_cireng_indi.png" alt="Logo Cireng Indi"></div><h1>Cireng Indi Owner</h1><p>Masuk menggunakan akun owner/staff.</p>${msg?`<div class="notice auth-message" role="alert">${esc(msg)}</div>`:""}<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="indicireng@gmail.com" value="indicireng@gmail.com"><label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password Owner"><button class="full" onclick="doLogin()">Masuk Owner</button><div class="auth-help"><button type="button" class="auth-text-action" onclick="renderOwnerForgot()">Lupa Password? Reset melalui Email</button></div><div class="auth-help"><span class="muted">Belum menerima email verifikasi?</span><div id="ownerAuthStatus" role="alert" aria-live="polite" class="auth-message"></div><div><button type="button" class="auth-text-action" onclick="resendOwnerVerification(this)">Kirim ulang email verifikasi</button></div></div><button type="button" class="btn secondary" style="width:100%;margin-top:13px" onclick="registerOwner()">Panduan Verifikasi Owner</button><button class="btn secondary" style="width:100%;margin-top:14px;padding:14px" type="button" onclick="enterOwnerPreview()">Buka Preview UI Owner (Tanpa Login)</button><p class="muted" style="text-align:center;margin:12px 0 0">Mode demonstrasi. Tidak menampilkan atau mengubah data asli.</p></div></section>`
 }
 function registerOwner(){
  const email='indicireng@gmail.com';
@@ -384,6 +385,7 @@ function errorText(m){
 }
 function fail(e){const m=String(e?.message||e);if(m.includes("AUTH_REQUIRED")||m.includes("JWT")){clearSession();renderLogin("Sesi berakhir. Silakan masuk lagi.")}else if(m.includes("STAFF_REQUIRED")){clearSession();renderLogin("Akun tidak memiliki akses Owner/Staff.")}else toast(errorText(m))}
 async function go(p){
+ if(state.uiPreview){ownerPreview(p);return;}
  const previous=state.page;
  if(previous!==p&&root.querySelector('.app')&&!root.querySelector('.instantPreview'))instantViews.set(previous,root.innerHTML);
  state.page=p;const key=++navId;
@@ -596,7 +598,52 @@ async function settings(){
   if(state.page!=='settings')return;root.innerHTML=shell(`<div class="section"><h2>Lainnya</h2><div class="card"><div class="row">${icon("i-store")}<div class="grow"><b>${esc(me.staff?.full_name||"Owner")}</b><div class="muted">${esc(me.staff?.role||"staff")} • ${esc(me.email||"")}</div></div></div></div><div class="card" onclick="go('vouchers')"><div class="row">${icon("i-cash")}<div class="grow"><b>Voucher Member</b><div class="muted">Buat diskon dan berikan voucher kepada member</div></div><b>›</b></div></div><div class="card" onclick="go('rewards')"><div class="row">${icon("i-cash")}<div class="grow"><b>Reward & Penukaran</b><div class="muted">Stok reward dan persetujuan penukaran</div></div><b>›</b></div></div><div class="card" onclick="go('operations')"><div class="row">${icon("i-settings")}<div class="grow"><b>Rekening, Banner & Kurir</b><div class="muted">Kontrol konten operasional</div></div><b>›</b></div></div><div class="card"><div class="row">${icon("i-alert")}<div class="grow"><b>Keamanan</b><div class="muted">Semua mutasi sensitif divalidasi kembali oleh backend dan role staff.</div></div></div></div><div class="card"><div class="kv"><span>Aplikasi</span><b>Cireng Indi Owner</b></div><div class="kv"><span>Versi</span><b>${esc(Native.appVersion())}</b></div><div class="kv"><span>Pembayaran</span><b>COD & Transfer (jika diaktifkan)</b></div></div><button class="btn danger" style="width:100%" onclick="logout()">${icon("i-logout")} Keluar</button></div>`,"settings")
  }catch(e){fail(e)}finally{busy(false)}
 }
-async function logout(){busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
+async function logout(){if(state.uiPreview){exitOwnerPreview();return;}busy(true);try{try{await ownerApi("logout")}catch(e){}clearSession();renderLogin()}finally{busy(false)}}
+
+
+/* Separate read-only UI demonstration. Cannot call authenticated endpoints. */
+const OWNER_PREVIEW_PRODUCTS=[{"name":"Cireng","price":30000},{"name":"Cireng Isi","price":25000},{"name":"Cilok","price":30000},{"name":"Sempol Ayam","price":40000},{"name":"Tahu Bakso","price":35000},{"name":"Pempek Ikan Tenggiri","price":25000},{"name":"Nugget Ayam","price":30000},{"name":"Chicken Katsu","price":28000},{"name":"Bakso Ayam","price":28000},{"name":"Bola Ayam Keju","price":40000},{"name":"Bitterballen","price":40000},{"name":"Ayam Ungkep","price":60000},{"name":"Jamu Manjakani","price":28000},{"name":"Jamu Komplit","price":28000},{"name":"Kunyit Asam","price":28000},{"name":"Jahe Latte","price":30000},{"name":"Jahe Original","price":28000},{"name":"Sari Kacang Hijau","price":28000},{"name":"Ebi Furai","price":40000},{"name":"Baceman Frozen","price":35000},{"name":"Dimsum Crispy","price":40000},{"name":"Rollade Ayam","price":35000},{"name":"Kebab Pisang","price":35000},{"name":"Kebab Daging","price":45000},{"name":"Corndog","price":30000},{"name":"Churros","price":30000},{"name":"Kentang Goreng","price":25000},{"name":"Frozen Mix Platter","price":75000},{"name":"Puding Mix","price":20000},{"name":"Salad Jelly","price":15000},{"name":"Rengginang","price":35000}];
+function enterOwnerPreview(){state.uiPreview=true;state.session=null;ownerPreview("dashboard")}
+function exitOwnerPreview(){state.uiPreview=false;state.cache={};renderLogin()}
+function previewNotice(){toast("Mode preview: aksi hanya simulasi, tidak menyimpan data.")}
+function previewOrder(id,status,total){
+ return '<div class="card"><div class="row"><div class="grow"><b>'+esc(id)+'</b><div class="muted">17 Oktober · Data contoh</div></div><span class="badge pending">'+esc(status)+'</span></div><div class="row" style="margin-top:10px"><strong class="grow money">'+rp(total)+'</strong><button class="btn secondary" onclick="previewNotice()">Rincian</button></div></div>';
+}
+function previewProducts(search){
+ const q=String(search||"").trim().toLowerCase();
+ const list=OWNER_PREVIEW_PRODUCTS.filter(p=>p.name.toLowerCase().includes(q));
+ return list.length?list.map(p=>'<div class="card"><div class="row"><div class="grow"><b>'+esc(p.name)+'</b><div class="muted">Produk katalog · Stok contoh: 20</div></div><div style="text-align:right"><div class="money">'+rp(p.price)+'</div><button class="btn secondary" style="margin-top:7px" onclick="previewNotice()">Rincian</button></div></div></div>').join(""):'<div class="empty">Produk tidak ditemukan.</div>';
+}
+function filterPreviewProducts(v){const el=document.getElementById("previewProducts");if(el)el.innerHTML=previewProducts(v)}
+function ownerPreview(page){
+ if(!state.uiPreview)return;
+ const allowed=["dashboard","orders","products","members","settings","vouchers","rewards","operations"];
+ state.page=allowed.includes(page)?page:"dashboard";
+ let body="",a=state.page;
+ if(a==="dashboard"){
+  body='<div class="section"><h2>Ringkasan Hari Ini</h2><div class="grid">'+[
+   ["Pesanan hari ini","12"],["Omzet selesai","Rp750.000"],
+   ["Perlu diproses","3"],["Stok menipis","2"],
+   ["Produk aktif",String(OWNER_PREVIEW_PRODUCTS.length)],["Member aktif","98"]
+  ].map(v=>'<div class="metric"><div class="label">'+v[0]+'</div><strong>'+v[1]+'</strong><div class="hint">Data contoh</div></div>').join("")+'</div></div><div class="section"><h2>Pesanan Terbaru</h2>'+previewOrder("CI-DEMO-001","Menunggu pembayaran",125000)+previewOrder("CI-DEMO-002","Diproses",89000)+'</div>';
+ }else if(a==="orders"){
+  body='<div class="section"><h2>Pesanan & Pembayaran</h2><div class="search"><input placeholder="Cari nomor pesanan" oninput="previewNotice()"></div>'+previewOrder("CI-DEMO-001","Pending",125000)+previewOrder("CI-DEMO-002","Diproses",89000)+'<div class="notice">Konfirmasi transfer dan penugasan kurir nonaktif pada preview.</div></div>';
+ }else if(a==="products"){
+  body='<div class="section"><h2>Produk & Stok</h2><div class="muted" style="margin-bottom:12px">Nama dan harga dari katalog Cireng Indi. Stok simulasi.</div><div class="search"><input type="search" placeholder="Cari produk" oninput="filterPreviewProducts(this.value)"></div><div id="previewProducts">'+previewProducts("")+'</div></div>';
+ }else if(a==="members"){
+  body='<div class="section"><h2>Member</h2><div class="card"><div class="row"><div class="grow"><b>Member Demo</b><div class="muted">Hanya profil contoh</div></div><span class="badge completed">120 Point</span></div></div></div>';
+ }else if(a==="settings"){
+  body='<div class="section"><h2>Lainnya</h2><div class="card"><b>Owner Preview</b><p class="muted">Tidak masuk ke akun Owner asli.</p></div>'+[
+   ["Rekening, Banner & Kurir","operations"],["Voucher Member","vouchers"],["Reward & Penukaran","rewards"]
+  ].map(v=>'<button class="btn secondary" style="width:100%;margin-bottom:9px" onclick="go(\''+v[1]+'\')">'+v[0]+' →</button>').join("")+
+  '<div class="card"><b>Keamanan</b><p class="muted">Login Owner produksi tetap memerlukan akun terverifikasi dan izin owner.</p></div><button class="btn danger" style="width:100%" onclick="exitOwnerPreview()">Keluar Preview</button></div>';
+ }else{
+  const h={operations:"Rekening, Banner & Kurir",vouchers:"Voucher Member",rewards:"Reward & Penukaran"}[a]||"Preview";
+  body='<div class="section"><h2>'+h+'</h2><div class="card"><b>'+h+' (contoh)</b><p class="muted">Halaman ini untuk tinjauan UI. Data dan tindakan produksi tidak tersedia.</p><button class="btn secondary" onclick="previewNotice()">Pratinjau Pengaturan</button></div></div>';
+ }
+ const banner='<div class="notice" style="margin:12px 18px 0" role="status"><b>MODE PREVIEW OWNER</b><div style="margin:5px 0">Tinjau dan revisi UI tanpa OTP. Data contoh; bukan akses akun produksi.</div><button class="btn secondary" onclick="exitOwnerPreview()">Keluar Preview</button></div>';
+ root.innerHTML=shell(banner+body,["operations","vouchers","rewards"].includes(a)?"settings":a);
+}
 
 (async()=>{state.session=getSession();if(state.session?.access_token){previewPage('dashboard');try{if(await verifyStaff())await dashboard();else{clearSession();renderLogin("Akun ini belum memiliki role Owner/Staff.")}}catch(e){clearSession();renderLogin(errorText(e.message))}}else renderLogin()})();
 </script>
