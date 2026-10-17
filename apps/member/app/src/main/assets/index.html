@@ -1121,6 +1121,14 @@ html,body{background:#fff9f2!important}
  transition:none!important;
  animation:none!important;
 }
+
+/* Fixed, optically centered PLUS: draw bars instead of rotated/scaled SVG. */
+#root .ciStraightPlus{display:block!important;position:relative!important;flex:none!important;width:18px!important;height:18px!important;margin:0 auto!important;padding:0!important;border:0!important;background:none!important;transform:none!important;rotate:0deg!important;animation:none!important;transition:none!important}
+#root .ciStraightPlus::before,#root .ciStraightPlus::after{content:""!important;display:block!important;position:absolute!important;top:50%!important;left:50%!important;background:currentColor!important;border-radius:2px!important;box-shadow:none!important;transform:translate(-50%,-50%)!important;rotate:0deg!important}
+#root .ciStraightPlus::before{width:18px!important;height:2px!important}
+#root .ciStraightPlus::after{width:2px!important;height:18px!important}
+#root .ciStoreRecommend+.hscroll .pCard .add,#root .ciCatalogProduct>.add,#root .ciVividPopularScroll .pCard .add,#root .ciCheckoutSuggestion button{display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important;transform:none!important}
+
 </style>
 </head>
 <body>
@@ -1704,7 +1712,7 @@ function pcard(p,b){
   <div><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}
   <div class="meta">${esc(p.description||'Favorit member')}</div>
   <div class="price">${rp(v?.price??p.base_price)}</div></div>
-  <button type="button" class="add" aria-label="Tambah ${esc(p.name)}" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button>
+  <button type="button" class="add" aria-label="Tambah ${esc(p.name)}" onclick="event.stopPropagation();quickAddOrSelect('${p.id}')"><span class="ciStraightPlus" aria-hidden="true"></span></button>
  </div>`;
 }
 
@@ -1716,7 +1724,7 @@ function prow(p,b){
   <div class="ciCatalogProductCopy"><h3>${esc(p.name)}</h3>${p.best_seller?'<span class="ciBestSellerBadge">Best Seller</span>':''}
   <p>${esc(p.description||'Camilan dan frozen food Cireng Indi')}</p><div class="price">${rp(v?.price??p.base_price)}</div></div>
   <button type="button" class="add" aria-label="Tambah ${esc(p.name)} ke keranjang"
-    onclick="event.stopPropagation();quickAddOrSelect('${p.id}')">${icon('i-plus')}</button>
+    onclick="event.stopPropagation();quickAddOrSelect('${p.id}')"><span class="ciStraightPlus" aria-hidden="true"></span></button>
  </article>`;
 }
 function setCat(id){
@@ -2230,7 +2238,7 @@ async function renderCheckoutSnapshot(c,b,verified,oldScroll){
       const unit=Number(v.price??p.base_price??0);
       return `<article class="ciCheckoutItem"><div class="ciCheckoutItemInfo"><b>${esc(p.name||'Produk Cireng Indi')}</b><small>${esc(v.name||'')} · ${qty} item</small><div class="ciCheckoutItemPrice">${rp(unit*qty)}</div></div><img ${photoAttrs(prd)}><div class="ciCheckoutItemBottom"><button type="button" class="ciCheckoutTextAction" onclick="openCheckoutProduct('${esc(p.id)}')">Ubah</button><div class="ciCheckoutStepper"><button type="button" aria-label="Kurangi ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty-1})">${icon('i-minus')}</button><output>${qty}</output><button type="button" aria-label="Tambah ${esc(p.name||'produk')}" onclick="checkoutQty('${id}',${qty+1})">${icon('i-plus')}</button></div></div></article>`;
     }).join('');
-    const suggestedHtml=suggestions.map(x=>`<div class="ciCheckoutSuggestion"><img ${photoAttrs(x.p)}><div class="ciCheckoutGrow"><b>${esc(x.p.name)}</b><small>${rp(x.first.price)}</small></div><button type="button" onclick="checkoutAddSuggested('${esc(x.p.id)}')" aria-label="Tambah ${esc(x.p.name)}">${icon('i-plus')}</button></div>`).join('');
+    const suggestedHtml=suggestions.map(x=>`<div class="ciCheckoutSuggestion"><img ${photoAttrs(x.p)}><div class="ciCheckoutGrow"><b>${esc(x.p.name)}</b><small>${rp(x.first.price)}</small></div><button type="button" onclick="checkoutAddSuggested('${esc(x.p.id)}')" aria-label="Tambah ${esc(x.p.name)}"><span class="ciStraightPlus" aria-hidden="true"></span></button></div>`).join('');
     const viewSignature=JSON.stringify([
       state.fulfillment,state.checkoutPayment,state.selectedVoucherId,subtotal,discount,canTransfer,
       ...((c.items||[]).map(i=>[i.variant_id,i.quantity,i.variant?.price,i.variant?.name,i.variant?.product?.name])),
@@ -2253,7 +2261,6 @@ async function renderCheckoutSnapshot(c,b,verified,oldScroll){
       <section class="ciCheckoutSection"><h2>Detail Pesanan</h2>${itemsHtml}</section>
       ${suggestions.length?`<section class="ciCheckoutSection"><h2>Lebih cocok dinikmati bareng ini</h2><div class="ciCheckoutSuggestions">${suggestedHtml}</div></section>`:''}
       <section class="ciCheckoutSection"><div class="ciCheckoutAddRow"><div class="ciCheckoutGrow"><b>Ada tambahan lagi?</b><small>Kamu masih bisa tambah menu lain, ya.</small></div><button type="button" class="ciCheckoutOutline" onclick="go('store')">Tambah</button></div></section>
-      <section class="ciCheckoutSection"><label class="ciCheckoutBagRow"><span class="ciCheckoutIcon">${icon('i-bag')}</span><div class="ciCheckoutGrow"><b>Perlu tas belanja?</b><small>Permintaan ke outlet, biaya jika ada dikonfirmasi Owner</small></div><input id="checkoutBag" class="ciCheckoutSwitch" type="checkbox" ${state.checkoutBag?'checked':''} onchange="state.checkoutBag=this.checked"></label></section>
       <section class="ciCheckoutSection"><h2>Voucher Diskon</h2>${eligible.length?`<div class="ciCheckoutVoucherCard"><span class="ciCheckoutIcon">${icon('i-gift')}</span><div class="ciCheckoutGrow"><b>${selected?'Voucher berhasil dipilih':'Ada voucher untuk pesananmu'}</b><small id="checkoutVoucherHighlight">${selected?esc(selected.title)+' · Potongan '+rp(discount):esc(eligible[0].title)+' · Hemat '+rp(previewDiscount(eligible[0],subtotal))}</small></div><button type="button" class="ciCheckoutOutline" onclick="checkoutApplyBestVoucher()">${selected?'Ganti':'Pakai'}</button></div><details class="ciCheckoutVoucherDetails"><summary>Lihat voucher lainnya ${icon('i-right','sm')}</summary><select id="checkoutVoucher" class="ciCheckoutSelect" aria-label="Pilih voucher" onchange="updateCheckoutVoucher()"><option value="">Tanpa voucher</option>${eligible.map(v=>`<option value="${esc(v.id)}" ${v.id===state.selectedVoucherId?'selected':''}>${esc(v.title)} — ${esc(voucherLabel(v))}</option>`).join('')}</select></details>`:`<div class="ciCheckoutNotice">${icon('i-gift')}<span>Belum ada voucher yang memenuhi syarat pesanan ini.</span></div>`}<p id="checkoutVoucherMessage" style="font-size:11px;color:#8a796d;margin:10px 0 0">${selected?'Estimasi diskon '+rp(discount)+'. Final diverifikasi sistem.':'Diskon hanya berlaku untuk voucher aktif dari Owner.'}</p></section>
       <section class="ciCheckoutSection"><h2>Metode Pembayaran</h2><label class="ciCheckoutPaymentChoice"><span class="ciCheckoutIcon">${icon('i-cash')}</span><div class="ciCheckoutGrow"><b>COD / Bayar di Tempat</b><small>${delivery?'Bayar saat menerima pesanan':'Bayar saat mengambil pesanan'}</small></div><input type="radio" name="copay" value="cod" ${payment==='cod'?'checked':''} onchange="checkoutPaymentChanged('cod')"></label>
       ${canTransfer?`<label class="ciCheckoutPaymentChoice"><span class="ciCheckoutIcon">${icon('i-receipt')}</span><div class="ciCheckoutGrow"><b>Transfer Bank</b><small>Transfer ke rekening resmi Cireng Indi</small></div><input type="radio" name="copay" id="transferRadio" value="transfer" ${payment==='transfer'?'checked':''} onchange="checkoutPaymentChanged('transfer')"></label><div class="ciCheckoutBank" id="checkoutBankArea" style="display:${payment==='transfer'?'block':'none'}"><label style="display:block;font-size:12px;margin-bottom:6px;font-weight:750" for="cobank">Pilih rekening penerima</label><select id="cobank" class="ciCheckoutSelect" onchange="state.checkoutBank=this.value;checkoutPaymentChanged('transfer')">${banks.map(a=>`<option value="${esc(a.code||a.bank_name)}" ${(a.code||a.bank_name)===(selectedBank.code||selectedBank.bank_name)?'selected':''}>${esc(a.bank_name)} · ${esc(a.account_number)} · a.n. ${esc(a.account_holder)}</option>`).join('')}</select><div class="ciCheckoutNotice">${icon('i-clock')}<span>Setelah memesan, unggah bukti transfer di Riwayat Pesanan agar Owner dapat memverifikasi pembayaran.</span></div></div>`:`<div class="ciCheckoutNotice">${icon('i-clock')}<span>Transfer tersedia setelah rekening bank diaktifkan oleh Owner.</span></div>`}
@@ -2352,7 +2359,6 @@ async function checkoutAddSuggested(id){
 
 async function openCheckoutProduct(id){await openP(id)}
 
-function checkoutBagToggle(){state.checkoutBag=!!document.getElementById('checkoutBag')?.checked}
 
 async function placeOrder(){
  if(state.placingOrder)return;
@@ -2364,7 +2370,7 @@ async function placeOrder(){
   const voucher_id=document.getElementById('checkoutVoucher')?.value||null;
   const bank_code=payment_method==='transfer'?(document.getElementById('cobank')?.value||null):null;
   if(payment_method==='transfer'&&!bank_code)throw new Error('PILIH_BANK');
-  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,voucher_id,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:state.checkoutBag?'Mohon sertakan tas belanja bila tersedia. Konfirmasikan biaya tas terlebih dahulu.':null});
+  const d=await api('checkout',{fulfillment_type:state.fulfillment,payment_method,bank_code,voucher_id,address_id:delivery?(document.getElementById('coaddr')?.value||null):null,notes:null});
   state.cartSnapshot=null;state.ordersSnapshot=[];state.selectedVoucherId=null;toast('Pesanan '+d.order.order_number+' berhasil dibuat.');await go('orders');
  }catch(e){fail(e)}finally{state.placingOrder=false;loading(false)}
 }
