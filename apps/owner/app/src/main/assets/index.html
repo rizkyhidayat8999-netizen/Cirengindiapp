@@ -204,6 +204,186 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .nav button{touch-action:manipulation}
 .loading,.loading.show,.spin{display:none!important;animation:none!important}
 @media(max-width:380px){.ci-product-card .ci-variant{flex-wrap:wrap}.ci-product-card .ci-variant .grow{flex-basis:100%}}
+
+/* CI_OWNER_AMBIENT_VISUAL_V1
+ * Visual layer ONLY: no new controls, requests, authentication, or stock logic.
+ * Animated decorations use transforms (not layout) and respect reduced motion.
+ */
+:root{
+ --ci-espresso:#42271e;
+ --ci-cocoa:#8e4a30;
+ --ci-parchment:#fffaf3;
+ --ci-line:#e6d5c5;
+ --ci-subtle:#817268;
+}
+html,body{background-color:#f6eadc;color:#39251d}
+body{
+ background:
+  radial-gradient(ellipse 380px 340px at 94% 4%,rgba(231,180,137,.39),transparent 77%),
+  radial-gradient(ellipse 350px 410px at 0% 51%,rgba(234,192,157,.27),transparent 76%),
+  radial-gradient(ellipse 370px 390px at 100% 98%,rgba(240,208,170,.32),transparent 79%),
+  linear-gradient(153deg,#fff9f0 0%,#f9edde 46%,#fff8f0 100%);
+ background-attachment:fixed;
+}
+.app{position:relative;isolation:isolate;background:transparent}
+.app::before,.app::after{
+ content:"";position:fixed;pointer-events:none;z-index:-1;
+ border-radius:50%;transform:translate3d(0,0,0);
+}
+.app::before{
+ width:270px;height:270px;top:13%;left:calc(50% + 82px);
+ background:radial-gradient(circle,rgba(228,163,109,.22),rgba(241,192,147,.11) 45%,transparent 74%);
+ animation:ciOwnerAmbientOne 18s ease-in-out infinite alternate;
+}
+.app::after{
+ width:240px;height:300px;top:62%;left:calc(50% - 320px);
+ background:radial-gradient(ellipse,rgba(221,162,116,.18),rgba(239,193,159,.08) 49%,transparent 76%);
+ animation:ciOwnerAmbientTwo 22s ease-in-out infinite alternate;
+}
+@keyframes ciOwnerAmbientOne{
+ from{transform:translate3d(-8px,-12px,0) scale(.97)}
+ to{transform:translate3d(14px,15px,0) scale(1.03)}
+}
+@keyframes ciOwnerAmbientTwo{
+ from{transform:translate3d(6px,11px,0) scale(1)}
+ to{transform:translate3d(-10px,-12px,0) scale(1.045)}
+}
+.app .top{
+ background:
+  radial-gradient(ellipse 120px 92px at 95% 0%,rgba(248,213,167,.36),transparent 90%),
+  linear-gradient(114deg,rgba(255,255,253,.98),rgba(255,247,234,.97));
+ border:1px solid rgba(228,204,184,.89);
+ border-radius:25px;
+ box-shadow:0 10px 28px rgba(92,53,32,.11),inset 0 1px rgba(255,255,255,.94);
+}
+.app .top .logo{
+ background:linear-gradient(145deg,#fffefa,#fff3df);
+ border-color:#e6cbac;
+ box-shadow:0 4px 13px rgba(111,66,34,.12);
+}
+.app .ci-owner-label{
+ background:#fff9ed;border:1px solid #e4ccad;
+ color:#8b543b;border-radius:13px;padding:9px 11px;letter-spacing:.65px;
+}
+.app .section{
+ position:relative;isolation:isolate;
+ background:
+  radial-gradient(ellipse 240px 100px at 100% 0%,rgba(255,218,174,.16),transparent 92%),
+  linear-gradient(155deg,rgba(255,254,251,.97),rgba(255,250,243,.965));
+ border:1px solid #e7d5c2;
+ border-radius:27px;
+ box-shadow:0 11px 29px rgba(121,76,41,.095),inset 0 1px rgba(255,255,255,.96);
+}
+.app .section::before{
+ content:"";position:absolute;pointer-events:none;left:22px;right:22px;top:1px;height:1px;
+ background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+}
+.app .section h2{color:var(--ci-espresso);letter-spacing:-.55px;font-weight:800}
+.app .section h3{color:#70442d}
+.app .ci-heading p,.app .muted{color:#86766d}
+.app .card,.app button.card{
+ background:linear-gradient(140deg,#fffefb 0%,#fffcf7 100%);
+ border:1px solid #e9d9c9;
+ border-radius:21px;
+ box-shadow:0 6px 16px rgba(113,69,43,.055),inset 0 1px rgba(255,255,255,.9);
+}
+.app .metric{
+ background:
+  radial-gradient(ellipse 120px 100px at 100% 0%,rgba(255,240,217,.35),transparent 88%),
+  linear-gradient(130deg,#fffefa,#fffaf4);
+ border-color:#e8d7c7;
+ border-radius:22px;
+ box-shadow:0 6px 17px rgba(119,72,43,.065),inset 0 1px rgba(255,255,255,.95);
+}
+.app .metric .ci-metric-icon{border-radius:16px;box-shadow:inset 0 1px rgba(255,255,255,.65)}
+.app .metric strong{color:#3a2018}
+.app .ci-today,.app .ci-view-all{
+ background:linear-gradient(135deg,#fffefa,#fff4e8);
+ border:1px solid #e5cdb5;color:#83523c;
+ border-radius:17px;box-shadow:0 2px 8px rgba(115,70,35,.055);
+}
+.app .ci-order-summary{border-radius:20px}
+.app .ci-profile-card{
+ background:
+  radial-gradient(circle at 100% 0%,rgba(241,207,167,.28),transparent 50%),
+  linear-gradient(125deg,#fffdf8,#fff8ed);
+ border-color:#e7d3bf;
+}
+.app .ci-menu-card{
+ min-height:82px;
+ gap:14px;
+ padding:15px 17px;
+ border-radius:21px;
+ background:
+  linear-gradient(130deg,#fffefa 0%,#fffaf3 100%);
+ text-align:left;
+ color:#43291e;
+ touch-action:manipulation;
+}
+.app .ci-menu-card .ci-menu-icon{
+ width:44px;height:44px;border-radius:15px;
+ background:linear-gradient(145deg,#f9e4d2,#ffefe3);
+ color:#945039;
+ box-shadow:inset 0 1px rgba(255,255,255,.9);
+}
+.app .ci-menu-card .ci-menu-arrow{color:#b68a6b}
+.app .ci-menu-card:active{
+ background:linear-gradient(135deg,#fff2e5,#fff8ee);
+ border-color:#d9b79e;
+}
+.app .kv{padding:14px 0;border-bottom:1px solid #ecdfd0;align-items:center}
+.app .kv > span{color:#817166}
+.app .kv > b{font-size:13.5px;color:#4c3327;text-align:right;min-width:0;overflow-wrap:anywhere}
+/* Sign-out remains functional but no longer resembles a destructive alert banner. */
+.app button[onclick="logout()"]{
+ display:flex!important;align-items:center;justify-content:center;gap:10px;
+ min-height:52px;
+ background:linear-gradient(115deg,#fffdf9,#fff6ed)!important;
+ border:1px solid #dfc7b5!important;
+ color:#914d34!important;
+ border-radius:17px!important;
+ box-shadow:0 4px 12px rgba(121,65,32,.055)!important;
+ font-size:14px!important;
+ font-weight:750!important;
+ padding:13px 18px!important;
+}
+.app button[onclick="logout()"] .icon{
+ width:19px;height:19px;flex:0 0 19px;stroke-width:1.9;
+}
+.app button[onclick="logout()"]:active{background:#f8ede3!important}
+.app .nav{
+ background:rgba(255,252,247,.985);
+ border:1px solid #e7d2bd;
+ border-radius:24px;
+ box-shadow:0 12px 29px rgba(105,62,31,.18),inset 0 1px #fff;
+}
+.app .nav button{border-radius:18px}
+.app .nav button.active{background:linear-gradient(135deg,#fae8d7,#fff1e3);color:#85442c}
+.app .stock button,.app .btn.secondary{
+ background:linear-gradient(135deg,#fffefa,#fff7ee);
+ border-color:#e3c9b5;
+}
+.app input:not([type=checkbox]),.app select,.app textarea{
+ background:#fffdfa;border-color:#e2d0bf;
+}
+.app .search input:focus-visible,.app .btn:focus-visible,.app .ci-menu-card:focus-visible{
+ outline:2px solid #b97956;outline-offset:2px;
+}
+.app .badge{border:1px solid rgba(115,72,42,.08)}
+/* Login keeps its existing actions while adopting the same luxury palette. */
+.login{background:radial-gradient(circle at 94% 3%,rgba(238,184,134,.23),transparent 48%),linear-gradient(145deg,#6f3928,#a76748)}
+.loginbox{background:linear-gradient(155deg,#fffefa,#fff9f3);border-color:#e7cbb8}
+.loginbox .full{background:linear-gradient(125deg,#783b27,#9e5031)}
+/* Motion is purely ornamental, never blocks input or navigation. */
+@media (prefers-reduced-motion:reduce){
+ .app::before,.app::after{animation:none!important;transform:none!important}
+}
+@media (max-width:365px){
+ .app .ci-menu-card{padding:13px 12px;gap:10px}
+ .app .ci-menu-card .ci-menu-icon{width:40px;height:40px}
+ .app .ci-owner-label{padding:7px 8px}
+}
+
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
