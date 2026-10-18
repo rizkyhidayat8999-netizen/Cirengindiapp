@@ -384,6 +384,26 @@ body{
  .app .ci-owner-label{padding:7px 8px}
 }
 
+
+/* Focused, non-blocking price editor. Navigation and underlying page remain mounted. */
+.ci-price-overlay{position:fixed;inset:0;z-index:220;display:flex;align-items:flex-end;justify-content:center;padding:16px 15px calc(20px + env(safe-area-inset-bottom));background:rgba(28,20,15,.44);backdrop-filter:blur(4px)}
+.ci-price-sheet{width:min(100%,470px);background:linear-gradient(145deg,#fffefa,#fff8f0);border:1px solid #e7d5c1;border-radius:25px;box-shadow:0 18px 55px rgba(58,31,18,.22);padding:25px 22px 21px;color:#33241d}
+.ci-price-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.7px;color:#9b6b4c;margin-bottom:8px}
+.ci-price-sheet h2{font-size:23px;line-height:1.25;margin:0 0 10px;letter-spacing:-.5px}
+.ci-price-product{font-weight:750;font-size:14px;margin-bottom:24px}
+.ci-price-product span{color:#8a7c70;font-weight:500}
+.ci-price-sheet label{display:block;font-size:12px;font-weight:750;margin-bottom:10px;color:#6a5548}
+.ci-price-input-wrap{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:58px;background:#fff;border:1.5px solid #dac6b4;border-radius:15px}
+.ci-price-input-wrap:focus-within{border-color:#8d5134;box-shadow:0 0 0 3px rgba(141,81,52,.09)}
+.ci-price-input-wrap span{font-weight:800;color:#8d5134;font-size:17px}
+.ci-price-input-wrap input{background:transparent;min-width:0;width:100%;font-weight:780;font-size:24px;border:0;outline:none;color:#302018;box-shadow:none}
+.ci-price-input-wrap input::-webkit-inner-spin-button,.ci-price-input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.ci-price-caption{color:#8c7c70;font-size:12px;line-height:1.6;margin-top:11px}
+.ci-price-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:26px}
+.ci-price-actions button{height:49px;border-radius:14px;font-weight:800;font-size:13px;cursor:pointer}
+.ci-price-cancel{background:#fff;border:1px solid #e4cdb9;color:#795441}
+.ci-price-save{background:#875038;border:1px solid #875038;color:white;box-shadow:0 5px 14px rgba(135,80,56,.16)}
+
 </style>
 <link rel="stylesheet" href="https://raw.githubusercontent.com/rizkyhidayat8999-netizen/Cirengindiapp/main/apps/shared/premium-overrides.css" media="print" onload="this.media='all'" crossorigin="anonymous">
 </head>
@@ -906,7 +926,7 @@ async function products(){
   const d=await ownerApi("products"),ps=d.products||[],vs=d.variants||[];
   (d.variants||[]).forEach(x=>{const j=stockPending.get(x.id);if(j)x.stock=j.wanted});
   state.cache.products=d;
-  const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row ci-variant" data-variant-id="${esc(v.id)}"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted">${rp(v.price)} • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',-1)">−</button><b data-stock-number="${esc(v.id)}">${Number(v.stock)||0}</b><button onclick="stock('${v.id}',1)">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
+  const html=ps.map(p=>`<div class="card ci-product-card owner-product-item" data-q="${esc(String(p.name||'').toLowerCase())}"><div class="row"><div class="grow"><b>${esc(p.name)}</b><div class="muted">${vs.filter(v=>v.product_id===p.id).length} varian ${p.best_seller?"• Best seller":""}</div></div><button class="switch ${p.active?"on":""}" onclick="toggleProduct('${p.id}',${!p.active})"></button></div>${vs.filter(v=>v.product_id===p.id).map(v=>`<div class="row ci-variant" data-variant-id="${esc(v.id)}"><div class="grow"><b style="font-size:13px">${esc(v.name)}</b><div class="muted"><span data-variant-price="${esc(v.id)}">${rp(v.price)}</span> • ${v.active?"Aktif":"Nonaktif"}</div></div><div class="stock"><button onclick="stock('${v.id}',-1)">−</button><b data-stock-number="${esc(v.id)}">${Number(v.stock)||0}</b><button onclick="stock('${v.id}',1)">+</button></div><button class="btn secondary" onclick="editVariant('${v.id}')">Edit</button></div>`).join("")}</div>`).join("");
   if(state.page!=='products')return;paintOwner(`<div class="section">${ownerPageIntro("Produk & Stok","Kelola harga, varian, dan persediaan")}<div class="search"><input type="search" placeholder="Cari produk…" aria-label="Cari produk" oninput="filterOwnerProducts(this.value)"></div><div id="ownerProductList">${html||'<div class="empty">Produk belum tersedia.</div>'}</div></div>`,"products")
  }catch(e){fail(e)}finally{busy(false)}
 }
@@ -972,15 +992,73 @@ async function flushQuantity(id,kind){
 function stock(id,delta){optimisticQuantity(id,delta,'stock')}
 
 async function toggleProduct(id,on){busy(true);try{await ownerApi("set_product_active",{id,active:on});await products()}catch(e){fail(e)}finally{busy(false)}}
-async function editVariant(id){
- const v=(state.cache.products?.variants||[]).find(x=>x.id===id);if(!v)return;
- const name=prompt("Nama varian",v.name);if(name===null)return;
- const price=prompt("Harga (angka)",v.price);if(price===null)return;
- const stockValue=prompt("Stok (angka)",v.stock);if(stockValue===null)return;
- busy(true);try{
-  await ownerApi("update_variant",{id,name:name.trim(),price:Number(price),stock:Number(stockValue),active:!!v.active});
-  toast("Varian diperbarui.");await products()
- }catch(e){fail(e)}finally{busy(false)}
+function closePriceEditor(){
+ document.getElementById('ciPriceEditor')?.remove();
+}
+function paintVariantPrice(id,price){
+ const formatted=rp(price);
+ document.querySelectorAll('[data-variant-price]').forEach(el=>{
+  if(el.dataset.variantPrice===id)el.textContent=formatted;
+ });
+ const marker='data-variant-price="'+id+'">';
+ const replacePrice=(html)=>{
+  const start=html.indexOf(marker);
+  if(start<0)return html;
+  const from=start+marker.length,end=html.indexOf('</span>',from);
+  return end<0?html:html.slice(0,from)+formatted+html.slice(end);
+ };
+ const cache=instantViews.get('products');
+ if(cache)instantViews.set('products',replacePrice(cache));
+ if(state.session?._ciScreens?.products)state.session._ciScreens.products=replacePrice(state.session._ciScreens.products);
+}
+function editVariant(id){
+ const v=(state.cache.products?.variants||[]).find(x=>x.id===id);
+ if(!v)return toast('Varian tidak ditemukan. Muat ulang halaman Produk.');
+ closePriceEditor();
+ const product=(state.cache.products?.products||[]).find(p=>p.id===v.product_id);
+ document.body.insertAdjacentHTML('beforeend',
+  `<div id="ciPriceEditor" class="ci-price-overlay" onclick="if(event.target===this)closePriceEditor()">
+    <section class="ci-price-sheet" role="dialog" aria-modal="true" aria-labelledby="ciPriceHeading">
+     <div class="ci-price-eyebrow">CIRENG INDI • OWNER</div>
+     <h2 id="ciPriceHeading">Ubah Harga Produk</h2>
+     <div class="ci-price-product">${esc(product?.name||'Produk')} <span>• ${esc(v.name)}</span></div>
+     <label for="ciPriceInput">Harga baru</label>
+     <div class="ci-price-input-wrap"><span>Rp</span><input id="ciPriceInput" type="number" min="1" max="1000000000" step="1" inputmode="numeric" autocomplete="off" value="${Number(v.price)||0}" onkeydown="if(event.key==='Enter')saveVariantPrice('${id}')"></div>
+     <div class="ci-price-caption">Harga saat ini: ${rp(v.price)}. Stok dan nama varian tetap.</div>
+     <div class="ci-price-actions"><button type="button" class="ci-price-cancel" onclick="closePriceEditor()">Batal</button><button type="button" class="ci-price-save" onclick="saveVariantPrice('${id}')">Simpan Harga</button></div>
+    </section>
+   </div>`);
+ document.getElementById('ciPriceInput')?.focus();
+}
+async function saveVariantPrice(id){
+ const input=document.getElementById('ciPriceInput');
+ const v=(state.cache.products?.variants||[]).find(x=>x.id===id);
+ if(!v||!input)return;
+ const raw=input.value.trim(), price=Number(raw);
+ if(!raw||!Number.isSafeInteger(price)||price<=0||price>1000000000){
+  toast('Masukkan harga valid dari Rp1 sampai Rp1.000.000.000.');
+  input.focus();return;
+ }
+ if(price===Number(v.price)){closePriceEditor();return;}
+ if(!reserveAction('variant-price:'+id))return;
+ const previous=Number(v.price);
+ v.price=price;paintVariantPrice(id,price);closePriceEditor();
+ if(state.page==='products')persistOwnerView('products');
+ try{
+  // Read current attributes so an edit never uses stale stock/name/active values.
+  const latest=await ownerApi('products');
+  const fresh=(latest.variants||[]).find(x=>x.id===id);
+  if(!fresh)throw new Error('VARIANT_NOT_FOUND');
+  await ownerApi('update_variant',{id,name:fresh.name,price,stock:fresh.stock,active:!!fresh.active});
+  toast('Harga berhasil diperbarui.');
+  if(state.page==='products')persistOwnerView('products');
+ }catch(e){
+  v.price=previous;paintVariantPrice(id,previous);
+  if(state.page==='products')persistOwnerView('products');
+  const code=String(e?.message||e);
+  if(code.includes('AUTH_REQUIRED')||code.includes('STAFF_REQUIRED')||code.includes('JWT'))fail(e);
+  else toast('Gagal menyimpan harga. Harga sebelumnya dipulihkan.');
+ }finally{releaseAction('variant-price:'+id)}
 }
 
 async function members(){
