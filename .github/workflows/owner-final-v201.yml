@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/owner-final-v201.yml'
+      - 'apps/owner/**'
   workflow_dispatch:
 
 permissions:
