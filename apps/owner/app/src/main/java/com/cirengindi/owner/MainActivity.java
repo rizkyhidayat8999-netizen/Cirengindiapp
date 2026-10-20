@@ -3,6 +3,9 @@ package com.cirengindi.owner;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
+import android.os.Build;
+import android.view.View;
+import android.view.WindowInsets;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebChromeClient;
@@ -26,6 +29,20 @@ public final class MainActivity extends Activity {
         SecureSessionStore store = new SecureSessionStore(this);
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(255, 248, 241));
+
+        // Android 16 enforces edge-to-edge for apps targeting API 36.
+        // Insets keep the owner controls below the status bar and above navigation.
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            webView.setOnApplyWindowInsetsListener((view, insets) -> {
+                android.graphics.Insets systemBars =
+                        insets.getInsets(WindowInsets.Type.systemBars());
+                view.setPadding(systemBars.left, systemBars.top,
+                        systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
