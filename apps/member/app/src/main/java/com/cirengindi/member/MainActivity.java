@@ -18,6 +18,9 @@ import java.util.concurrent.Executors;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
+import android.view.View;
+import android.view.WindowInsets;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
@@ -56,6 +59,16 @@ public final class MainActivity extends Activity {
         SecureSessionStore sessionStore = new SecureSessionStore(this);
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(255,248,241));
+        // Android 16 edge-to-edge: reserve physical status/navigation bar insets.
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            webView.setOnApplyWindowInsetsListener((view, insets) -> {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                return insets;
+            });
+        }
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(false);
