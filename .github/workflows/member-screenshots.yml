@@ -1,0 +1,88 @@
+name: Capture Cireng Indi Member Store Screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/member-play-readiness]
+    paths:
+      - "apps/member/**"
+      - ".github/workflows/member-screenshots.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android 16 SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;35.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Build Member debug APK
+        run: gradle -p apps/member :app:assembleDebug --stacktrace
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Capture actual Member screens
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: default
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            set -euo pipefail
+            adb install -r apps/member/app/build/outputs/apk/debug/app-debug.apk
+            adb shell monkey -p com.cirengindi.member.internal -c android.intent.category.LAUNCHER 1
+            sleep 10
+            adb exec-out screencap -p > /tmp/member-login.png
+            adb shell input tap 235 245
+            sleep 2
+            adb exec-out screencap -p > /tmp/member-register.png
+
+      - name: Validate screenshots are non-blank
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from collections import Counter
+          from PIL import Image
+          for name in ("login", "register"):
+              image=Image.open("/tmp/member-"+name+".png").convert("RGB")
+              center=image.crop((5,70,image.width-5,image.height-85))
+              ratio=Counter(center.getdata()).most_common(1)[0][1]/(center.width*center.height)
+              print(name, image.size, "dominant ratio", round(ratio,3))
+              if ratio > 0.92:
+                  raise SystemExit("blank screenshot: "+name)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: CirengIndi-Member-Store-Screenshots
+          path: |
+            /tmp/member-login.png
+            /tmp/member-register.png
+          if-no-files-found: error
+          retention-days: 90
