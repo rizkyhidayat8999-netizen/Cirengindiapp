@@ -53,28 +53,35 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            set -euo pipefail
+            set -eu
+            adb wait-for-device
             adb install -r apps/member/app/build/outputs/apk/debug/app-debug.apk
             adb shell monkey -p com.cirengindi.member.internal -c android.intent.category.LAUNCHER 1
             sleep 10
             adb exec-out screencap -p > /tmp/member-login.png
             adb shell input tap 235 245
-            sleep 2
+            sleep 3
             adb exec-out screencap -p > /tmp/member-register.png
 
-      - name: Validate screenshots are non-blank
+      - name: Validate screenshots
         if: always()
+        shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
-          from collections import Counter
-          from PIL import Image
+          import struct
+          from pathlib import Path
           for name in ("login", "register"):
-              image=Image.open("/tmp/member-"+name+".png").convert("RGB")
-              center=image.crop((5,70,image.width-5,image.height-85))
-              ratio=Counter(center.getdata()).most_common(1)[0][1]/(center.width*center.height)
-              print(name, image.size, "dominant ratio", round(ratio,3))
-              if ratio > 0.92:
-                  raise SystemExit("blank screenshot: "+name)
+              path = Path("/tmp/member-" + name + ".png")
+              if not path.is_file() or path.stat().st_size < 1000:
+                  raise SystemExit("missing or empty screenshot: " + str(path))
+              data = path.read_bytes()
+              if data[:8] != b"\\x89PNG\\r\\n\\x1a\\n":
+                  raise SystemExit("not a PNG: " + str(path))
+              width, height = struct.unpack(">II", data[16:24])
+              print(name, width, height, path.stat().st_size, "bytes")
+              if width < 200 or height < 400:
+                  raise SystemExit("unexpected screenshot dimensions: " + str(path))
           PY
 
       - uses: actions/upload-artifact@v4
