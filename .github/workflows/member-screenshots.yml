@@ -76,7 +76,7 @@ jobs:
               if not path.is_file() or path.stat().st_size < 1000:
                   raise SystemExit("missing or empty screenshot: " + str(path))
               data = path.read_bytes()
-              if data[:8] != b"\\x89PNG\\r\\n\\x1a\\n":
+              if data[:8] != b"\x89PNG\r\n\x1a\n":
                   raise SystemExit("not a PNG: " + str(path))
               width, height = struct.unpack(">II", data[16:24])
               print(name, width, height, path.stat().st_size, "bytes")
