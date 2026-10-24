@@ -202,6 +202,48 @@ async function mobile(req,b){
  if(a==='bootstrap')return reply({categories:await list('ci_categories','*',{eq:{active:true},order:'sort_order',asc:true}),products:await list('ci_products','*',{eq:{active:true},order:'sort_order',asc:true}),variants:await list('ci_product_variants','*',{eq:{active:true},order:'sort_order',asc:true}),banners:await list('ci_banners','*',{eq:{active:true},order:'sort_order',asc:true}),couriers:await list('ci_couriers','*',{eq:{active:true},order:'sort_order',asc:true}),bank_transfer:await paymentSettings()});
  const {user,profile}=await member(req),uid=user.id;
  if(a==='me')return reply({profile,points:await points(uid)});
+ if(a==='delete_account'){
+  const password=String(b.password||'');
+  if(password.length<8||password.length>256)return err('INVALID_CURRENT_PASSWORD',401);
+  const verifyClient=createClient(SB_URL,PUBLIC,{auth:{autoRefreshToken:false,persistSession:false}});
+  const verified=await verifyClient.auth.signInWithPassword({email:profile.email,password});
+  if(verified.error||verified.data?.user?.id!==uid)return err('INVALID_CURRENT_PASSWORD',401);
+
+  // Block new account activity before removing personal data.
+  const disabled=check(await admin.from('member_profiles').update({status:'disabled'}).eq('user_id',uid).eq('status','active').select('user_id').maybeSingle());
+  if(!disabled)return err('ACCOUNT_DELETION_UNAVAILABLE',409);
+
+  try{
+   const orders=check(await admin.from('ci_orders').select('id').eq('member_id',uid));
+   const orderIds=orders.map(x=>x.id);
+   if(orderIds.length){
+    const payments=check(await admin.from('ci_payments').select('id,proof_storage_path').in('order_id',orderIds));
+    const proofPaths=payments.map(x=>x.proof_storage_path).filter(Boolean);
+    for(let i=0;i<proofPaths.length;i+=100){
+     const removed=await admin.storage.from('ci-payment-proofs').remove(proofPaths.slice(i,i+100));
+     if(removed.error)throw new Error(removed.error.message);
+    }
+    check(await admin.from('ci_payments').update({
+     proof_storage_path:null,proof_file_type:null,proof_submitted_at:null,
+     review_note:null,reviewed_by:null,reviewed_at:null
+    }).in('order_id',orderIds));
+    check(await admin.from('ci_orders').update({
+     member_id:null,address_id:null,address_snapshot:null,notes:null
+    }).eq('member_id',uid));
+   }
+
+   // Removing the Auth user cascades through the Member profile to addresses,
+   // cart, points, vouchers, rewards, notifications and device tokens.
+   const deleted=await admin.auth.admin.deleteUser(uid);
+   if(deleted.error)throw new Error(deleted.error.message);
+   return reply({ok:true});
+  }catch(e){
+   const restored=await admin.from('member_profiles').update({status:'active'}).eq('user_id',uid).eq('status','disabled');
+   if(restored.error)console.error('Member account restore failed:',restored.error.message);
+   console.error('Member account deletion failed:',String(e?.message||e));
+   return err('ACCOUNT_DELETION_UNAVAILABLE',503);
+  }
+ }
  if(a==='addresses')return reply({addresses:await list('ci_addresses','*',{eq:{member_id:uid},order:'created_at'})});
  if(a==='address_create'){
   for(const field of ['recipient_name','phone','address_line','city','province'])if(!String(b[field]||'').trim())return err('ADDRESS_INCOMPLETE');
