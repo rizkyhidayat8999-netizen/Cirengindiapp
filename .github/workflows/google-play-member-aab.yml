@@ -3,7 +3,7 @@ name: Build Cireng Indi MEMBER Google Play AAB
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, codex/member-play-readiness]
     paths:
       - "apps/member/**"
       - ".github/workflows/google-play-member-aab.yml"
