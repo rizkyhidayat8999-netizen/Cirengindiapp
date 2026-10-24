@@ -8,7 +8,7 @@ Aplikasi Android Cireng Indi dengan UI baru bergaya aplikasi food-ordering premi
 - Debug test package: `com.cirengindi.member.internal`
 - Version: `1.1.0-test`
 - Min Android: API 26
-- Target SDK: 35
+- Target SDK: 36 (Android 16)
 - UI: local HTML/CSS/JavaScript di WebView Android dengan Native Bridge
 - Session: Android Keystore AES/GCM
 - Service-role key: tidak ada di client
@@ -39,7 +39,7 @@ Build test ini masih menunjuk ke backend Supabase Cireng Indi yang sebelumnya di
 
 ## Build
 
-Gunakan JDK 17, Android SDK 35, dan Gradle 8.13. GitHub Actions workflow sudah tersedia pada `.github/workflows/build-apk.yml`.
+Gunakan JDK 17, Android SDK 36, dan Gradle 8.13. GitHub Actions workflow tersedia pada `.github/workflows/google-play-member-aab.yml`.
 
 
 ## Two-app architecture
